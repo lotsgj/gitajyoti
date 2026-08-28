@@ -134,3 +134,80 @@
   .more-voices ul{grid-template-columns:1fr;gap:12px}
   .more-voices li a{min-height:78px;padding:13px 15px;border-radius:19px}
 }
+
+/* Royal, serene Foundation link. */
+.foundation-link{position:relative;display:inline-grid;grid-template-columns:28px minmax(0,auto) 30px;gap:10px;align-items:center;max-width:100%;margin-top:8px;padding:12px 15px;border:1px solid rgba(201,149,63,.82);border-radius:999px;background:linear-gradient(135deg,#173f53 0%,#233b61 55%,#132f48 100%);color:#fff8e9;font-family:Georgia,"Times New Roman",serif;font-size:1rem;font-weight:600;line-height:1.3;letter-spacing:.015em;text-align:center;text-decoration:none;box-shadow:inset 0 0 0 2px rgba(255,248,233,.08),0 12px 30px rgba(26,43,67,.2);transition:.2s transform,.2s border-color,.2s box-shadow,.2s filter}
+.foundation-link:before{content:"";position:absolute;inset:4px;border:1px solid rgba(231,190,105,.22);border-radius:inherit;pointer-events:none}
+.foundation-link .foundation-ornament{display:grid;width:28px;height:28px;place-items:center;color:#e6b75d;font-size:.82rem;text-shadow:0 0 12px rgba(230,183,93,.55)}
+.foundation-link i{display:grid;width:30px;height:30px;place-items:center;border:1px solid rgba(230,183,93,.78);border-radius:50%;color:#efc979;font-family:Inter,ui-sans-serif,system-ui,sans-serif;font-size:.82rem;font-style:normal;font-weight:900}
+.foundation-link:hover{transform:translateY(-2px);border-color:#f0cf86;filter:brightness(1.06);box-shadow:inset 0 0 0 2px rgba(255,248,233,.1),0 16px 36px rgba(26,43,67,.28),0 0 22px rgba(201,149,63,.13)}
+.foundation-link:focus-visible{outline:3px solid var(--gold);outline-offset:4px}
+
+.final-cta{gap:9px}
+.final-cta img{width:25px;height:25px;flex:0 0 auto}
+
+@media(max-width:600px){
+  .foundation-link{grid-template-columns:24px minmax(0,1fr) 28px;width:100%;padding:11px 13px;border-radius:26px;font-size:.94rem}
+  .foundation-link .foundation-ornament{width:24px;height:24px}
+  .foundation-link i{width:28px;height:28px}
+}
+
+/* Royal, serene non-navigation captions with a replayable lotus sparkle. */
+.royal-caption{isolation:isolate;display:grid;grid-template-columns:42px minmax(0,auto);gap:8px;align-items:center;border:1px solid rgba(201,149,63,.86);background:linear-gradient(135deg,#173f53 0%,#233b61 55%,#132f48 100%);color:#fff8e9;box-shadow:inset 0 0 0 2px rgba(255,248,233,.08),0 14px 34px rgba(12,31,51,.26);text-align:center;font-family:Georgia,"Times New Roman",serif;font-weight:600;letter-spacing:.035em;text-shadow:0 1px 2px rgba(0,0,0,.35);transition:.25s border-color,.25s box-shadow,.25s filter}
+.royal-caption:after{content:"";position:absolute;z-index:-1;inset:5px;border:1px solid rgba(231,190,105,.24);border-radius:inherit;pointer-events:none}
+.caption-ornament{position:relative;display:grid;width:42px;height:34px;place-items:center}
+.caption-ornament svg{width:38px;height:28px;overflow:visible;fill:none;stroke:#efc979;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(239,201,121,.32));transform-origin:center bottom}
+.caption-spark{position:absolute;z-index:2;color:#f2cf83;font-family:Georgia,serif;font-size:.68rem;line-height:1;opacity:.68;text-shadow:0 0 7px rgba(242,207,131,.65)}
+.caption-spark-one{left:0;top:2px}.caption-spark-two{right:0;top:0}
+.royal-caption .caption-text{margin:0;padding:0;color:inherit}
+.royal-caption .caption-text b{padding:0 .16em;color:#e2a746;font-weight:600}
+.royal-caption:hover,.royal-caption.is-sparkling{border-color:#f0cf86;filter:brightness(1.06);box-shadow:inset 0 0 0 2px rgba(255,248,233,.1),0 16px 38px rgba(12,31,51,.3),0 0 24px rgba(201,149,63,.16)}
+.royal-caption:hover .caption-ornament svg,.royal-caption.is-sparkling .caption-ornament svg{animation:lotus-awaken .82s ease both}
+.royal-caption:hover .caption-spark-one,.royal-caption.is-sparkling .caption-spark-one{animation:spark-left .82s ease-out both}
+.royal-caption:hover .caption-spark-two,.royal-caption.is-sparkling .caption-spark-two{animation:spark-right .82s .08s ease-out both}
+@keyframes lotus-awaken{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-3px) scale(1.09)}}
+@keyframes spark-left{0%{opacity:0;transform:translate(5px,7px) scale(.5) rotate(0)}45%{opacity:1}100%{opacity:0;transform:translate(-7px,-8px) scale(1.25) rotate(-35deg)}}
+@keyframes spark-right{0%{opacity:0;transform:translate(-5px,7px) scale(.5) rotate(0)}45%{opacity:1}100%{opacity:0;transform:translate(7px,-9px) scale(1.2) rotate(35deg)}}
+
+.metamorph .royal-caption{grid-template-columns:42px minmax(0,auto);width:min(86%,430px);padding:11px 20px 13px;background:linear-gradient(135deg,#173f53 0%,#233b61 55%,#132f48 100%)}
+.metamorph .royal-caption:before{background:linear-gradient(90deg,#173f53,#233b61 55%,#132f48)}
+.lamp-card .royal-caption{grid-template-columns:42px minmax(0,auto);bottom:46px;padding:9px 20px 11px;font-size:1.25rem}
+
+@media(max-width:600px){
+  .royal-caption{grid-template-columns:34px minmax(0,auto);gap:6px}
+  .caption-ornament{width:34px;height:29px}
+  .caption-ornament svg{width:31px;height:24px}
+  .metamorph .royal-caption{width:84%;padding:9px 15px 11px;font-size:1rem}
+  .lamp-card .royal-caption{grid-template-columns:34px minmax(0,auto);bottom:30px;padding:8px 15px 10px;font-size:1rem}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .royal-caption:hover .caption-ornament svg,.royal-caption.is-sparkling .caption-ornament svg,.royal-caption:hover .caption-spark,.royal-caption.is-sparkling .caption-spark{animation:none}
+}
+
+/* Golden flute medallion with musical-note feedback. */
+.flute-cta{overflow:visible}
+.flute-burst{position:relative;display:grid;width:34px;height:34px;flex:0 0 auto;place-items:center;overflow:visible}
+.flute-burst img{display:block;width:34px;height:34px;transform-origin:42% 62%}
+.music-note{position:absolute;z-index:3;right:-2px;top:0;color:#173f53;font-family:Georgia,"Times New Roman",serif;font-size:.9rem;font-style:normal;font-weight:700;line-height:1;opacity:0;pointer-events:none;text-shadow:0 1px 0 rgba(255,248,233,.72),0 0 5px rgba(255,248,233,.42)}
+.note-two{color:#3f746f;font-size:.8rem}.note-three{color:#0d3445;font-size:.74rem}
+.flute-cta:hover .flute-burst img,.flute-cta.is-playing .flute-burst img{animation:flute-lilt .78s ease both}
+.flute-cta:hover .note-one,.flute-cta.is-playing .note-one{animation:note-rise-one .78s ease-out both}
+.flute-cta:hover .note-two,.flute-cta.is-playing .note-two{animation:note-rise-two .78s .09s ease-out both}
+.flute-cta:hover .note-three,.flute-cta.is-playing .note-three{animation:note-rise-three .78s .17s ease-out both}
+@keyframes flute-lilt{0%,100%{transform:translateY(0) rotate(0)}42%{transform:translateY(-2px) rotate(-4deg)}}
+@keyframes note-rise-one{0%{opacity:0;transform:translate(0,5px) scale(.55) rotate(-8deg)}35%{opacity:1}100%{opacity:0;transform:translate(10px,-19px) scale(1.12) rotate(10deg)}}
+@keyframes note-rise-two{0%{opacity:0;transform:translate(-1px,5px) scale(.5) rotate(5deg)}35%{opacity:1}100%{opacity:0;transform:translate(18px,-12px) scale(1.06) rotate(18deg)}}
+@keyframes note-rise-three{0%{opacity:0;transform:translate(0,4px) scale(.5)}35%{opacity:.95}100%{opacity:0;transform:translate(5px,-27px) scale(1.02) rotate(-10deg)}}
+
+.nav-cta .flute-burst,.nav-cta .cta-icon{width:34px;height:34px}
+.final-cta .flute-burst,.final-cta .flute-burst img{width:38px;height:38px}
+
+@media(max-width:900px){
+  .nav .nav-cta{overflow:visible}
+  .nav-cta .flute-burst,.nav-cta .cta-icon{width:36px;height:36px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .flute-cta:hover .flute-burst img,.flute-cta.is-playing .flute-burst img,.flute-cta:hover .music-note,.flute-cta.is-playing .music-note{animation:none}
+}
