@@ -274,3 +274,25 @@
   .master-ring.is-active .ring-runner{stroke-dasharray:none;opacity:.72}
   .master-ring.is-active .ring-spark{display:none}
 }
+
+/* My Gita coming-soon page. */
+.coming-soon-page{min-height:100svh;display:grid;grid-template-rows:auto 1fr auto;overflow-x:hidden;background:radial-gradient(circle at 50% 38%,rgba(235,190,94,.24),transparent 28%),linear-gradient(145deg,#0b2f40 0%,#123e51 52%,#0a2b3a 100%);color:#fff8e9}
+.coming-soon-header{position:relative;z-index:2;padding:24px 0}
+.coming-soon-header .wrap{display:flex;align-items:center}
+.coming-soon-main{display:grid;place-items:center;padding:34px 20px 64px}
+.coming-soon-card{position:relative;isolation:isolate;width:min(760px,100%);padding:clamp(38px,7vw,72px);overflow:hidden;border:1px solid rgba(239,201,121,.48);border-radius:34px;background:rgba(8,42,56,.62);text-align:center;box-shadow:inset 0 0 0 5px rgba(255,248,233,.04),0 28px 80px rgba(0,0,0,.28);backdrop-filter:blur(10px)}
+.coming-soon-card:after{content:"";position:absolute;inset:8px;z-index:-1;border:1px solid rgba(239,201,121,.16);border-radius:26px;pointer-events:none}
+.coming-soon-glow{position:absolute;left:50%;top:10%;z-index:-2;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(239,201,121,.2),transparent 68%);transform:translateX(-50%)}
+.coming-soon-flute{position:relative;display:grid;width:94px;height:94px;margin:0 auto 20px;place-items:center}
+.coming-soon-flute img{width:88px;height:88px}
+.coming-soon-flute i{position:absolute;color:#efc979;font-style:normal;text-shadow:0 0 10px rgba(239,201,121,.7);animation:coming-note 3.2s ease-in-out infinite}
+.coming-soon-flute i:nth-of-type(1){right:1px;top:9px}.coming-soon-flute i:nth-of-type(2){right:-9px;top:31px;animation-delay:.5s}.coming-soon-flute i:nth-of-type(3){right:10px;top:-4px;animation-delay:1s}
+.coming-soon-card .eyebrow{color:#efc979}
+.coming-soon-card h1{max-width:650px;margin:auto;font-size:clamp(2.6rem,7vw,5rem);letter-spacing:-.045em}
+.coming-soon-card>p:not(.eyebrow){max-width:590px;margin:24px auto 30px;color:rgba(255,248,233,.82);font-size:clamp(1rem,2vw,1.16rem)}
+.coming-soon-return{background:#e2a746;color:#17374a}
+.coming-soon-footer{display:flex;justify-content:space-between;gap:18px;padding:24px max(20px,calc((100% - 1160px)/2));color:rgba(255,248,233,.68);font-size:.8rem}
+.coming-soon-footer a{color:#efc979}
+@keyframes coming-note{0%,100%{opacity:0;transform:translate(0,4px) scale(.8)}45%,70%{opacity:1;transform:translate(4px,-8px) scale(1)}}
+@media(max-width:600px){.coming-soon-header{padding:18px 0}.coming-soon-main{padding:24px 14px 42px}.coming-soon-card{padding:38px 22px;border-radius:26px}.coming-soon-card:after{border-radius:19px}.coming-soon-flute{margin-bottom:14px}.coming-soon-footer{justify-content:center;flex-direction:column;text-align:center}.coming-soon-card>p:not(.eyebrow){margin:20px auto 26px}}
+@media(prefers-reduced-motion:reduce){.coming-soon-flute i{animation:none;opacity:1}}
