@@ -1,0 +1,122 @@
+[
+  {
+    "id": "exp-gita-children",
+    "slug": "gita-for-children",
+    "status": "published",
+    "title": "Gita for Children",
+    "subtitle": "From learning the Gita’s shlokas to living their wisdom",
+    "shortDescription": "A learning journey that helps children move from learning the Gita’s shlokas to living their wisdom.",
+    "description": "Children encounter selected shlokas through chanting, stories, dialogue, contemplation and practical experiments. The journey helps them recognise familiar struggles and respond with greater clarity, responsibility and care.",
+    "image": {"src": "placeholders/gita-for-children", "alt": "Children learning, chanting and applying the wisdom of the Gita"},
+    "designedFor": ["Ages 7–18"],
+    "needs": ["recognise-life-struggles", "understand-selected-shlokas", "apply-wisdom"],
+    "form": "learning-programme",
+    "guidanceMode": "blended",
+    "languages": ["English"],
+    "commitment": {"summary": "Nine-month journey"},
+    "recommendedProcess": [
+      {"order": 1, "title": "Encounter", "description": "Meet the teaching through story, chanting and dialogue."},
+      {"order": 2, "title": "Inquire", "description": "Recognise the human struggle within the teaching."},
+      {"order": 3, "title": "Try", "description": "Apply one insight in family, school or friendship."},
+      {"order": 4, "title": "Reflect", "description": "Return to the group, share and deepen understanding."}
+    ],
+    "intendedOutcomes": [
+      "Recognise life’s struggles with greater honesty.",
+      "Understand selected shlokas and their relevance.",
+      "Respond to situations with greater clarity and care."
+    ],
+    "constituentActivityIds": ["activity-gfc-prepare", "activity-gfc-chant", "activity-gfc-contemplate"],
+    "delivery": {"requiresBatch": true, "supportsSelfStart": false},
+    "initialContext": "Journey 1 — My Battles"
+  },
+  {
+    "id": "exp-gita-sara",
+    "slug": "gita-sara",
+    "status": "published",
+    "title": "Gita Sāra",
+    "subtitle": "The essence of the Gita through 126 chosen shlokas",
+    "shortDescription": "A structured exploration of the Gita’s central teachings through 126 carefully chosen shlokas.",
+    "description": "Guided teaching, reflection and application reveal how the Gita’s foundational ideas belong to one integrated vision of life. Learners build a coherent understanding without first undertaking all 700 shlokas.",
+    "image": {"src": "placeholders/gita-sara", "alt": "Selected shlokas illuminating the essence of the Gita"},
+    "designedFor": ["Adults", "Serious beginners"],
+    "needs": ["understand-gita", "study-selected-shlokas", "integrate-central-teachings"],
+    "form": "learning-programme",
+    "guidanceMode": "acharya-guided",
+    "languages": ["English"],
+    "contentScope": {"scripture": "Bhagavad Gita", "chapters": 18, "shlokas": 126, "selection": "chosen"},
+    "commitment": {"summary": "Structured learning journey"},
+    "recommendedProcess": [
+      {"order": 1, "title": "Learn", "description": "Attend or watch the teaching."},
+      {"order": 2, "title": "Reflect", "description": "Contemplate the meaning."},
+      {"order": 3, "title": "Apply", "description": "Relate the teaching to life."}
+    ],
+    "intendedOutcomes": [
+      "Understand the Gita’s central teachings.",
+      "Recognise relationships among its foundational ideas.",
+      "Use selected teachings in everyday inquiry and action."
+    ],
+    "constituentActivityIds": ["activity-sara-teaching", "activity-sara-reflection", "activity-sara-application"],
+    "delivery": {"requiresBatch": true, "supportsSelfStart": false},
+    "initialContext": "Foundations — Seeing the whole"
+  },
+  {
+    "id": "exp-purna-yoga",
+    "slug": "purna-yoga-darsana",
+    "status": "published",
+    "title": "Pūrṇa Yoga Darśana",
+    "subtitle": "A deep-dive journey into the Gita through all 700 shlokas",
+    "shortDescription": "Study the Bhagavad Gita as a complete and integrated vision of life and Yoga.",
+    "description": "A long-term guided inquiry into every shloka and the relationships among action, knowledge, devotion, meditation and freedom. This Experience is intended for learners ready for sustained, careful study.",
+    "image": {"src": "placeholders/purna-yoga-darsana", "alt": "An expansive path representing the complete vision of the Bhagavad Gita"},
+    "designedFor": ["Committed learners", "Advanced learners"],
+    "needs": ["study-all-shlokas", "understand-integrated-yoga", "sustained-contemplation"],
+    "form": "advanced-learning-programme",
+    "guidanceMode": "acharya-guided",
+    "languages": ["English"],
+    "contentScope": {"scripture": "Bhagavad Gita", "chapters": 18, "shlokas": 700, "selection": "complete"},
+    "commitment": {"summary": "Long-term, in-depth journey"},
+    "recommendedProcess": [
+      {"order": 1, "title": "Study", "description": "Enter each chapter and shloka with an Acharya."},
+      {"order": 2, "title": "Connect", "description": "See relationships across the complete teaching."},
+      {"order": 3, "title": "Contemplate", "description": "Examine the vision in lived experience."}
+    ],
+    "intendedOutcomes": [
+      "Understand the Bhagavad Gita as an integrated vision.",
+      "Recognise the unity of its approaches to Yoga.",
+      "Develop sustained habits of scriptural inquiry and contemplation."
+    ],
+    "constituentActivityIds": ["activity-purna-study", "activity-purna-dialogue", "activity-purna-contemplation"],
+    "delivery": {"requiresBatch": false, "supportsSelfStart": false},
+    "initialContext": "Orientation — Entering the complete vision"
+  },
+  {
+    "id": "exp-gita-yoga",
+    "slug": "gita-yoga",
+    "status": "published",
+    "title": "Gita Yoga",
+    "subtitle": "Learn to chant all 700 shlokas",
+    "shortDescription": "A complete chanting journey through all eighteen chapters of the Bhagavad Gita.",
+    "description": "Progress chapter by chapter with guided pronunciation, metre, rhythm and repetition. Regular practice develops accuracy, confidence, attentiveness and reverence for the complete text.",
+    "image": {"src": "placeholders/gita-yoga", "alt": "Rhythmic chanting flowing through the eighteen chapters of the Gita"},
+    "designedFor": ["Chanting learners", "Different ages and levels"],
+    "needs": ["learn-sanskrit-chanting", "build-rhythm-and-accuracy", "chant-complete-gita"],
+    "form": "chanting-programme",
+    "guidanceMode": "acharya-guided",
+    "languages": ["Sanskrit", "English guidance"],
+    "contentScope": {"scripture": "Bhagavad Gita", "chapters": 18, "shlokas": 700, "selection": "complete"},
+    "commitment": {"summary": "Complete chanting journey covering all 18 chapters"},
+    "recommendedProcess": [
+      {"order": 1, "title": "Listen", "description": "Hear pronunciation, metre and cadence."},
+      {"order": 2, "title": "Repeat", "description": "Practise in short guided sections."},
+      {"order": 3, "title": "Integrate", "description": "Chant complete passages and chapters."}
+    ],
+    "intendedOutcomes": [
+      "Chant all 700 shlokas with growing accuracy.",
+      "Develop rhythm, confidence and attentive listening.",
+      "Approach the text with steadiness and reverence."
+    ],
+    "constituentActivityIds": ["activity-yoga-listen", "activity-yoga-practise", "activity-yoga-recite"],
+    "delivery": {"requiresBatch": true, "supportsSelfStart": false},
+    "initialContext": "Chapter 1 — Listening and pronunciation"
+  }
+]

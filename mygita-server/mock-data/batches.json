@@ -1,0 +1,17 @@
+[
+  {
+    "id":"batch-gfc-2026-09","experienceId":"exp-gita-children","name":"Gita for Children — September 2026","timezone":"Asia/Kolkata",
+    "batchPeriod":{"startsOn":"2026-09-06","endsOn":"2027-05-30"},
+    "enrolment":{"state":"open","opensOn":"2026-08-01","closesOn":"2026-09-05","capacity":30},"status":"scheduled"
+  },
+  {
+    "id":"batch-sara-2026-09","experienceId":"exp-gita-sara","name":"Gita Sāra — September 2026 Evening","timezone":"Asia/Kolkata",
+    "batchPeriod":{"startsOn":"2026-09-19","endsOn":"2027-03-27"},
+    "enrolment":{"state":"open","opensOn":"2026-08-15","closesOn":"2026-09-18","capacity":40},"status":"scheduled"
+  },
+  {
+    "id":"batch-yoga-2026-10","experienceId":"exp-gita-yoga","name":"Gita Yoga — October 2026","timezone":"Asia/Kolkata",
+    "batchPeriod":{"startsOn":"2026-10-04","endsOn":"2027-09-26"},
+    "enrolment":{"state":"open","opensOn":"2026-08-20","closesOn":"2026-10-03","capacity":35},"status":"scheduled"
+  }
+]
