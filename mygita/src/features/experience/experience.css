@@ -1,0 +1,13 @@
+.experience-detail { max-width:68rem; margin-inline:auto; }
+.back-link { display:inline-block; margin-bottom:var(--space-5); color:var(--color-gold-dark); font-weight:750; }
+.experience-detail header { max-width:54rem; margin-bottom:var(--space-6); }
+.experience-detail h1,.narrow-page h1 { font-size:clamp(2.7rem,8vw,5.5rem); }
+.experience-lead { max-width:46rem; font-size:clamp(1.15rem,2.5vw,1.55rem); }
+.experience-detail > .illustration { min-height:clamp(18rem,45vw,31rem); border-radius:var(--radius-md); }
+.experience-copy { display:grid; max-width:48rem; gap:var(--space-5); margin:var(--space-7) auto 0; font-size:1.08rem; }
+.outcome-list { display:grid; gap:var(--space-3); padding-left:1.4rem; }
+.narrow-page { max-width:48rem; margin-inline:auto; }
+.batch-list { display:grid; gap:var(--space-4); }
+.batch-option { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:var(--space-4); padding:var(--space-4); border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface); cursor:pointer; }
+.batch-option:has(input:checked) { border-color:var(--color-gold-dark); box-shadow:0 0 0 2px rgb(232 170 61 / 25%); }
+.batch-option small { display:block; margin-top:var(--space-1); }

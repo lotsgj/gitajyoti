@@ -1,0 +1,9 @@
+.journey-header { margin-bottom:var(--space-7); }
+.journey-header h1 { font-size:clamp(3rem,9vw,6rem); }
+.journey-list { display:grid; gap:var(--space-5); }
+.journey-card { display:grid; grid-template-columns:minmax(15rem,1fr) 1.25fr; overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface); box-shadow:var(--shadow-soft); }
+.journey-card > div:last-child { align-self:center; padding:clamp(1.5rem,4vw,3rem); }
+.journey-card h2 { margin:var(--space-4) 0 var(--space-2); font-size:clamp(2rem,4vw,3.2rem); }
+.progress { overflow:hidden; height:.65rem; margin:var(--space-5) 0; border-radius:var(--radius-pill); background:var(--color-paper-warm); }
+.progress span { display:block; height:100%; border-radius:inherit; background:var(--color-gold); }
+@media (max-width:43.75rem) { .journey-card { grid-template-columns:1fr; } }

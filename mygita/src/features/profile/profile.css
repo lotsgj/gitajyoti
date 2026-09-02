@@ -1,0 +1,4 @@
+.profile-page { max-width:48rem; margin-inline:auto; }
+.profile-page header { display:flex; align-items:center; gap:var(--space-5); margin-bottom:var(--space-6); }
+.profile-page h1 { margin-bottom:0; font-size:clamp(2.5rem,7vw,4.5rem); }
+.avatar--lg { width:6rem; height:6rem; font-family:var(--font-display); font-size:2rem; }

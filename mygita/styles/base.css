@@ -1,0 +1,14 @@
+*, *::before, *::after { box-sizing: border-box; }
+html { min-width: 20rem; scroll-behavior: smooth; }
+body { margin: 0; min-height: 100vh; color: var(--color-ink); background: var(--color-paper); font-family: var(--font-body); line-height: 1.55; }
+button, input, select, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+img, svg { display: block; max-width: 100%; }
+h1, h2, h3, p { margin-block-start: 0; }
+h1, h2, h3 { color: var(--color-ink-deep); font-family: var(--font-display); line-height: 1.12; }
+:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.skip-link { position: fixed; z-index: 100; top: var(--space-3); left: var(--space-3); padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: white; transform: translateY(-200%); }
+.skip-link:focus { transform: translateY(0); }
+.noscript { margin: var(--space-5); padding: var(--space-4); border: 1px solid var(--color-danger); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }

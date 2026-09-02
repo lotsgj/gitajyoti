@@ -1,0 +1,9 @@
+.activity-page { max-width:64rem; margin-inline:auto; }
+.activity-page > .illustration { min-height:clamp(17rem,40vw,28rem); border-radius:var(--radius-md); }
+.activity-copy { max-width:46rem; margin:var(--space-7) auto 0; }
+.activity-copy h1,.session-page h1 { font-size:clamp(2.7rem,7vw,5rem); }
+.activity-lead { font-size:1.2rem; }
+.activity-facts { display:grid; grid-template-columns:repeat(2,1fr); gap:var(--space-5); margin:var(--space-6) 0; }
+.session-page { max-width:48rem; margin-inline:auto; text-align:center; }
+.session-orb { display:grid; width:10rem; height:10rem; place-items:center; margin:var(--space-6) auto; border:1px solid var(--color-gold); border-radius:50%; color:var(--color-gold-dark); background:radial-gradient(circle,#fff,#f7e5b8); font-family:var(--font-display); font-size:3.5rem; }
+@media(max-width:43.75rem){.activity-facts{grid-template-columns:1fr;}}
