@@ -91,6 +91,7 @@ API identities use dots in prose. Their filesystem directories use hyphens—for
 - Repository-boundary Phase 1 is complete.
 - A local Python mock API exists separately, but the browser does not use it.
 - API client, session, and configuration scaffolding remains in place intentionally for the future API-provider phase; current pages do not import it.
+- The OpenAPI 3.1 `mygita.api` contract covers every mock API operation and is checked against documented examples and captured mock responses.
 
 The prototype OTP is `123456`. It is not a production authentication mechanism.
 
@@ -100,8 +101,8 @@ The browser fixtures and mock-server seed data are intentionally independent at 
 
 ## What is intentionally deferred
 
-- The `mygita.api` OpenAPI specification and client API providers.
-- Runtime validation in API adapters.
+- Client API providers and provider selection.
+- Runtime validation and normalization in API adapters.
 - Production identity, OTP, persistence, hosting, privacy, consent, safeguarding, and retention decisions.
 - Secure product launch, enrolment provisioning, and progress synchronization.
 - Production product applications, curricula, media, and artwork.
@@ -123,7 +124,7 @@ Development dependencies live outside the browser application:
 ```sh
 cd dev-tools
 pnpm install --frozen-lockfile
-pnpm run check:mygita
+pnpm run check
 ```
 
 `dev-tools/node_modules` is generated and ignored by Git. `dev-tools/package.json` and `dev-tools/pnpm-lock.yaml` are committed so another machine can recreate the same toolchain.

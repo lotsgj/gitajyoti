@@ -24,18 +24,18 @@
 
 ## MyGita API contract
 
-- [ ] Create `contracts/mygita-api/openapi.yaml` using OpenAPI 3.1.
-- [ ] Define operations, schemas, authentication, and the standard error envelope.
-- [ ] Add request and response examples.
-- [ ] Lint the OpenAPI document and validate examples in CI.
-- [ ] Validate mock-server responses against the contract.
+- [x] Create `contracts/mygita-api/openapi.yaml` using OpenAPI 3.1.
+- [x] Define operations, schemas, authentication, and the standard error envelope.
+- [x] Add request and response examples.
+- [x] Lint the OpenAPI document and validate examples in CI.
+- [x] Validate mock-server responses against the contract.
 
 ## Design-time safety
 
 - [x] Add `// @ts-check` to client modules.
 - [x] Add checked-JavaScript `jsconfig.json` with strict null checking.
 - [x] Define JSDoc domain types and repository interfaces.
-- [ ] Run `tsc --noEmit` in CI.
+- [x] Run `tsc --noEmit` in CI.
 - [x] Validate fixture relationships and identifiers.
 
 ## Runtime safety

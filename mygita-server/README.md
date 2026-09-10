@@ -28,6 +28,13 @@ The default host is loopback-only. Do not expose this server to the internet.
 python3 -m unittest discover -s mygita-server/tests -v
 ```
 
+The authoritative HTTP contract is [`contracts/mygita-api/openapi.yaml`](../contracts/mygita-api/openapi.yaml). After installing the versioned development tools, lint it, validate its examples, and check mock responses with:
+
+```bash
+cd dev-tools
+pnpm run check:openapi
+```
+
 ## Authentication flow
 
 Request an OTP challenge:

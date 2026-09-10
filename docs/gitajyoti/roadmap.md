@@ -23,12 +23,12 @@ Implemented: feature/page boundaries, checked-JavaScript repository contracts, f
 
 ## Phase 2 — MyGita API contract
 
-Status: Planned
+Status: In progress
 
-- `mygita.api` OpenAPI specification
-- API adapters and runtime response validation
-- API-backed repositories
-- One complete Gita Sāra vertical slice
+- Complete: `mygita.api` OpenAPI 3.1 specification, examples, linting, CI, and mock-response compatibility validation
+- Next: API adapters and runtime response validation
+- Next: API-backed repositories
+- Next: one complete Gita Sāra vertical slice
 
 ## Phase 3 — Product integration
 

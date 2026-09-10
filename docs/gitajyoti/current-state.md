@@ -33,11 +33,14 @@ Last reviewed: 2026-09-10
 ## Products and contracts
 
 - Four products are identified, but no product applications are implemented in this repository.
-- No OpenAPI contracts exist yet.
+- The OpenAPI 3.1 `mygita.api` contract describes every current mock API operation, shared schemas, bearer authentication, and the standard error envelope.
+- Contract linting, 66 request/response example validations, and compatibility checks over 17 captured mock API responses run locally and in CI.
+- The browser remains fixture-backed; API adapters and API-backed repositories have not been implemented.
 - Product launch, enrolment provisioning, identity exchange, and progress synchronization are design work.
 
 ## Development verification
 
 - Development-tool declarations and their lock file live in `dev-tools/` and are version-controlled.
 - Generated `dev-tools/node_modules/` content is ignored and recreated with `pnpm install --frozen-lockfile`.
-- `pnpm run check:mygita` from `dev-tools/` runs checked-JavaScript analysis, repository contract tests, fixture-integrity tests, and import-boundary tests.
+- `pnpm run check` from `dev-tools/` runs checked-JavaScript analysis, client tests, OpenAPI linting, example validation, and mock-response compatibility validation.
+- GitHub Actions runs the complete development-tool check and the Python mock API unit tests on pushes and pull requests.

@@ -1,0 +1,1126 @@
+openapi: 3.1.0
+info:
+  title: MyGita API
+  version: 0.1.0
+  description: >-
+    Authoritative browser-to-server contract for the MyGita region. The current
+    implementation is a local mock API; production identity and persistence are
+    outside this contract milestone.
+  license:
+    name: All rights reserved
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: http://127.0.0.1:8081/api/v1
+    description: Local mock API
+tags:
+  - name: Service
+    description: Service discovery and operational health.
+  - name: Experiences
+    description: Public learning-experience catalogue and batches.
+  - name: Identity
+    description: Authentication, learner identity, profile, and onboarding.
+  - name: Journey
+    description: Learner interests, enrolments, activities, and progress.
+  - name: Development
+    description: Local mock-server operations that are excluded from production.
+security: []
+paths:
+  /:
+    get:
+      tags: [Service]
+      operationId: getApiIndex
+      summary: Describe the API
+      responses:
+        '200':
+          description: API identity and links
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiIndex'
+              example:
+                service: My Gita mock API
+                version: '1'
+                status: ok
+                links:
+                  health: /api/v1/health
+                  experiences: /api/v1/experiences
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /health:
+    get:
+      tags: [Service]
+      operationId: getHealth
+      summary: Check service health
+      responses:
+        '200':
+          description: Healthy service
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+              example:
+                status: ok
+                service: mygita-mock-api
+                version: '1'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /experiences:
+    get:
+      tags: [Experiences]
+      operationId: listExperiences
+      summary: List published experiences
+      responses:
+        '200':
+          description: Published experience catalogue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceList'
+              example:
+                items: []
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /experiences/{experienceId}:
+    parameters:
+      - $ref: '#/components/parameters/ExperienceId'
+    get:
+      tags: [Experiences]
+      operationId: getExperience
+      summary: Get a published experience by ID or slug
+      responses:
+        '200':
+          description: Experience details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experience'
+              examples:
+                gitaSara:
+                  $ref: '#/components/examples/GitaSaraExperience'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /experiences/{experienceId}/batches:
+    parameters:
+      - $ref: '#/components/parameters/ExperienceId'
+    get:
+      tags: [Experiences]
+      operationId: listExperienceBatches
+      summary: List batches for a published experience
+      responses:
+        '200':
+          description: Batches belonging to the experience
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchList'
+              example:
+                items:
+                  - id: batch-sara-2026-09
+                    experienceId: exp-gita-sara
+                    name: Gita Sāra — September 2026 Evening
+                    timezone: Asia/Kolkata
+                    batchPeriod:
+                      startsOn: '2026-09-19'
+                      endsOn: '2027-03-27'
+                    enrolment:
+                      state: open
+                      opensOn: '2026-08-15'
+                      closesOn: '2026-09-18'
+                      capacity: 40
+                    status: scheduled
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /auth/otp/request:
+    post:
+      tags: [Identity]
+      operationId: requestOtp
+      summary: Request a prototype OTP challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+            example:
+              countryCode: '+91'
+              mobile: '9876543210'
+      responses:
+        '201':
+          description: OTP challenge created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpChallenge'
+              example:
+                challengeId: otp-example-challenge
+                expiresInSeconds: 300
+                prototypeOtp: '123456'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /auth/otp/verify:
+    post:
+      tags: [Identity]
+      operationId: verifyOtp
+      summary: Verify a prototype OTP challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerification'
+            example:
+              challengeId: otp-example-challenge
+              otp: '123456'
+      responses:
+        '200':
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiJ9.example.signature
+                tokenType: Bearer
+                expiresIn: 28800
+                isNewUser: true
+                user:
+                  id: user-example
+                  roles: [learner]
+                  status: active
+                  personalDetails:
+                    fullName: ''
+                    displayName: ''
+                    email: ''
+                    mobile: '+919876543210'
+                    dateOfBirth: ''
+                    preferredLanguage: ''
+                    city: ''
+                    country: India
+                    timezone: Asia/Kolkata
+                    profilePicture: ''
+                  onboarding:
+                    state: pending
+                    completedAt: null
+                  createdAt: '2026-09-10T10:00:00+00:00'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me:
+    get:
+      tags: [Identity]
+      operationId: getCurrentUser
+      summary: Get the authenticated learner
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current learner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                activeLearner:
+                  $ref: '#/components/examples/CompleteUser'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+    patch:
+      tags: [Identity]
+      operationId: updateCurrentUser
+      summary: Update editable learner profile fields
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+            example:
+              displayName: Vijay
+              city: Bengaluru
+              preferredLanguage: English
+      responses:
+        '200':
+          description: Updated learner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                activeLearner:
+                  $ref: '#/components/examples/CompleteUser'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me/onboarding:
+    patch:
+      tags: [Identity]
+      operationId: completeOnboarding
+      summary: Complete mandatory learner onboarding
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingUpdate'
+            example:
+              fullName: Vijay Sharma
+              displayName: Vijay
+              dateOfBirth: '1985-05-12'
+      responses:
+        '200':
+          description: Onboarded learner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              examples:
+                activeLearner:
+                  $ref: '#/components/examples/CompleteUser'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me/journey:
+    get:
+      tags: [Journey]
+      operationId: getMyJourney
+      summary: List the learner's journeys and interests
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Learner journey state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyCollection'
+              example:
+                items: []
+                interests: []
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+    post:
+      tags: [Journey]
+      operationId: createJourney
+      summary: Enrol the learner in an experience
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JourneyCreate'
+            example:
+              experienceId: exp-gita-sara
+              batchId: batch-sara-2026-09
+      responses:
+        '201':
+          description: Created and enriched journey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Journey'
+              examples:
+                activeJourney:
+                  $ref: '#/components/examples/ActiveJourney'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me/interests:
+    post:
+      tags: [Journey]
+      operationId: registerInterest
+      summary: Register interest in an experience
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InterestCreate'
+            example:
+              experienceId: exp-purna-yoga
+      responses:
+        '201':
+          description: Registered interest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interest'
+              example:
+                id: interest-example
+                userId: user-example
+                experienceId: exp-purna-yoga
+                registeredAt: '2026-09-10T10:00:00+00:00'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me/activities/{activityId}:
+    parameters:
+      - $ref: '#/components/parameters/ActivityId'
+    get:
+      tags: [Journey]
+      operationId: getMyActivity
+      summary: Get a learner activity and delivery session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Activity in the learner's journey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LearnerActivity'
+              examples:
+                teaching:
+                  $ref: '#/components/examples/LearnerActivity'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me/activities/{activityId}/complete:
+    parameters:
+      - $ref: '#/components/parameters/ActivityId'
+    post:
+      tags: [Journey]
+      operationId: completeMyActivity
+      summary: Mark a learner activity complete
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+            example: {}
+      responses:
+        '200':
+          description: Updated journey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Journey'
+              examples:
+                activeJourney:
+                  $ref: '#/components/examples/ActiveJourney'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /dev/reset:
+    post:
+      tags: [Development]
+      operationId: resetDevelopmentState
+      summary: Reset local mock runtime state
+      description: Development-only operation. It must not exist in the production API.
+      responses:
+        '200':
+          description: Runtime state reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetResult'
+              example:
+                status: reset
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    ExperienceId:
+      name: experienceId
+      in: path
+      required: true
+      description: Stable experience ID or public slug.
+      schema:
+        type: string
+        minLength: 1
+      example: exp-gita-sara
+    ActivityId:
+      name: activityId
+      in: path
+      required: true
+      description: Stable activity ID.
+      schema:
+        type: string
+        minLength: 1
+      example: activity-sara-teaching
+  responses:
+    BadRequestError:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: invalid_otp_challenge
+              message: OTP challenge is invalid
+    AuthenticationError:
+      description: Authentication failed or is required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: authentication_required
+              message: A bearer token is required
+    AuthorizationError:
+      description: The learner cannot perform the operation yet
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: onboarding_required
+              message: Complete the mandatory profile before continuing
+    NotFoundError:
+      description: Requested resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: experience_not_found
+              message: Experience not found
+    ConflictError:
+      description: Request conflicts with existing learner state
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: duplicate_enrolment
+              message: This Experience is already active in your Journey
+    ValidationError:
+      description: Request failed domain validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: missing_profile_fields
+              message: Complete all mandatory profile details
+              details:
+                fields: [fullName, displayName, dateOfBirth]
+    RateLimitError:
+      description: Too many OTP attempts
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: otp_attempts_exceeded
+              message: Too many OTP attempts
+    UnexpectedError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+          example:
+            error:
+              code: internal_error
+              message: The mock server encountered an unexpected error
+  schemas:
+    ApiIndex:
+      type: object
+      additionalProperties: false
+      required: [service, version, status, links]
+      properties:
+        service: {type: string}
+        version: {type: string}
+        status: {type: string, const: ok}
+        links:
+          type: object
+          additionalProperties: false
+          required: [health, experiences]
+          properties:
+            health: {type: string}
+            experiences: {type: string}
+    Health:
+      type: object
+      additionalProperties: false
+      required: [status, service, version]
+      properties:
+        status: {type: string, const: ok}
+        service: {type: string}
+        version: {type: string}
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code: {type: string, minLength: 1}
+            message: {type: string, minLength: 1}
+            details:
+              type: object
+              additionalProperties: true
+    Image:
+      type: object
+      additionalProperties: false
+      required: [src, alt]
+      properties:
+        src: {type: string, minLength: 1}
+        alt: {type: string, minLength: 1}
+    Delivery:
+      type: object
+      additionalProperties: false
+      required: [requiresBatch, supportsSelfStart]
+      properties:
+        requiresBatch: {type: boolean}
+        supportsSelfStart: {type: boolean}
+    Commitment:
+      type: object
+      additionalProperties: false
+      required: [summary]
+      properties:
+        summary: {type: string, minLength: 1}
+    ContentScope:
+      type: object
+      additionalProperties: false
+      required: [scripture, chapters, shlokas, selection]
+      properties:
+        scripture: {type: string}
+        chapters: {type: integer, minimum: 1}
+        shlokas: {type: integer, minimum: 1}
+        selection: {type: string}
+    ProcessStep:
+      type: object
+      additionalProperties: false
+      required: [order, title, description]
+      properties:
+        order: {type: integer, minimum: 1}
+        title: {type: string, minLength: 1}
+        description: {type: string, minLength: 1}
+    Experience:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - status
+        - title
+        - subtitle
+        - shortDescription
+        - description
+        - image
+        - designedFor
+        - needs
+        - form
+        - guidanceMode
+        - languages
+        - commitment
+        - recommendedProcess
+        - intendedOutcomes
+        - constituentActivityIds
+        - delivery
+        - initialContext
+      properties:
+        id: {type: string, pattern: '^exp-'}
+        slug: {type: string, minLength: 1}
+        status: {type: string, enum: [published]}
+        title: {type: string, minLength: 1}
+        subtitle: {type: string, minLength: 1}
+        shortDescription: {type: string, minLength: 1}
+        description: {type: string, minLength: 1}
+        image: {$ref: '#/components/schemas/Image'}
+        designedFor:
+          type: array
+          minItems: 1
+          items: {type: string}
+        needs:
+          type: array
+          minItems: 1
+          items: {type: string}
+        form: {type: string, minLength: 1}
+        guidanceMode: {type: string, minLength: 1}
+        languages:
+          type: array
+          minItems: 1
+          items: {type: string}
+        contentScope: {$ref: '#/components/schemas/ContentScope'}
+        commitment: {$ref: '#/components/schemas/Commitment'}
+        recommendedProcess:
+          type: array
+          minItems: 1
+          items: {$ref: '#/components/schemas/ProcessStep'}
+        intendedOutcomes:
+          type: array
+          minItems: 1
+          items: {type: string}
+        constituentActivityIds:
+          type: array
+          minItems: 1
+          items: {type: string, pattern: '^activity-'}
+        delivery: {$ref: '#/components/schemas/Delivery'}
+        initialContext: {type: string, minLength: 1}
+    ExperienceSummary:
+      type: object
+      additionalProperties: false
+      required: [id, slug, title, subtitle]
+      properties:
+        id: {type: string}
+        slug: {type: string}
+        title: {type: string}
+        subtitle: {type: string}
+    ExperienceList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Experience'}
+    DateRange:
+      type: object
+      additionalProperties: false
+      required: [startsOn, endsOn]
+      properties:
+        startsOn: {type: string, format: date}
+        endsOn: {type: string, format: date}
+    EnrolmentWindow:
+      type: object
+      additionalProperties: false
+      required: [state, opensOn, closesOn, capacity]
+      properties:
+        state: {type: string, enum: [open, closed]}
+        opensOn: {type: string, format: date}
+        closesOn: {type: string, format: date}
+        capacity: {type: integer, minimum: 1}
+    Batch:
+      type: object
+      additionalProperties: false
+      required: [id, experienceId, name, timezone, batchPeriod, enrolment, status]
+      properties:
+        id: {type: string, pattern: '^batch-'}
+        experienceId: {type: string, pattern: '^exp-'}
+        name: {type: string, minLength: 1}
+        timezone: {type: string, minLength: 1}
+        batchPeriod: {$ref: '#/components/schemas/DateRange'}
+        enrolment: {$ref: '#/components/schemas/EnrolmentWindow'}
+        status: {type: string, enum: [scheduled, active, completed, cancelled]}
+    BatchList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Batch'}
+    OtpRequest:
+      type: object
+      additionalProperties: false
+      required: [mobile]
+      properties:
+        countryCode: {type: string, const: '+91', default: '+91'}
+        mobile: {type: string, pattern: '^[6-9][0-9]{9}$'}
+    OtpChallenge:
+      type: object
+      additionalProperties: false
+      required: [challengeId, expiresInSeconds, prototypeOtp]
+      properties:
+        challengeId: {type: string, minLength: 1}
+        expiresInSeconds: {type: integer, minimum: 1}
+        prototypeOtp: {type: string, pattern: '^[0-9]{6}$'}
+    OtpVerification:
+      type: object
+      additionalProperties: false
+      required: [challengeId, otp]
+      properties:
+        challengeId: {type: string, minLength: 1}
+        otp: {type: string, pattern: '^[0-9]{6}$'}
+    PersonalDetails:
+      type: object
+      additionalProperties: false
+      required: [fullName, displayName, email, mobile, dateOfBirth, preferredLanguage, city, country, timezone, profilePicture]
+      properties:
+        fullName: {type: string}
+        displayName: {type: string}
+        email: {type: string}
+        mobile: {type: string, pattern: '^\+91[6-9][0-9]{9}$'}
+        dateOfBirth: {type: string}
+        preferredLanguage: {type: string}
+        city: {type: string}
+        country: {type: string}
+        timezone: {type: string}
+        profilePicture: {type: string}
+    OnboardingState:
+      type: object
+      additionalProperties: false
+      required: [state, completedAt]
+      properties:
+        state: {type: string, enum: [pending, complete]}
+        completedAt:
+          anyOf:
+            - {type: string, format: date-time}
+            - {type: 'null'}
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, roles, status, personalDetails, onboarding, createdAt]
+      properties:
+        id: {type: string, pattern: '^user-'}
+        roles:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items: {type: string}
+        status: {type: string, enum: [active]}
+        personalDetails: {$ref: '#/components/schemas/PersonalDetails'}
+        onboarding: {$ref: '#/components/schemas/OnboardingState'}
+        createdAt: {type: string, format: date-time}
+    AuthSession:
+      type: object
+      additionalProperties: false
+      required: [accessToken, tokenType, expiresIn, isNewUser, user]
+      properties:
+        accessToken: {type: string, minLength: 1}
+        tokenType: {type: string, const: Bearer}
+        expiresIn: {type: integer, minimum: 1}
+        isNewUser: {type: boolean}
+        user: {$ref: '#/components/schemas/User'}
+    ProfileUpdate:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        fullName: {type: string}
+        displayName: {type: string}
+        dateOfBirth: {type: string, format: date}
+        email: {type: string}
+        preferredLanguage: {type: string}
+        city: {type: string}
+    OnboardingUpdate:
+      allOf:
+        - $ref: '#/components/schemas/ProfileUpdate'
+        - type: object
+          required: [fullName, displayName, dateOfBirth]
+    ActivityDelivery:
+      type: object
+      additionalProperties: false
+      required: [mode, providerType]
+      properties:
+        mode: {type: string}
+        providerType: {type: string}
+    Activity:
+      type: object
+      required: [id, experienceId, title, activityType, guidanceMode, required, recommendedDurationMinutes, description, preparation, intendedOutcome, delivery]
+      properties:
+        id: {type: string, pattern: '^activity-'}
+        experienceId: {type: string, pattern: '^exp-'}
+        title: {type: string, minLength: 1}
+        activityType: {type: string, minLength: 1}
+        guidanceMode: {type: string, minLength: 1}
+        required: {type: boolean}
+        recommendedDurationMinutes: {type: integer, minimum: 1}
+        description: {type: string, minLength: 1}
+        preparation: {type: string, minLength: 1}
+        intendedOutcome: {type: string, minLength: 1}
+        delivery: {$ref: '#/components/schemas/ActivityDelivery'}
+    Facilitator:
+      type: object
+      additionalProperties: false
+      required: [userId, role, displayName]
+      properties:
+        userId: {type: string}
+        role: {type: string}
+        displayName: {type: string}
+    Session:
+      type: object
+      additionalProperties: false
+      required: [id, batchId, experienceActivityId, title, facilitators, startsAt, endsAt, status, delivery]
+      properties:
+        id: {type: string}
+        batchId: {type: string}
+        experienceActivityId: {type: string}
+        title: {type: string}
+        facilitators:
+          type: array
+          items: {$ref: '#/components/schemas/Facilitator'}
+        startsAt: {type: string, format: date-time}
+        endsAt: {type: string, format: date-time}
+        status: {type: string}
+        delivery: {$ref: '#/components/schemas/ActivityDelivery'}
+    LearnerActivity:
+      type: object
+      unevaluatedProperties: false
+      allOf:
+        - $ref: '#/components/schemas/Activity'
+        - type: object
+          required: [completed, session]
+          properties:
+            completed: {type: boolean}
+            session:
+              anyOf:
+                - $ref: '#/components/schemas/Session'
+                - {type: 'null'}
+    Progress:
+      type: object
+      additionalProperties: false
+      required: [completed, total]
+      properties:
+        completed: {type: integer, minimum: 0}
+        total: {type: integer, minimum: 0}
+    Journey:
+      type: object
+      additionalProperties: false
+      required: [id, userId, experienceId, batchId, status, startedOn, lastAccessed, currentContext, activityIds, completedActivityIds, experience, nextActivity, progress]
+      properties:
+        id: {type: string, pattern: '^journey-'}
+        userId: {type: string, pattern: '^user-'}
+        experienceId: {type: string, pattern: '^exp-'}
+        batchId:
+          anyOf:
+            - {type: string, pattern: '^batch-'}
+            - {type: 'null'}
+        status: {type: string, enum: [active, completed]}
+        startedOn: {type: string, format: date}
+        lastAccessed: {type: string, format: date-time}
+        currentContext: {type: string}
+        activityIds:
+          type: array
+          items: {type: string}
+        completedActivityIds:
+          type: array
+          uniqueItems: true
+          items: {type: string}
+        experience: {$ref: '#/components/schemas/ExperienceSummary'}
+        nextActivity:
+          anyOf:
+            - $ref: '#/components/schemas/Activity'
+            - {type: 'null'}
+        progress: {$ref: '#/components/schemas/Progress'}
+    JourneyCreate:
+      type: object
+      additionalProperties: false
+      required: [experienceId]
+      properties:
+        experienceId: {type: string, pattern: '^exp-'}
+        batchId:
+          anyOf:
+            - {type: string, pattern: '^batch-'}
+            - {type: 'null'}
+    Interest:
+      type: object
+      additionalProperties: false
+      required: [id, userId, experienceId, registeredAt]
+      properties:
+        id: {type: string, pattern: '^interest-'}
+        userId: {type: string, pattern: '^user-'}
+        experienceId: {type: string, pattern: '^exp-'}
+        registeredAt: {type: string, format: date-time}
+    InterestCreate:
+      type: object
+      additionalProperties: false
+      required: [experienceId]
+      properties:
+        experienceId: {type: string, pattern: '^exp-'}
+    JourneyCollection:
+      type: object
+      additionalProperties: false
+      required: [items, interests]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Journey'}
+        interests:
+          type: array
+          items: {$ref: '#/components/schemas/Interest'}
+    ResetResult:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status: {type: string, const: reset}
+  examples:
+    GitaSaraExperience:
+      summary: Gita Sāra experience
+      value:
+        id: exp-gita-sara
+        slug: gita-sara
+        status: published
+        title: Gita Sāra
+        subtitle: The essence of the Gita through 126 chosen shlokas
+        shortDescription: A structured exploration of the Gita’s central teachings through 126 carefully chosen shlokas.
+        description: Guided teaching, reflection and application reveal how the Gita’s foundational ideas belong to one integrated vision of life.
+        image:
+          src: placeholders/gita-sara
+          alt: Selected shlokas illuminating the essence of the Gita
+        designedFor: [Adults, Serious beginners]
+        needs: [understand-gita, study-selected-shlokas, integrate-central-teachings]
+        form: learning-programme
+        guidanceMode: acharya-guided
+        languages: [English]
+        contentScope:
+          scripture: Bhagavad Gita
+          chapters: 18
+          shlokas: 126
+          selection: chosen
+        commitment:
+          summary: Structured learning journey
+        recommendedProcess:
+          - order: 1
+            title: Learn
+            description: Attend or watch the teaching.
+        intendedOutcomes: [Understand the Gita’s central teachings.]
+        constituentActivityIds: [activity-sara-teaching, activity-sara-reflection, activity-sara-application]
+        delivery:
+          requiresBatch: true
+          supportsSelfStart: false
+        initialContext: Foundations — Seeing the whole
+    CompleteUser:
+      summary: Onboarded learner
+      value:
+        id: user-example
+        roles: [learner]
+        status: active
+        personalDetails:
+          fullName: Vijay Sharma
+          displayName: Vijay
+          email: ''
+          mobile: '+919876543210'
+          dateOfBirth: '1985-05-12'
+          preferredLanguage: English
+          city: Bengaluru
+          country: India
+          timezone: Asia/Kolkata
+          profilePicture: ''
+        onboarding:
+          state: complete
+          completedAt: '2026-09-10T10:01:00+00:00'
+        createdAt: '2026-09-10T10:00:00+00:00'
+    LearnerActivity:
+      summary: Activity with a scheduled session
+      value:
+        id: activity-sara-teaching
+        experienceId: exp-gita-sara
+        title: Foundational Teaching
+        activityType: teaching
+        guidanceMode: acharya-guided
+        required: true
+        recommendedDurationMinutes: 75
+        description: Study a connected group of chosen shlokas with an Acharya.
+        preparation: Read the shlokas and note questions.
+        intendedOutcome: Understand the teaching in its immediate and wider context.
+        delivery:
+          mode: online-live
+          providerType: simulated-live-session
+        completed: false
+        session:
+          id: session-sara-teaching-2026-09-19
+          batchId: batch-sara-2026-09
+          experienceActivityId: activity-sara-teaching
+          title: Gita Sāra Foundational Teaching
+          facilitators:
+            - userId: facilitator-acharya-meera
+              role: gita-acharya
+              displayName: Acharya Meera
+          startsAt: '2026-09-19T19:00:00+05:30'
+          endsAt: '2026-09-19T20:15:00+05:30'
+          status: scheduled
+          delivery:
+            mode: online-live
+            providerType: simulated-live-session
+    ActiveJourney:
+      summary: Active Gita Sāra journey
+      value:
+        id: journey-example
+        userId: user-example
+        experienceId: exp-gita-sara
+        batchId: batch-sara-2026-09
+        status: active
+        startedOn: '2026-09-10'
+        lastAccessed: '2026-09-10T10:02:00+00:00'
+        currentContext: Foundations — Seeing the whole
+        activityIds: [activity-sara-teaching, activity-sara-reflection, activity-sara-application]
+        completedActivityIds: []
+        experience:
+          id: exp-gita-sara
+          slug: gita-sara
+          title: Gita Sāra
+          subtitle: The essence of the Gita through 126 chosen shlokas
+        nextActivity:
+          id: activity-sara-teaching
+          experienceId: exp-gita-sara
+          title: Foundational Teaching
+          activityType: teaching
+          guidanceMode: acharya-guided
+          required: true
+          recommendedDurationMinutes: 75
+          description: Study a connected group of chosen shlokas with an Acharya.
+          preparation: Read the shlokas and note questions.
+          intendedOutcome: Understand the teaching in its immediate and wider context.
+          delivery:
+            mode: online-live
+            providerType: simulated-live-session
+        progress:
+          completed: 0
+          total: 3
