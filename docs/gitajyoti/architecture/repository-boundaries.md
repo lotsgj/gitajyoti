@@ -9,6 +9,8 @@ UI code works only through feature repositories. It does not import fixtures, co
 
 UI-to-repository contracts receive design-time checking. Runtime validation is not duplicated at this trusted internal boundary. API responses are runtime-validated in API adapters before repositories expose normalized domain data.
 
+Fixture providers remain the browser default. `?provider=api` explicitly selects API providers for local and integration verification. Generated validators live under the client contract layer rather than domain-agnostic `core`, and their freshness is checked against the authoritative OpenAPI document.
+
 Initial repositories align with the three domain features: Identity, Experience, and Journey.
 
 - Identity owns authentication, session, learner identity, profile, roles, and identity-level authorization information.

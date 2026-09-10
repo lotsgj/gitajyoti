@@ -2,14 +2,17 @@
   "name": "@gitajyoti/dev-tools",
   "private": true,
   "scripts": {
-    "check": "pnpm run check:mygita && pnpm run check:openapi",
-    "check:mygita": "tsc --project ../mygita/jsconfig.json --noEmit && node --test ../mygita/tests/**/*.test.js",
-    "check:openapi": "redocly lint --config redocly.yaml ../contracts/mygita-api/openapi.yaml && node scripts/validate-openapi.mjs && python3 ../mygita-server/tests/verify_openapi.py"
+    "check": "pnpm run check:mygita && pnpm run check:openapi && pnpm run check:api-flow",
+    "check:api-flow": "python3 ../mygita-server/tests/run_browser_api_flow.py",
+    "check:mygita": "node scripts/generate-api-validators.mjs --check && tsc --project ../mygita/jsconfig.json --noEmit && node --test ../mygita/tests/**/*.test.js",
+    "check:openapi": "redocly lint --config redocly.yaml ../contracts/mygita-api/openapi.yaml && node scripts/validate-openapi.mjs && python3 ../mygita-server/tests/verify_openapi.py",
+    "generate:api-validators": "node scripts/generate-api-validators.mjs"
   },
   "devDependencies": {
     "@redocly/cli": "^2.51.2",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "esbuild": "^0.28.2",
     "typescript": "5.9.2",
     "yaml": "^2.9.0"
   }

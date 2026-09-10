@@ -41,9 +41,63 @@ defineRoute("/states/:type",feature("System state",params=>systemPage(params.typ
 defineRoute("/review",page("Prototype screen map",reviewPage));
 defineRoute("/not-found",({path})=>render({title:"Page not found",content:systemPage("not-found"),route:path}));
 
-document.addEventListener("click",async event=>{const target=event.target;if(!(target instanceof Element))return;const action=target.closest("[data-action]");if(!(action instanceof HTMLElement))return;const name=action.dataset.action;if(name==="toggle-menu"||name==="toggle-mobile-menu"){const menu=document.getElementById(name==="toggle-menu"?"account-menu":"mobile-menu");if(!menu)return;const opening=menu.hidden;menu.hidden=!opening;action.setAttribute("aria-expanded",String(opening));}if(name==="sign-out"){await Promise.all([identityRepository.signOut(),journeyRepository.reset()]);navigate("/discover");}if(name==="reset-fixtures"){await Promise.all([identityRepository.reset(),journeyRepository.reset()]);navigate("/review");}});
+document.addEventListener("click",async event=>{const target=event.target;if(!(target instanceof Element))return;const action=target.closest("[data-action]");if(!(action instanceof HTMLElement))return;const name=action.dataset.action;if(name==="toggle-menu"||name==="toggle-mobile-menu"){const menu=document.getElementById(name==="toggle-menu"?"account-menu":"mobile-menu");if(!menu)return;const opening=menu.hidden;menu.hidden=!opening;action.setAttribute("aria-expanded",String(opening));}if(name==="sign-out"){await identityRepository.signOut();navigate("/discover");}if(name==="reset-fixtures"){await Promise.all([identityRepository.reset(),journeyRepository.reset()]);navigate("/review");}});
 
-document.addEventListener("submit",async event=>{const target=event.target;if(!(target instanceof HTMLFormElement)||!target.matches("form[data-form]"))return;event.preventDefault();const form=target;const data=Object.fromEntries(new FormData(form));const type=form.dataset.form;const error=form.querySelector("[data-form-error]");if(type==="mobile"){sessionStorage.setItem("mygita.pending.mobile",String(data.mobile||""));navigate("/auth/otp");}if(type==="otp"){if(data.otp!=="123456"){if(error instanceof HTMLElement){error.textContent="Use prototype OTP 123456.";error.hidden=false;}return;}navigate("/onboarding");}if(type==="onboarding"){await identityRepository.signIn(data);const destination=sessionStorage.getItem("mygita.pending.destination")||"/discover";sessionStorage.removeItem("mygita.pending.destination");navigate(destination);}if(type==="enrol"){if(!await identityRepository.getCurrentUser()){sessionStorage.setItem("mygita.pending.destination",`/experience/${form.dataset.slug}/enrol`);navigate("/auth");return;}await journeyRepository.enrol(String(form.dataset.experience),String(data.batchId||""));navigate(`/experience/${form.dataset.slug}/enrolled`);}if(type==="interest"){if(!await identityRepository.getCurrentUser()){sessionStorage.setItem("mygita.pending.destination",`/experience/${form.dataset.slug}/enrol`);navigate("/auth");return;}await journeyRepository.registerInterest(String(form.dataset.experience));navigate(`/experience/${form.dataset.slug}/interested`);}if(type==="complete-activity"){await journeyRepository.completeActivity(String(form.dataset.activity));navigate(`/activity/${form.dataset.activity}/session`);}if(type==="profile"){await identityRepository.updateProfile(data);await render({title:"Profile",content:await profilePage(),route:"/profile"});const notice=document.querySelector("[data-profile-notice]");if(notice instanceof HTMLElement)notice.hidden=false;}});
+document.addEventListener("submit",async event=>{
+  const target=event.target;
+  if(!(target instanceof HTMLFormElement)||!target.matches("form[data-form]"))return;
+  event.preventDefault();
+  const form=target;
+  if(form.dataset.submitting==="true")return;
+  form.dataset.submitting="true";
+  const submitter=form.querySelector("button[type=submit]");
+  if(submitter instanceof HTMLButtonElement)submitter.disabled=true;
+  const data=Object.fromEntries(new FormData(form));
+  const type=form.dataset.form;
+  const errorView=form.querySelector("[data-form-error]");
+  if(errorView instanceof HTMLElement)errorView.hidden=true;
+  try{
+    if(type==="mobile"){
+      const mobile=String(data.mobile||"").replace(/\D/g,"");
+      const challenge=await identityRepository.requestOtp(mobile);
+      sessionStorage.setItem("mygita.pending.mobile",mobile);
+      sessionStorage.setItem("mygita.pending.otpChallenge",challenge.challengeId);
+      navigate("/auth/otp");
+    }
+    if(type==="otp"){
+      const challengeId=sessionStorage.getItem("mygita.pending.otpChallenge")||"";
+      const result=await identityRepository.verifyOtp(challengeId,String(data.otp||""));
+      sessionStorage.removeItem("mygita.pending.otpChallenge");
+      if(result.user.onboarding?.state!=="complete")navigate("/onboarding");
+      else{const destination=sessionStorage.getItem("mygita.pending.destination")||"/discover";sessionStorage.removeItem("mygita.pending.destination");navigate(destination);}
+    }
+    if(type==="onboarding"){
+      await identityRepository.completeOnboarding(data);
+      const destination=sessionStorage.getItem("mygita.pending.destination")||"/discover";
+      sessionStorage.removeItem("mygita.pending.destination");
+      navigate(destination);
+    }
+    if(type==="enrol"){
+      if(!await identityRepository.getCurrentUser()){sessionStorage.setItem("mygita.pending.destination",`/experience/${form.dataset.slug}/enrol`);navigate("/auth");return;}
+      await journeyRepository.enrol(String(form.dataset.experience),String(data.batchId||""));
+      navigate(`/experience/${form.dataset.slug}/enrolled`);
+    }
+    if(type==="interest"){
+      if(!await identityRepository.getCurrentUser()){sessionStorage.setItem("mygita.pending.destination",`/experience/${form.dataset.slug}/enrol`);navigate("/auth");return;}
+      await journeyRepository.registerInterest(String(form.dataset.experience));
+      navigate(`/experience/${form.dataset.slug}/interested`);
+    }
+    if(type==="complete-activity"){await journeyRepository.completeActivity(String(form.dataset.activity));navigate(`/activity/${form.dataset.activity}/session`);}
+    if(type==="profile"){await identityRepository.updateProfile(data);await render({title:"Profile",content:await profilePage(),route:"/profile"});const notice=document.querySelector("[data-profile-notice]");if(notice instanceof HTMLElement)notice.hidden=false;}
+  }catch(error){
+    console.error(error);
+    if(errorView instanceof HTMLElement){errorView.textContent=error instanceof Error?error.message:"The request could not be completed.";errorView.hidden=false;}
+    else await render({title:"Something went wrong",route:"error",content:systemPage(navigator.onLine?"error":"offline")});
+  }finally{
+    form.dataset.submitting="false";
+    if(submitter instanceof HTMLButtonElement)submitter.disabled=false;
+  }
+});
 
 window.addEventListener("unhandledrejection",event=>{console.error(event.reason);void render({title:"Something went wrong",route:"error",content:systemPage("error")});});
 startRouter();

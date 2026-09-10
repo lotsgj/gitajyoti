@@ -12,3 +12,5 @@ test("pages use feature public entry points and never concrete providers",async(
 test("features do not depend on pages or another feature",async()=>{for(const feature of ["identity","experience","journey"]){for(const file of await filesIn(join(src,"features",feature))){const source=await readFile(file,"utf8");assert.doesNotMatch(source,/from ["'][^"']*pages\//,`${relative(src,file)} imports a page`);assert.doesNotMatch(source,new RegExp(`features/(?!${feature}/)`),`${relative(src,file)} imports another feature`);}}});
 
 test("core remains domain agnostic",async()=>{for(const file of await filesIn(join(src,"core"))){const source=await readFile(file,"utf8");assert.doesNotMatch(source,/from ["'][^"']*(features|pages|shell)\//,`${relative(src,file)} depends on an outer layer`);}});
+
+test("HTTP contracts do not depend on features, pages, or shell",async()=>{for(const file of await filesIn(join(src,"contracts"))){const source=await readFile(file,"utf8");assert.doesNotMatch(source,/from ["'][^"']*(features|pages|shell)\//,`${relative(src,file)} depends on an outer layer`);}});

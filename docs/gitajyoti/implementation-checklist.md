@@ -40,11 +40,11 @@
 
 ## Runtime safety
 
-- [ ] Validate data at the API adapter boundary.
-- [ ] Normalize transport responses before repositories return domain data.
-- [ ] Standardize contract and API errors.
-- [ ] Validate user input in the client and enforce it again on the server.
-- [ ] Handle expired sessions, request cancellation, timeouts, and duplicate submissions.
+- [x] Validate data at the API adapter boundary.
+- [x] Normalize transport responses before repositories return domain data.
+- [x] Standardize contract and API errors.
+- [x] Validate user input in the client and enforce it again on the server.
+- [x] Handle expired sessions, request cancellation, timeouts, and duplicate submissions.
 
 ## Product integration
 

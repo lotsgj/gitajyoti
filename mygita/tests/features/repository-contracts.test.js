@@ -1,22 +1,133 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
-import { experienceRepository } from "../../src/features/experience/index.js";
-import { identityRepository } from "../../src/features/identity/index.js";
-import { journeyRepository } from "../../src/features/journey/index.js";
+
+import { createExperienceApiProvider } from "../../src/features/experience/api-provider.js";
+import { experienceFixtureProvider } from "../../src/features/experience/fixture-provider.js";
+import { createIdentityApiProvider } from "../../src/features/identity/api-provider.js";
+import { identityFixtureProvider } from "../../src/features/identity/fixture-provider.js";
+import { createJourneyApiProvider } from "../../src/features/journey/api-provider.js";
+import { journeyFixtureProvider } from "../../src/features/journey/fixture-provider.js";
 import { MemorySessionStorage } from "../helpers/session-storage.js";
 
-beforeEach(()=>{globalThis.sessionStorage=new MemorySessionStorage();});
+beforeEach(() => { globalThis.sessionStorage = new MemorySessionStorage(); });
 
-describe("Identity repository contract",()=>{
-  test("supports the fixture-backed identity lifecycle",async()=>{assert.equal(await identityRepository.getCurrentUser(),null);const user=await identityRepository.signIn({fullName:"Aruna Rao",displayName:"Aruna",dateOfBirth:"1992-01-02"});assert.equal(user.personalDetails.displayName,"Aruna");assert.equal((await identityRepository.getCurrentUser())?.id,"fixture-user");const updated=await identityRepository.updateProfile({displayName:"Aru"});assert.equal(updated.personalDetails.displayName,"Aru");await identityRepository.signOut();assert.equal(await identityRepository.getCurrentUser(),null);});
+async function assertIdentityContract(repository) {
+  assert.equal(await repository.getCurrentUser(), null);
+  const challenge = await repository.requestOtp("9876543210");
+  assert.ok(challenge.challengeId);
+  const authenticated = await repository.verifyOtp(challenge.challengeId, "123456");
+  assert.equal(authenticated.user.onboarding?.state, "pending");
+  const user = await repository.completeOnboarding({ fullName: "Aruna Rao", displayName: "Aruna", dateOfBirth: "1992-01-02" });
+  assert.equal(user.personalDetails.displayName, "Aruna");
+  assert.ok((await repository.getCurrentUser())?.id);
+  const updated = await repository.updateProfile({ displayName: "Aru" });
+  assert.equal(updated.personalDetails.displayName, "Aru");
+  await repository.signOut();
+  assert.equal(await repository.getCurrentUser(), null);
+}
+
+async function assertExperienceContract(repository) {
+  const experiences = await repository.listExperiences();
+  assert.ok(experiences.length > 0);
+  const item = await repository.getExperience(experiences[0].slug);
+  assert.equal(item?.id, experiences[0].id);
+  assert.ok(Array.isArray(await repository.getBatches(experiences[0].id)));
+  const activity = await repository.getActivityDefinition(experiences[0].activityIds[0]);
+  assert.equal(activity.id, experiences[0].activityIds[0]);
+}
+
+async function assertJourneyContract(repository) {
+  await repository.registerInterest("exp-gita-sara");
+  await repository.registerInterest("exp-gita-sara");
+  await repository.enrol("exp-gita-sara", "batch-sara-2026-09");
+  await repository.enrol("exp-gita-sara", "batch-sara-2026-09");
+  await repository.completeActivity("activity-sara-teaching");
+  await repository.completeActivity("activity-sara-teaching");
+  const state = await repository.getState();
+  assert.deepEqual(state.interests, ["exp-gita-sara"]);
+  assert.equal(state.journeys.length, 1);
+  assert.deepEqual(state.completed, ["activity-sara-teaching"]);
+}
+
+function createApiHarness() {
+  const experience = {
+    id: "exp-gita-sara", slug: "gita-sara", title: "Gita Sāra", subtitle: "The essence of the Gita",
+    shortDescription: "A structured exploration.", description: "Guided teaching and reflection.",
+    designedFor: ["Adults"], guidanceMode: "acharya-guided", languages: ["English"],
+    commitment: { summary: "Structured journey" }, delivery: { requiresBatch: true },
+    intendedOutcomes: ["Understand the teaching."], image: { src: "placeholders/gita-sara" },
+    constituentActivityIds: ["activity-sara-teaching"],
+  };
+  const activity = {
+    id: "activity-sara-teaching", experienceId: experience.id, title: "Foundational Teaching",
+    activityType: "teaching", recommendedDurationMinutes: 75, description: "Study selected shlokas.",
+    preparation: "Read and note questions.", intendedOutcome: "Understand the teaching.",
+  };
+  const batch = {
+    id: "batch-sara-2026-09", experienceId: experience.id, name: "Gita Sāra — September 2026",
+    timezone: "Asia/Kolkata", batchPeriod: { startsOn: "2026-09-19", endsOn: "2027-03-27" },
+    enrolment: { state: "open" },
+  };
+  let user = null;
+  const journeys = [];
+  const interests = [];
+  const completed = [];
+  const apiJourney = () => ({ experienceId: experience.id, batchId: batch.id, completedActivityIds: [...completed] });
+  const request = async (path, options = {}) => {
+    const method = options.method || "GET";
+    if (path === "/experiences") return { items: [experience] };
+    if (path === "/experiences/gita-sara") return experience;
+    if (path === `/experiences/${experience.id}/batches`) return { items: [batch] };
+    if (path === `/me/activities/${activity.id}` && method === "GET") return { ...activity, completed: completed.includes(activity.id), session: null };
+    if (path === "/auth/otp/request") return { challengeId: "api-challenge", expiresInSeconds: 300, prototypeOtp: "123456" };
+    if (path === "/auth/otp/verify") {
+      user = { id: "user-api", roles: ["learner"], personalDetails: { fullName: "", displayName: "", dateOfBirth: "" }, onboarding: { state: "pending" } };
+      return { accessToken: "api-token", expiresIn: 28800, isNewUser: true, user };
+    }
+    if (path === "/me/onboarding") { user = { ...user, personalDetails: { ...user.personalDetails, ...options.body }, onboarding: { state: "complete" } }; return user; }
+    if (path === "/me" && method === "PATCH") { user = { ...user, personalDetails: { ...user.personalDetails, ...options.body } }; return user; }
+    if (path === "/me") return user;
+    if (path === "/me/journey" && method === "GET") return { items: journeys.map(apiJourney), interests: interests.map((experienceId) => ({ experienceId })) };
+    if (path === "/me/journey" && method === "POST") { journeys.push({}); return apiJourney(); }
+    if (path === "/me/interests") { interests.push(options.body.experienceId); return { experienceId: options.body.experienceId }; }
+    if (path.endsWith("/complete")) { if (!completed.includes(activity.id)) completed.push(activity.id); return apiJourney(); }
+    throw new Error(`Unexpected fake API request: ${method} ${path}`);
+  };
+  return {
+    experience: createExperienceApiProvider(request),
+    identity: createIdentityApiProvider(request),
+    journey: createJourneyApiProvider(request),
+  };
+}
+
+describe("fixture providers", () => {
+  test("Identity repository contract", () => assertIdentityContract(identityFixtureProvider));
+  test("Experience repository contract", () => assertExperienceContract(experienceFixtureProvider));
+  test("Journey repository contract", () => assertJourneyContract(journeyFixtureProvider));
 });
 
-describe("Experience repository contract",()=>{
-  test("lists and resolves catalogue entities asynchronously",async()=>{const experiences=await experienceRepository.listExperiences();assert.ok(experiences.length>0);const item=await experienceRepository.getExperience(experiences[0].slug);assert.equal(item?.id,experiences[0].id);assert.ok(Array.isArray(await experienceRepository.getBatches(experiences[0].id)));const activity=await experienceRepository.getActivityDefinition(experiences[0].activityIds[0]);assert.equal(activity.id,experiences[0].activityIds[0]);});
+describe("API providers", () => {
+  test("Identity repository contract", async () => assertIdentityContract(createApiHarness().identity));
+  test("Experience repository contract", async () => {
+    const harness = createApiHarness();
+    const challenge = await harness.identity.requestOtp("9876543210");
+    await harness.identity.verifyOtp(challenge.challengeId, "123456");
+    await assertExperienceContract(harness.experience);
+  });
+  test("Journey repository contract", async () => {
+    const harness = createApiHarness();
+    const challenge = await harness.identity.requestOtp("9876543210");
+    await harness.identity.verifyOtp(challenge.challengeId, "123456");
+    await assertJourneyContract(harness.journey);
+  });
 });
 
-describe("Journey repository contract",()=>{
-  test("records interest, enrolment, and activity completion without duplicates",async()=>{await journeyRepository.registerInterest("exp-gita-sara");await journeyRepository.registerInterest("exp-gita-sara");await journeyRepository.enrol("exp-gita-sara","batch-sara-2026-09");await journeyRepository.enrol("exp-gita-sara","batch-sara-2026-09");await journeyRepository.completeActivity("activity-sara-teaching");await journeyRepository.completeActivity("activity-sara-teaching");const state=await journeyRepository.getState();assert.deepEqual(state.interests,["exp-gita-sara"]);assert.equal(state.journeys.length,1);assert.deepEqual(state.completed,["activity-sara-teaching"]);});
+test("feature fixture providers preserve fields owned by other features", async () => {
+  await journeyFixtureProvider.enrol("exp-gita-sara", "batch-sara-2026-09");
+  const challenge = await identityFixtureProvider.requestOtp("9876543210");
+  await identityFixtureProvider.verifyOtp(challenge.challengeId, "123456");
+  await identityFixtureProvider.completeOnboarding({ fullName: "Aruna Rao", displayName: "Aruna", dateOfBirth: "1992-01-02" });
+  assert.equal((await journeyFixtureProvider.getState()).journeys.length, 1);
+  await identityFixtureProvider.signOut();
+  assert.equal((await journeyFixtureProvider.getState()).journeys.length, 1);
 });
-
-test("feature fixture providers preserve fields owned by other features",async()=>{await journeyRepository.enrol("exp-gita-sara","batch-sara-2026-09");await identityRepository.signIn({fullName:"Aruna Rao",displayName:"Aruna",dateOfBirth:"1992-01-02"});assert.equal((await journeyRepository.getState()).journeys.length,1);await identityRepository.signOut();assert.equal((await journeyRepository.getState()).journeys.length,1);});

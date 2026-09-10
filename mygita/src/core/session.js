@@ -17,3 +17,7 @@ export function clearSession() {
 export function getAccessToken() {
   return getSession()?.accessToken || "";
 }
+
+export function hasSession() {
+  return Boolean(getAccessToken());
+}

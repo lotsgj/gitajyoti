@@ -16,4 +16,4 @@ The check:
 2. validates every documented request and response example; and
 3. exercises every mock API operation and validates the captured payloads against the corresponding response schema.
 
-The contract does not connect the browser to the server. API adapters, runtime validation at the client boundary, API-backed repositories, and provider selection remain the next implementation phase.
+The client generates dependency-free runtime validators from this contract. Identity, Experience, and Journey API providers validate and normalize server responses before returning their repository-domain models. Fixtures remain the default; `?provider=api` selects the API path explicitly.

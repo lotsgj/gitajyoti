@@ -8,9 +8,16 @@ const store = createSessionDocumentStore("mygita.fixture.v1", defaults);
 
 export const identityFixtureProvider = Object.freeze({
   async getCurrentUser() { return /** @type {import('./contract.js').User|null} */ (store.read().user); },
-  async signIn(profile={}) {
+  async requestOtp() { return {challengeId:"fixture-otp",expiresInSeconds:300}; },
+  async verifyOtp(challengeId,otp) {
+    if(challengeId!=="fixture-otp"||otp!=="123456")throw new Error("OTP is incorrect");
+    const user={id:"fixture-user",personalDetails:{fullName:"",displayName:"",dateOfBirth:""},onboarding:{state:"pending"},roles:["learner"]};
+    store.update(state=>({...state,user}));
+    return {user,isNewUser:true};
+  },
+  async completeOnboarding(profile) {
     const personalDetails={fullName:profile.fullName||"Deepa Sharma",displayName:profile.displayName||"Deepa",dateOfBirth:profile.dateOfBirth||"1990-05-12",...(profile.email?{email:profile.email}:{})};
-    const user={id:"fixture-user",personalDetails,onboarding:{state:"complete"}};
+    const user={id:"fixture-user",personalDetails,onboarding:{state:"complete"},roles:["learner"]};
     store.update(state=>({...state,user}));
     return user;
   },

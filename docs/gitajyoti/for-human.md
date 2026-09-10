@@ -50,6 +50,7 @@ mygita/src/
 ├── core/
 │   ├── ui/                # domain-agnostic atomic UI
 │   └── components/        # domain-agnostic composite UI
+├── contracts/             # HTTP contract adapter and generated validators
 ├── features/
 │   ├── identity/
 │   ├── experience/
@@ -62,21 +63,21 @@ The dependency direction is deliberate:
 
 ```text
 page → feature public entry point → repository → fixture provider
-                                      └───────→ future API provider
+                                      └───────→ API provider → contract adapter → mygita.api
 ```
 
-Pages may compose multiple features, but they must use feature `index.js` entry points. They must not import fixture providers, future API providers, transport code, or private feature modules. Features may use `core`, but they do not depend on pages or reach into other features. `core` remains domain-agnostic.
+Pages may compose multiple features, but they must use feature `index.js` entry points. They must not import fixture providers, API providers, transport code, or private feature modules. Features may use `core`, but they do not depend on pages or reach into other features. `core` remains domain-agnostic.
 
-The repository interface is the stable contract between UI composition and data access. Repository methods are asynchronous even when backed by local fixtures, allowing a future API provider to replace a fixture provider without redesigning the pages.
+The repository interface is the stable contract between UI composition and data access. Repository methods are asynchronous even when backed by local fixtures. Fixture and API implementations can therefore be selected without redesigning pages.
 
 ## Safety and contracts
 
 There are two different kinds of boundary:
 
 1. **Inside the client:** checked JavaScript and JSDoc repository interfaces provide design-time safety. Runtime schema validation is not duplicated across this trusted boundary.
-2. **Across HTTP:** OpenAPI 3.1 will define the authoritative client/server contract. API responses will be runtime-validated when they enter client API adapters, before repositories expose normalized domain data.
+2. **Across HTTP:** OpenAPI 3.1 defines the authoritative client/server contract. Generated validators check API responses when they enter the client contract adapter, before repositories expose normalized domain data.
 
-In the target architecture, the browser will communicate with `mygita.api`. The current browser is fixture-backed and is not connected to that server. MyGita's server will communicate with product-specific APIs such as `gita4children.api` and `gitasara.api`. Product API contracts stay product-specific; common concepts provide consistency without forcing different learning models into one generic API.
+The browser can communicate with `mygita.api` through explicit provider selection, while fixtures remain the default. In the target product architecture, MyGita's server will communicate with product-specific APIs such as `gita4children.api` and `gitasara.api`. Product API contracts stay product-specific; common concepts provide consistency without forcing different learning models into one generic API.
 
 API identities use dots in prose. Their filesystem directories use hyphens—for example, `gitasara.api` and `gitasara-api`.
 
@@ -86,23 +87,22 @@ API identities use dots in prose. Their filesystem directories use hyphens—for
 - MyGita is a dependency-free browser application using native ES modules.
 - MyGita has working discovery, experience detail, batch selection, interest registration, simulated OTP, onboarding, journey, activity, profile, review, and system-state screens.
 - Pages work through asynchronous Identity, Experience, and Journey repositories.
-- Repositories currently use fixture providers and persist prototype state in `sessionStorage`.
+- Repositories have fixture and API providers; fixtures remain the default and persist prototype state in `sessionStorage`.
 - Checked-JavaScript analysis, repository-contract tests, fixture-integrity tests, and architecture import-boundary tests are available.
 - Repository-boundary Phase 1 is complete.
-- A local Python mock API exists separately, but the browser does not use it.
-- API client, session, and configuration scaffolding remains in place intentionally for the future API-provider phase; current pages do not import it.
+- A local Python mock API supports the API-backed development mode.
+- API transport, bearer-session handling, runtime response validation, normalization, and explicit provider selection are implemented.
 - The OpenAPI 3.1 `mygita.api` contract covers every mock API operation and is checked against documented examples and captured mock responses.
+- A complete Gita Sāra flow is tested through the API providers and mock server.
 
 The prototype OTP is `123456`. It is not a production authentication mechanism.
 
 ### Fixture independence
 
-The browser fixtures and mock-server seed data are intentionally independent at this stage. They share the identifiers required for the prototype, but the browser currently defines three concrete Gita Sāra activities plus placeholders while the mock server defines twelve activities. This difference is tracked as test data, not treated as an implicit API contract. OpenAPI, API-adapter normalization, runtime validation, and compatibility tests must establish that contract before the browser is connected to the server.
+The browser fixtures and mock-server seed data remain intentionally independent. They share stable identifiers, but the browser defines three concrete Gita Sāra activities plus placeholders while the mock server defines twelve concrete activities. OpenAPI and runtime-validated adapters now make the server boundary explicit instead of treating the two fixture shapes as an implicit contract.
 
 ## What is intentionally deferred
 
-- Client API providers and provider selection.
-- Runtime validation and normalization in API adapters.
 - Production identity, OTP, persistence, hosting, privacy, consent, safeguarding, and retention decisions.
 - Secure product launch, enrolment provisioning, and progress synchronization.
 - Production product applications, curricula, media, and artwork.
@@ -118,6 +118,8 @@ python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
 Open `http://127.0.0.1:8000/` for Landing or `http://127.0.0.1:8000/mygita/` for MyGita.
+
+For API-backed local development, also run `python3 mygita-server/dev_server.py` and open `http://127.0.0.1:8000/mygita/?provider=api`.
 
 Development dependencies live outside the browser application:
 
