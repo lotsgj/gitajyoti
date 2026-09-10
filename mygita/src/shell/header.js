@@ -1,6 +1,8 @@
-import { initialsAvatar } from "../ui/initials-avatar.js";
+// @ts-check
+import { initialsAvatar } from "../core/ui/initials-avatar.js";
 import { navigationItems } from "./navigation.js";
 
+/** @param {import('../features/identity/contract.js').User|null} user */
 export function header(user=null) {
   const nav=navigationItems.filter(item=>!item.protected||user).map(item=>`<a href="${item.href}">${item.label}</a>`).join("");
   const account=user?`<div class="shell-menu"><button class="icon-button" type="button" data-action="toggle-menu" aria-expanded="false" aria-controls="account-menu" aria-label="Open account menu">${initialsAvatar(user.personalDetails.displayName)}</button><div id="account-menu" class="menu" hidden><a href="#/profile">Profile</a><a href="#/journey">My Journey</a><button type="button" data-action="sign-out">Sign out</button></div></div>`:`<a class="button button--quiet button--small" href="#/auth">Sign up / Sign in</a>`;

@@ -1,9 +1,18 @@
 # MyGita roadmap
 
-1. Put fixture behavior behind typed repository interfaces.
-2. Move all UI access through repositories.
-3. Define `mygita.api` using OpenAPI.
-4. Add API adapters and runtime boundary validation.
-5. Connect one complete Gita Sāra vertical slice.
-6. Add secure product launch and aggregated progress.
-7. Replace prototype identity and persistence with approved production services.
+## Completed
+
+- Organize the client into domain-agnostic core, Identity/Experience/Journey features, route-level pages, and the MyGita shell.
+- Put fixture behavior behind checked, asynchronous repositories exposed through feature public entry points.
+- Move all page data access through feature repositories.
+
+## Next
+
+1. Define `mygita.api` using OpenAPI.
+2. Add API adapters and runtime boundary validation.
+3. Connect one complete Gita Sāra vertical slice.
+4. Add secure product launch and aggregated progress.
+
+## Deferred production decisions
+
+- Replace prototype identity and persistence with approved production services.

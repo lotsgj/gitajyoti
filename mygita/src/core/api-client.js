@@ -1,13 +1,17 @@
+// @ts-check
 import { config } from "../config.js";
 import { clearSession, getAccessToken } from "./session.js";
 
 export class ApiError extends Error {
+  /** @param {string} message @param {{status?:number,code?:string,details?:unknown,cause?:unknown}} options */
   constructor(message, { status = 0, code = "request_failed", details = null, cause } = {}) {
     super(message, { cause }); this.name = "ApiError"; this.status = status; this.code = code; this.details = details;
   }
 }
 
+/** @param {string} path @param {{method?:string,body?:unknown,signal?:AbortSignal,authenticated?:boolean}} options */
 export async function apiRequest(path, { method = "GET", body, signal, authenticated = false } = {}) {
+  /** @type {Record<string,string>} */
   const headers = { Accept: "application/json" };
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (authenticated) {

@@ -6,6 +6,7 @@ Gita Jyoti also connects learners to specialized **products**. Products deliver 
 
 ## Start here
 
+- [For humans: design overview](for-human.md)
 - [Glossary](glossary.md)
 - [Current state](current-state.md)
 - [Roadmap](roadmap.md)

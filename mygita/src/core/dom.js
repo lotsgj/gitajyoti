@@ -1,7 +1,4 @@
-export function html(strings, ...values) {
-  return strings.reduce((result, part, index) => result + part + (values[index] ?? ""), "");
-}
-
+// @ts-check
 export function escapeHtml(value = "") {
   return String(value).replace(/[&<>'"]/g, character => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",

@@ -18,4 +18,4 @@ Learning products
 
 The Landing and MyGita regions belong to the Gita Jyoti site. Learning products are first-class applications connected to MyGita through explicit product-specific APIs.
 
-The browser normally communicates with `mygita.api`. Server-side MyGita integrations communicate with product APIs and issue short-lived launch results when a learner enters a product.
+In the target architecture, the browser communicates with `mygita.api`. Server-side MyGita integrations communicate with product APIs and issue short-lived launch results when a learner enters a product. The current browser remains fixture-backed and is not connected to this API path.

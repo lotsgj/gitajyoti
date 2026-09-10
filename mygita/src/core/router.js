@@ -1,3 +1,4 @@
+// @ts-check
 const routes = [];
 
 export function defineRoute(pattern, load) {
@@ -27,7 +28,5 @@ export function startRouter() {
   if (!window.location.hash) window.location.replace(`${window.location.pathname}${window.location.search}#/discover`);
   else resolveRoute();
 }
-
-export function currentPath() { return normalise(window.location.hash.slice(1)); }
 
 function normalise(path) { return `/${String(path || "").replace(/^\/+|\/+$/g, "")}`; }

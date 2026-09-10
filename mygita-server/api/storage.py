@@ -11,7 +11,6 @@ INITIAL_RUNTIME_STATE = {
     "users": [],
     "journeys": [],
     "interests": [],
-    "completedActivities": [],
 }
 
 

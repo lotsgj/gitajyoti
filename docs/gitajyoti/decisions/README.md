@@ -9,3 +9,4 @@ Accepted decisions are durable records of architectural intent. If a decision ch
 - [ADR-0005: OpenAPI client/server contract](ADR-0005-openapi-client-server-contract.md)
 - [ADR-0006: Runtime validation boundary](ADR-0006-runtime-validation-boundary.md)
 - [ADR-0007: Product-specific API contracts](ADR-0007-product-specific-api-contracts.md)
+- [ADR-0008: MyGita feature and page composition](ADR-0008-mygita-feature-and-page-composition.md)

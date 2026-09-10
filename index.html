@@ -136,7 +136,7 @@
       const gap = compact ? 10 : 18;
       const edge = compact ? 8 : 12;
       const tailInset = compact ? 24 : 34;
-      masterBubble.classList.remove('points-left', 'points-right', 'points-top', 'points-bottom');
+      masterBubble.classList.remove('points-left', 'points-right', 'points-top');
       masterBubble.style.maxHeight = '';
       let bubbleHeight = masterBubble.offsetHeight;
       let left;
@@ -167,7 +167,7 @@
       suppressMasterFocusPreview = returnFocus;
       selectedMaster = null;
       masterBubble.hidden = true;
-      masterBubble.classList.remove('points-left', 'points-right', 'points-top', 'points-bottom');
+      masterBubble.classList.remove('points-left', 'points-right', 'points-top');
       gratitudeInteractive.style.minHeight = '';
       masterRings.forEach(ring => {
         ring.classList.remove('is-active');

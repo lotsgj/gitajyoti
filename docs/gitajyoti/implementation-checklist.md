@@ -6,15 +6,21 @@
 - [x] Record system boundaries and current state.
 - [x] Record repository, OpenAPI, validation, and product API decisions.
 - [x] Establish product and contract naming conventions.
+- [x] Define Identity, Experience, and Journey feature boundaries and page composition.
+- [x] Add a single human-readable design entry point.
+- [x] Document intentional API scaffolding and the independence of browser and server fixtures.
 
 ## UI to repository
 
-- [ ] Declare UI-to-repository interfaces for experiences, authentication, journeys, and activities.
-- [ ] Implement fixture providers behind repositories.
-- [ ] Make repository methods consistently asynchronous.
-- [ ] Remove direct fixture-service imports from UI modules.
-- [ ] Add loading, empty, offline, and error handling around repository calls.
-- [ ] Run the same contract tests against every provider implementation.
+- [x] Establish `core`, `features`, `pages`, and `shell` source boundaries.
+- [x] Declare UI-to-repository interfaces for Identity, Experience, and Journey.
+- [x] Expose each feature through a public entry point.
+- [x] Implement fixture providers behind repositories.
+- [x] Make repository methods consistently asynchronous.
+- [x] Remove direct fixture-service imports from UI modules.
+- [x] Move route-level screens to `pages` and compose features only through public entry points.
+- [x] Add loading, empty, offline, and error handling around repository calls.
+- [x] Run the same contract tests against every current provider implementation.
 
 ## MyGita API contract
 
@@ -26,11 +32,11 @@
 
 ## Design-time safety
 
-- [ ] Add `// @ts-check` to client modules.
-- [ ] Add a strict `jsconfig.json`.
-- [ ] Define JSDoc domain types and repository interfaces.
+- [x] Add `// @ts-check` to client modules.
+- [x] Add checked-JavaScript `jsconfig.json` with strict null checking.
+- [x] Define JSDoc domain types and repository interfaces.
 - [ ] Run `tsc --noEmit` in CI.
-- [ ] Validate fixture relationships and identifiers.
+- [x] Validate fixture relationships and identifiers.
 
 ## Runtime safety
 

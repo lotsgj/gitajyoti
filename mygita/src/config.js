@@ -1,3 +1,4 @@
+// @ts-check
 const localHosts = new Set(["127.0.0.1", "localhost"]);
 
 export const config = Object.freeze({

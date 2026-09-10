@@ -1,0 +1,10 @@
+{
+  "name": "@gitajyoti/dev-tools",
+  "private": true,
+  "scripts": {
+    "check:mygita": "tsc --project ../mygita/jsconfig.json --noEmit && node --test ../mygita/tests/**/*.test.js"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

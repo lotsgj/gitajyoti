@@ -1,7 +1,8 @@
+// @ts-check
 import { config } from "../config.js";
 
 export function getSession() {
-  try { return JSON.parse(sessionStorage.getItem(config.sessionStorageKey)) || null; }
+  try { const saved=sessionStorage.getItem(config.sessionStorageKey); return saved?JSON.parse(saved):null; }
   catch { clearSession(); return null; }
 }
 
