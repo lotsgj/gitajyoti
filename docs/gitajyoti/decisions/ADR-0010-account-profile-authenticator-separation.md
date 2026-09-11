@@ -1,7 +1,7 @@
 # ADR-0010: Separate Account, Profile, and Authenticator
 
 - Status: Accepted
-- Implementation: Partial
+- Implementation: Implemented
 - Supersedes: None
 - Superseded by: None
 - Date: 2026-09-11
@@ -42,6 +42,10 @@ No authentication method automatically merges Accounts based on matching mobile 
 - The server must store password hashes using a password-specific algorithm, enforce username uniqueness, rate-limit registration and login, and use generic authentication failures.
 - The client Identity repository can add password registration and login without depending on password storage or a concrete server identity implementation.
 - Picture recovery, passkeys, assisted recovery, and stronger proofing require separate contracts and threat review; they are not part of this decision's initial implementation.
+
+## Implementation evidence
+
+OpenAPI contract version 0.2, the client repository and both providers, the primary Account creation and password-login pages, and both current server stores implement this decision. Automated API-provider coverage verifies Account creation, optional Profile skip, enrolment, sign-out, password login, and restored Journey state. The shared server suite verifies password behavior and persistence against JSON and SQLite stores.
 
 ## Relationship to earlier decisions
 

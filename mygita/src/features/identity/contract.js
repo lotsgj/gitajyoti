@@ -7,7 +7,7 @@
 /** @typedef {{username:string,password:string}} PasswordCredentials */
 /**
  * @typedef {Object} IdentityRepository
- * @property {() => Promise<User|null>} getCurrentUser
+ * @property {(options?:{signal?:AbortSignal}) => Promise<User|null>} getCurrentUser
  * @property {(credentials:PasswordCredentials) => Promise<AuthenticationResult>} createPasswordAccount
  * @property {(credentials:PasswordCredentials) => Promise<AuthenticationResult>} loginWithPassword
  * @property {(mobile:string) => Promise<OtpChallenge>} requestOtp

@@ -12,8 +12,8 @@ This register is the human-facing source for the decisions currently in force. S
 | MyGita client architecture | [ADR-0004](ADR-0004-ui-repository-boundary.md), [ADR-0008](ADR-0008-mygita-feature-and-page-composition.md) | Implemented | ADR-0008 refines ADR-0004; both remain effective. |
 | MyGita client/server boundary | [ADR-0005](ADR-0005-openapi-client-server-contract.md), [ADR-0006](ADR-0006-runtime-validation-boundary.md) | Implemented | ADR-0006 defines where ADR-0005 responses are validated. |
 | Product API boundaries | [ADR-0007](ADR-0007-product-specific-api-contracts.md) | Planned | Applied when the first product integration is designed. |
-| MyGita server persistence | [ADR-0009](ADR-0009-server-persistence-boundary.md) | Partial | Store injection exists; value isolation and atomic updates remain. |
-| Identity account model | [ADR-0010](ADR-0010-account-profile-authenticator-separation.md) | Partial | Contract and client are implemented; server completion and end-to-end verification remain. |
+| MyGita server persistence | [ADR-0009](ADR-0009-server-persistence-boundary.md) | Partial | Store injection, SQLite persistence, database constraints, and shared store tests exist; `JsonStore` value isolation and atomic updates remain. |
+| Identity account model | [ADR-0010](ADR-0010-account-profile-authenticator-separation.md) | Implemented | Contract, client, server, fixture/API providers, and the end-to-end password lifecycle are implemented. |
 
 ## ADR lifecycle register
 
@@ -28,7 +28,7 @@ This register is the human-facing source for the decisions currently in force. S
 | [ADR-0007: Product-specific API contracts](ADR-0007-product-specific-api-contracts.md) | Accepted | Planned | — | — |
 | [ADR-0008: MyGita feature and page composition](ADR-0008-mygita-feature-and-page-composition.md) | Accepted | Implemented | — | — |
 | [ADR-0009: Server persistence boundary](ADR-0009-server-persistence-boundary.md) | Accepted | Partial | — | — |
-| [ADR-0010: Separate Account, Profile, and Authenticator](ADR-0010-account-profile-authenticator-separation.md) | Accepted | Partial | — | — |
+| [ADR-0010: Separate Account, Profile, and Authenticator](ADR-0010-account-profile-authenticator-separation.md) | Accepted | Implemented | — | — |
 
 ## How to read status
 

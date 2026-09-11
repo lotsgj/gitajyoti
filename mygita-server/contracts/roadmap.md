@@ -25,20 +25,49 @@ mine to make directly — for codex to pick up if it agrees.
 
 ### 2. Close the live-reference / non-atomic update gap in `JsonStore`
 
-**Status: NEW** (raised by [ADR-0009](../../docs/gitajyoti/decisions/ADR-0009-server-persistence-boundary.md)'s
-own consequences section, 2026-09-11)
+**Status: DONE, but only for `SqliteStore` — `JsonStore` itself still has the gap** (raised by
+[ADR-0009](../../docs/gitajyoti/decisions/ADR-0009-server-persistence-boundary.md)'s own
+consequences section, 2026-09-11; closed 2026-09-11, see `changes.md`)
 
 ADR-0009 records that `JsonStore` returns live dictionary references, and that `update_user` /
 `update_journey` persist mutations the caller already made to that live object before the store's
-lock is acquired — so two concurrent updates to the same user or journey can still interleave.
-Closing this means either the store deep-copies on read and merges an explicit patch on write, or
-the whole request-handling path holds a lock across read-mutate-write. Server-internal fix, no
-contract or docs impact expected — will fold into `changes.md` when done, and only needs a
-`suggestions.md` entry if the fix changes the shape of the `Store` interface itself.
+lock is acquired — so two concurrent updates to the same user or journey can still interleave. The
+specific manifestation this item was really about — a duplicate active Journey or duplicate
+Interest slipping through a race — is now closed by `SqliteStore`'s real database constraints (a
+partial unique index on `journeys(user_id, experience_id) WHERE status='active'`, and a unique
+constraint on interests), verified by bypassing the application-level pre-check entirely and
+hitting the constraints directly. **This is not universally closed**: `dev_server.py` still
+defaults to `JsonStore`, which retains the original live-reference gap for `update_user` /
+`update_journey` specifically (as opposed to the create-race this note focused on). Fully closing
+that remaining piece, or retiring `JsonStore`, is not scheduled.
+
+### 2b. Close the remaining live-reference gap in `JsonStore.update_user`/`update_journey`
+
+**Status: NEW** (split out 2026-09-11 from item 2 above, once SqliteStore closed the create-race
+half of it)
+
+Unlike the create-race above (now closed via `SqliteStore`'s constraints), `JsonStore.update_user`
+and `update_journey` still persist mutations the caller already made to a live returned object
+before the store's lock is acquired — a narrower, harder-to-hit race (concurrent profile/onboarding
+edits, or concurrent activity completions on the same Journey) that `SqliteStore`'s constraints
+don't address since there's no uniqueness invariant to enforce, just an ordering one. Closing it
+means either the store deep-copies on read and merges an explicit patch on write, or the request
+path holds a lock across read-mutate-write. Only matters for `JsonStore`, since `SqliteStore`'s
+per-operation `UPDATE` statements are already atomic. Low priority while `JsonStore` remains a
+single-process, low-traffic default.
 
 ### 3. Multi-method sign-in: Google, Microsoft, email/password alongside mobile OTP
 
-**Status: NEW** (design discussion 2026-09-11, no code written)
+**Status: password/email piece DONE (2026-09-11, via ADR-0010's Account/Profile/LoginIdentifier/
+Authenticator model — `POST /auth/accounts`, `POST /auth/password/login`, see `changes.md`);
+Google/Microsoft and the identity-linking design below remain NEW, not started.**
+
+The Account/LoginIdentifier/Authenticator shape recommended in this item is exactly what ADR-0010
+specified and what got built — `loginIdentifiers`/`authenticators` rows keyed by type, not `users`
+columns — so the convergence goal below is already realized for password vs. mobile OTP (both
+resolve through `find_user`/`_issue_session`). Google and Microsoft sign-in, and the identity-linking
+endpoints, are unbuilt and blocked on a contract addition (see "still open" below) codex hasn't
+picked up yet.
 
 Decision recommended: client-side SDK per provider (Google Identity Services, MSAL.js) obtains a
 provider-signed ID token; backend only verifies that token's signature against the provider's JWKS
@@ -73,16 +102,14 @@ directly.
 
 ### 4. `SqliteStore` behind the existing `Store` interface (hybrid ER + JSON schema)
 
-**Status: NEW** (design discussion 2026-09-11, no code written)
+**Status: DONE** (design discussion 2026-09-11; implemented 2026-09-11, see `changes.md` 17:45 UTC
+entry and `api/sqlite_store.py`)
 
-Evaluated file-based persistence options for a "few-thousand-users, no dedicated data store yet"
-stage. Recommendation: `sqlite3` (stdlib — no new dependency), with a **hybrid** schema rather than
-either a single JSON blob per collection or full 3NF normalization — real columns and indexes/FKs
-only for what's joined, filtered, or constrained (`id`, `slug`, `status`, `user_id`,
-`experience_id`, `mobile`), everything nested/variable-shaped (`personalDetails`,
-`intendedOutcomes[]`, `activityIds[]`) stays a JSON column. A partial unique index on
-`journeys(user_id, experience_id) WHERE status='active'` would additionally let the database enforce
-the duplicate-enrolment invariant directly, closing item 2 above as a side effect if built after it
-— or item 2's fix may make this less urgent if done first. Order between items 2 and 3 not yet
-decided. No commitment yet to build this; `JsonStore` remains the default until there's an actual
-concurrency or scale trigger.
+Built as designed: `sqlite3` (stdlib — no new dependency), hybrid schema — real columns/indexes/FKs
+only for what's joined, filtered, or constrained; everything nested/variable-shaped stays a JSON
+column. The partial unique index on `journeys(user_id, experience_id) WHERE status='active'`
+predicted here did close item 2's create-race half, as anticipated. Selected via
+`dev_server.py --store sqlite`; `JsonStore` remains the default (see item 2's note — that's the one
+remaining reason the live-reference gap isn't universally closed). No new roadmap item needed for
+this decision — see `suggestions.md` item 1's reconciliation note for why it didn't need its own
+ADR either (ADR-0009 already anticipated exactly this).

@@ -26,9 +26,9 @@ function normalizeState(payload) {
 /** @param {typeof mygitaApiRequest} request */
 export function createJourneyApiProvider(request = mygitaApiRequest) {
   const provider = Object.freeze({
-    async getState() {
+    async getState(options={}) {
       if (!hasSession()) return emptyState();
-      const payload = await request("/me/journey", { authenticated: true, validate: validateJourneyCollection });
+      const payload = await request("/me/journey", { signal:options.signal,authenticated: true, validate: validateJourneyCollection });
       return normalizeState(payload);
     },
     async enrol(experienceId, batchId) {

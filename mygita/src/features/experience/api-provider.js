@@ -56,25 +56,25 @@ function normalizeActivity(item) {
 /** @param {typeof mygitaApiRequest} request */
 export function createExperienceApiProvider(request = mygitaApiRequest) {
   return Object.freeze({
-    async listExperiences() {
-      const payload = await request("/experiences", { validate: validateExperienceList });
+    async listExperiences(options={}) {
+      const payload = await request("/experiences", { signal:options.signal,validate: validateExperienceList });
       return payload.items.map(normalizeExperience);
     },
-    async getExperience(slug) {
+    async getExperience(slug,options={}) {
       try {
-        const payload = await request(`/experiences/${encodeURIComponent(slug)}`, { validate: validateExperience });
+        const payload = await request(`/experiences/${encodeURIComponent(slug)}`, { signal:options.signal,validate: validateExperience });
         return normalizeExperience(payload);
       } catch (error) {
         if (error && typeof error === "object" && Reflect.get(error, "status") === 404) return undefined;
         throw error;
       }
     },
-    async getBatches(experienceId) {
-      const payload = await request(`/experiences/${encodeURIComponent(experienceId)}/batches`, { validate: validateBatchList });
+    async getBatches(experienceId,options={}) {
+      const payload = await request(`/experiences/${encodeURIComponent(experienceId)}/batches`, { signal:options.signal,validate: validateBatchList });
       return payload.items.map(normalizeBatch);
     },
-    async getActivityDefinition(id) {
-      const payload = await request(`/me/activities/${encodeURIComponent(id)}`, { authenticated: true, validate: validateLearnerActivity });
+    async getActivityDefinition(id,options={}) {
+      const payload = await request(`/me/activities/${encodeURIComponent(id)}`, { signal:options.signal,authenticated: true, validate: validateLearnerActivity });
       return normalizeActivity(payload);
     },
   });

@@ -10,10 +10,10 @@ import { clearSession, hasSession, setSession } from "../../core/session.js";
 /** @param {typeof mygitaApiRequest} request */
 export function createIdentityApiProvider(request = mygitaApiRequest) {
   return Object.freeze({
-    async getCurrentUser() {
+    async getCurrentUser(options={}) {
       if (!hasSession()) return null;
       return /** @type {import('./contract.js').User} */ (
-        await request("/me", { authenticated: true, validate: validateUser })
+        await request("/me", { signal:options.signal,authenticated: true, validate: validateUser })
       );
     },
     async createPasswordAccount(credentials) {

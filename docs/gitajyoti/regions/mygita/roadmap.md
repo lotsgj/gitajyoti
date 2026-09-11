@@ -8,6 +8,9 @@
 - Define and verify the OpenAPI 3.1 `mygita.api` contract against examples and current mock API responses.
 - Add runtime-validated API providers for Identity, Experience, and Journey with explicit provider selection.
 - Verify one complete Gita Sāra API vertical slice.
+- Produce an API-only, minified production client with hashed assets and development-only feature gates.
+- Add route cancellation, stale-result protection, structured interaction errors, accessible form feedback, reconnect retry, and post-login destination restoration.
+- Add an interchangeable SQLite persistence implementation and run the shared API behavior suite against both current stores.
 
 ## Next
 

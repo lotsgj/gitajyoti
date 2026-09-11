@@ -31,6 +31,7 @@ This interface is an internal server contract. It does not replace or extend the
 - Reference seed data and mutable learner data can map independently to production reference and transactional storage.
 - Every store implementation needs shared behavioral tests for query results, mutation semantics, isolation, and failure behavior.
 - Interface growth must be driven by application intent and must avoid leaking a particular database or JSON layout.
+- `SqliteStore` now demonstrates the boundary with durable local runtime data, relational uniqueness constraints, and shared behavior tests. It remains an opt-in local backend while `JsonStore` is the default.
 - The current `JsonStore` boundary still needs value isolation and operation-level atomic mutation: returned dictionaries are live references, and `update_user` and `update_journey` persist mutations made before their locks are acquired.
 
 ## Relationship to earlier decisions

@@ -1,4 +1,4 @@
-# My Gita client
+# MyGita client
 
 The client is a dependency-free, native ES-module application designed for GitHub Pages.
 
@@ -33,6 +33,18 @@ pnpm run check
 ```
 
 The check runs checked-JavaScript analysis, generated-validator freshness, fixture/API repository contracts, architecture and fixture tests, OpenAPI verification, mock-response compatibility, the Gita Sāra API flow, and the password Account lifecycle flow. Development dependencies are isolated under `dev-tools/node_modules` and are not required by the browser application.
+
+## Production build
+
+From `dev-tools/`, run:
+
+```sh
+MYGITA_API_BASE_URL=https://api.gitajyoti.org/api/v1 pnpm run build:mygita
+```
+
+The ignored `dist/mygita/` artifact is minified and uses content-hashed JavaScript and CSS. It always uses the API provider, ignores fixture-selection query parameters, and excludes development routes and simulated OTP from the visible production experience. `pnpm run check:mygita-build` builds and verifies the artifact.
+
+Route reads accept cancellation signals through the feature repository boundary, so newer navigation cannot be overwritten by older responses. Forms use shared accessible pending/error feedback, known API failures map to stable user messages, and authentication expiry preserves a safe internal destination for post-login continuation.
 
 ## Boundaries
 

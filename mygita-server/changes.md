@@ -2,6 +2,139 @@
 
 Every edit to `mygita-server/` gets a dated summary entry here, most recent first.
 
+## 2026-09-11 18:00 UTC — roadmap.md cleanup
+
+Reconciled `roadmap.md` against completed work, per explicit request. Item 4 (`SqliteStore`) marked
+DONE. Item 2 (live-reference/non-atomic gap) marked DONE for the create-race it was really about
+(closed via `SqliteStore`'s constraints, verified directly) but explicitly caveated as not universal
+— `JsonStore` remains the default and keeps the original gap; split the narrower remaining piece
+(`update_user`/`update_journey`'s live-reference mutation, unrelated to the create-race) into a new
+item 2b so it isn't lost. Item 3 (multi-method sign-in) updated to record the password/email piece
+as done via ADR-0010, with Google/Microsoft and identity-linking still open and still blocked on a
+contract addition codex hasn't picked up. Item 1 (slug pattern) re-checked against current
+`openapi.yaml` — still unaddressed, left as-is. No code changed.
+
+## 2026-09-11 17:52 UTC — suggestions.md: reconciled, no new ADR proposed for SqliteStore
+
+Considered whether the `SqliteStore` work warrants its own `suggestions.md`/ADR entry and decided
+against it: ADR-0009 already explicitly anticipated a database-backed `Store` implementation
+("introduced at the composition root without rewriting handlers"), so this is implementation of an
+existing decision, not a new one — unlike the PBKDF2 entry, which recorded a genuine deviation from
+written guidance. Updated item 1's reconciliation note instead: the live-reference/non-atomic-update
+gap it points at is now closed for whichever store is selected (via `SqliteStore`'s real
+constraints), not universally, since `JsonStore` remains the default. No code changed.
+
+## 2026-09-11 17:45 UTC — `SqliteStore`: hybrid ER+JSON persistence backend
+
+Implemented the SQLite `Store` behind the interface established by ADR-0009, per the hybrid
+ER+JSON schema designed earlier this session (real columns/indexes only for what's joined,
+filtered, or must be unique; everything else stays a single JSON column per row). Purely additive:
+`JsonStore` stays the default, nothing existing changes unless `sqlite` is explicitly selected.
+
+- **New: `api/sqlite_store.py`.** Full `Store` implementation — reference tables (experiences,
+  activities, batches, sessions) re-seeded (upserted) from `mock-data/*.json` on every construction,
+  so the existing JSON-authoring workflow is unchanged; runtime tables (users, accounts, profiles,
+  login_identifiers, authenticators, journeys, interests) live only in the database. One connection
+  per store instance (`check_same_thread=False`), `PRAGMA journal_mode=WAL` (readers never blocked
+  by a writer) and `PRAGMA foreign_keys=ON`.
+- **Real constraints as defense-in-depth, not just app-level checks.** A partial unique index —
+  `journeys(user_id, experience_id) WHERE status='active'` — makes the duplicate-active-journey race
+  impossible at the database level, not just via the app's pre-check (`find_active_journey`, still
+  the primary check for a friendly error). Same pattern for interests
+  (`UNIQUE(user_id, experience_id)`). This is the concrete fix for the gap ADR-0009's own
+  consequences section flagged and roadmap item 2 tracked, for whichever store is selected.
+- **`api/store.py`:** added `DuplicateActiveJourney`, `DuplicateInterest` exceptions (mirroring the
+  existing `DuplicateLoginIdentifier`), and a `close()` lifecycle method on the `Store` interface
+  (connection cleanup; `JsonStore.close()` is a no-op).
+- **`api/app.py`:** `_create_journey`/`_register_interest` now also catch the two new exceptions and
+  translate them to the same `409` responses their existing pre-checks already produce — real
+  defense-in-depth, not a behavior change for the common case.
+- **`dev_server.py`:** new `--store json|sqlite` flag, default `json` (unchanged behavior unless
+  opted in); closes the store on shutdown.
+- **A real bug found and fixed during verification, not left for later:** `SqliteStore.reset()`
+  initially deleted `accounts` before the tables that reference it (`profiles`,
+  `login_identifiers`, `authenticators`), which `PRAGMA foreign_keys=ON` correctly rejected. Because
+  the exception happened before `commit()`, it left the connection in a way that made a second
+  connection to the same file report `database is locked`, **and** because it happened inside
+  `dispatch()`'s `/dev/reset` branch, the two lines after `store.reset()`
+  (`otp_challenges.clear()`, `rate_limit_state.clear()`) never ran -- so rate-limit counters
+  silently stopped resetting between tests from that point on, which is what actually surfaced the
+  bug (cascading, seemingly unrelated `429`s partway through the SQLite test run). Fixed by deleting
+  child tables before the parent they reference, plus a rollback-on-any-exception safety net. Also
+  fixed a related but separate clarity bug while verifying this: the `IntegrityError` handlers in
+  `create_journey`/`create_interest`/`create_password_account` were mapping *any* integrity error
+  (including a foreign-key violation from a bad reference -- a bug, not a legitimate duplicate) to
+  the friendly duplicate exceptions; now disambiguated by the actual constraint that failed
+  (`_is_unique_violation`), so a genuine data-integrity problem surfaces honestly instead of being
+  mislabeled.
+- **Tests:** per ADR-0009's own stated expectation ("every store implementation needs shared
+  behavioral tests"), `tests/test_api.py`'s `ApiTestCase` was parameterized rather than duplicated —
+  a `make_store` classmethod, two concrete subclasses (`JsonStoreApiTestCase`,
+  `SqliteStoreApiTestCase`), all 17 existing test bodies run unchanged against both backends. Also
+  fixed a stale assertion in `test_password_material_absent_from_responses` that checked for the
+  string `"scrypt"`, a leftover from before this session's earlier PBKDF2 swap -- it was checking for
+  something that could never appear regardless of any real leak; now checks `"pbkdf2"`.
+
+**Verification:**
+- `python3 -m unittest discover -s mygita-server/tests -v` — 34/34 pass (17 tests × 2 backends), 1
+  base class correctly skipped.
+- Re-ran the Python-based OpenAPI-compliance reimplementation against *both* backends explicitly
+  (not just the default) — 78 examples + 20 live captures, 18/18 operations covered, fully compliant
+  under both `JsonStore` and `SqliteStore`.
+- Directly exercised the new DB-level constraints, bypassing the app-level pre-checks entirely, to
+  prove the constraints themselves work, not just the code that normally guards them: confirmed the
+  partial unique index blocks a second concurrent active journey for the same (user, experience)
+  while still allowing a *completed* journey for a different experience (proving the index is
+  correctly scoped to `active` only, matching `find_active_journey`'s own semantics); confirmed the
+  interest-uniqueness constraint; confirmed a foreign-key violation (a journey referencing a
+  nonexistent experience) is now correctly rejected and surfaces honestly rather than being
+  mislabeled as a duplicate.
+- Ran the real entry point end-to-end: `python3 dev_server.py --store sqlite`, real HTTP calls
+  (account creation, journey enrolment, duplicate-enrolment 409), confirmed `state.db`/`-wal`/`-shm`
+  files appear on disk (WAL mode genuinely active).
+
+**Not yet decided:** whether `dev_server.py`'s default flips from `json` to `sqlite`. Left as `json`
+for now since this was explicitly framed as additive; that's a separate decision for whenever the
+Flask/deployment stages are greenlit.
+
+**Scope:** `api/sqlite_store.py` (new), `api/store.py`, `api/app.py`, `dev_server.py`,
+`tests/test_api.py`. No contract, docs, or framework changes.
+
+## 2026-09-11 11:56 UTC — Stage-0 production-readiness fixes: secret fallback + error logging
+
+Two fixes agreed as prerequisites to the planned production work, done on the current server (no
+framework migration yet, per explicit instruction).
+
+- **`dev_server.py`: removed the hardcoded JWT-secret fallback default.** Previously,
+  `MYGITA_DEV_JWT_SECRET` unset meant silently signing sessions with a fixed, git-committed string
+  (`"mygita-local-development-secret-change-me"`) — anyone who read the repo could forge a valid
+  token for any user if this server were ever reached by anything other than its own author. Now,
+  an unset env var generates a fresh random secret (`secrets.token_urlsafe(32)`) per process
+  instead, with a printed warning. Preserves zero-setup local dev (still just runs, no required env
+  var) while eliminating the predictable-secret risk; sessions no longer survive a restart when no
+  explicit secret is set, which is the correct trade-off for a value that must never be guessable.
+- **`api/app.py`: unexpected exceptions in `Handler._handle` are now logged.** The generic
+  `except Exception:` fallback sent a `500 internal_error` to the client with zero trace anywhere —
+  correct client-facing behavior (never leak internals), but previously left zero diagnostic trail
+  for an operator. Added `traceback.print_exc()` before the response is sent.
+
+**Verification:**
+- `python3 -m unittest discover -s mygita-server/tests -v` — 17/17 pass, unchanged.
+- Re-ran the Python-based OpenAPI-compliance reimplementation from the 2026-09-11 session (fresh
+  venv, `jsonschema`+`pyyaml`) — 78 examples + 20 live captures, 18/18 operations covered, all still
+  compliant. Expected: neither fix touches a response shape.
+- **Secret fix**: started two real server processes on different ports with no
+  `MYGITA_DEV_JWT_SECRET` set, minted a session token on one, and confirmed it returns `401
+  invalid_token` against the other — proving the two processes' secrets are genuinely different, not
+  shared. Confirmed the warning message actually prints (unbuffered run).
+- **Logging fix**: injected a genuine unexpected exception into a live handler method on a real
+  running server, hit it over real HTTP, and confirmed: the client still receives the unchanged
+  generic `500 internal_error` (no detail leaked), while the server's own log now shows a complete
+  traceback pinpointing the exact failure -- previously nothing would have appeared there at all.
+
+**Scope:** `dev_server.py` and `api/app.py` only. No contract, docs, or framework changes. Flask
+migration remains a separate, not-yet-started step per explicit instruction.
+
 ## 2026-09-11 10:05 UTC — suggestions.md: PBKDF2 algorithm-choice entry
 
 Reconciled `suggestions.md` against `docs/gitajyoti/decisions/` (still only ADR-0009 and ADR-0010;

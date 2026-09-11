@@ -20,6 +20,24 @@ class DuplicateLoginIdentifier(Exception):
     store so this can never be a check-then-act race."""
 
 
+class DuplicateActiveJourney(Exception):
+    """Raised by `create_journey` when the (user, experience) pair already
+    has an active journey.
+
+    This is a defense-in-depth backstop, not the primary check: callers are
+    still expected to call `find_active_journey` first for a friendly error.
+    A store without real transactional/constraint support (e.g. `JsonStore`)
+    cannot enforce this atomically and does not raise it; a store that can
+    (e.g. a SQL-backed one, via a unique constraint) should, so the rare
+    race a plain pre-check cannot close is still caught."""
+
+
+class DuplicateInterest(Exception):
+    """Raised by `create_interest` when the (user, experience) pair already
+    has an interest registration. Same defense-in-depth role as
+    `DuplicateActiveJourney`."""
+
+
 class Store(ABC):
     # Reference data (read-only, seeded).
 
@@ -154,3 +172,9 @@ class Store(ABC):
     @abstractmethod
     def reset(self):
         """Clear all runtime (non-seed) data."""
+
+    @abstractmethod
+    def close(self):
+        """Release any resources the store holds (e.g. a database
+        connection). Safe to call more than once. A no-op for a store that
+        holds nothing to release."""

@@ -86,16 +86,16 @@ API identities use dots in prose. Their filesystem directories use hyphens—for
 ## What exists today
 
 - The Landing region is a responsive static page with externalized CSS and progressively loaded images.
-- MyGita is a dependency-free browser application using native ES modules.
+- MyGita is a dependency-free browser application using native ES modules in source mode, with a reproducible minified production build.
 - MyGita has working discovery, experience detail, batch selection, interest registration, simulated OTP, onboarding, journey, activity, profile, review, and system-state screens.
 - Pages work through asynchronous Identity, Experience, and Journey repositories.
 - Username/password Account creation and login are the primary Identity UI; Profile setup is optional and can be resumed later.
-- Repositories have fixture and API providers; fixtures remain the default and persist prototype state in `sessionStorage`.
+- Repositories have fixture and API providers. Source-mode development defaults to fixtures; production builds are API-only and disable fixture selection and development-only UI.
 - Checked-JavaScript analysis, repository-contract tests, fixture-integrity tests, and architecture import-boundary tests are available.
 - Repository-boundary Phase 1 is complete.
-- A local Python mock API supports the API-backed development mode.
+- A local Python `ThreadingHTTPServer` mock API supports the API-backed development mode. It has interchangeable JSON and SQLite stores; JSON is the default and SQLite provides durable local runtime data.
 - API transport, bearer-session handling, runtime response validation, normalization, and explicit provider selection are implemented.
-- The OpenAPI 3.1 `mygita.api` contract covers every current mock API operation; version 0.2 defines password Account creation and login, now implemented at the client boundary with server integration in progress.
+- The OpenAPI 3.1 `mygita.api` contract covers every current mock API operation; version 0.2 password Account creation and login are implemented and verified across the client and current server.
 - A complete Gita Sāra flow is tested through the API providers and mock server.
 
 The prototype OTP compatibility option is `123456`. It is not the primary UI or a production authentication mechanism.
@@ -122,7 +122,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Open `http://127.0.0.1:8000/` for Landing or `http://127.0.0.1:8000/mygita/` for MyGita.
 
-For API-backed local development, also run `python3 mygita-server/dev_server.py` and open `http://127.0.0.1:8000/mygita/?provider=api`.
+For API-backed local development, also run `python3 mygita-server/dev_server.py` and open `http://127.0.0.1:8000/mygita/?provider=api`. To retain Account and Journey data in SQLite across server restarts, start it with `python3 mygita-server/dev_server.py --store sqlite`.
 
 Development dependencies live outside the browser application:
 

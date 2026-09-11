@@ -14,14 +14,30 @@ if SERVER_ROOT not in sys.path:
 
 from api import create_server  # noqa: E402
 from api.storage import JsonStore  # noqa: E402
+from api.sqlite_store import SqliteStore  # noqa: E402
 
 
 class ApiTestCase(unittest.TestCase):
+    """Shared behavioral tests for every `Store` implementation (per
+    ADR-0009: "every store implementation needs shared behavioral tests for
+    query results, mutation semantics, isolation, and failure behavior").
+    Not run directly -- see the `JsonStoreApiTestCase`/`SqliteStoreApiTestCase`
+    subclasses at the bottom, which only supply `make_store`. Every test
+    method here runs once per concrete subclass, against a real HTTP server
+    backed by that subclass's store."""
+
+    @classmethod
+    def make_store(cls, seed_dir, runtime_dir):
+        raise NotImplementedError("subclasses must implement make_store")
+
     @classmethod
     def setUpClass(cls):
+        if cls is ApiTestCase:
+            raise unittest.SkipTest("base class: run a concrete Store subclass instead")
         cls.temporary = tempfile.TemporaryDirectory()
         cls.current_time = [1788000000]
         cls.seed_dir = os.path.join(SERVER_ROOT, "mock-data")
+        cls.store = cls.make_store(cls.seed_dir, cls.temporary.name)
         cls.server = create_server(
             "127.0.0.1",
             0,
@@ -30,6 +46,7 @@ class ApiTestCase(unittest.TestCase):
             "test-secret",
             allowed_origins={"http://localhost:8000"},
             now=lambda: cls.current_time[0],
+            store=cls.store,
         )
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -37,9 +54,12 @@ class ApiTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        if cls is ApiTestCase:
+            return
         cls.server.shutdown()
         cls.server.server_close()
         cls.thread.join(timeout=2)
+        cls.store.close()
         cls.temporary.cleanup()
 
     def setUp(self):
@@ -138,8 +158,11 @@ class ApiTestCase(unittest.TestCase):
 
     def test_runtime_state_survives_store_reload(self):
         self.register()
-        reloaded = JsonStore(self.seed_dir, self.temporary.name)
-        self.assertEqual(len(reloaded.list_users()), 1)
+        reloaded = self.make_store(self.seed_dir, self.temporary.name)
+        try:
+            self.assertEqual(len(reloaded.list_users()), 1)
+        finally:
+            reloaded.close()
 
     def create_password_account(self, username="vijay.sharma", password="a long memorable passphrase"):
         status, payload, _ = self.request("POST", "/auth/accounts", {"username": username, "password": password})
@@ -262,11 +285,14 @@ class ApiTestCase(unittest.TestCase):
 
     def test_password_account_state_survives_store_reload(self):
         self.create_password_account(username="persisted.user")
-        reloaded = JsonStore(self.seed_dir, self.temporary.name)
-        self.assertEqual(len(reloaded.list_accounts()), 1)
-        identifier = reloaded.find_login_identifier("username", "persisted.user")
-        self.assertIsNotNone(identifier)
-        self.assertIsNotNone(reloaded.find_authenticator(identifier["accountId"], "password"))
+        reloaded = self.make_store(self.seed_dir, self.temporary.name)
+        try:
+            self.assertEqual(len(reloaded.list_accounts()), 1)
+            identifier = reloaded.find_login_identifier("username", "persisted.user")
+            self.assertIsNotNone(identifier)
+            self.assertIsNotNone(reloaded.find_authenticator(identifier["accountId"], "password"))
+        finally:
+            reloaded.close()
 
     def test_password_material_absent_from_responses(self):
         status, created = self.create_password_account(username="secret.user")
@@ -279,7 +305,19 @@ class ApiTestCase(unittest.TestCase):
         for payload in (created, me, logged_in):
             serialized = json.dumps(payload)
             self.assertNotIn("password", serialized.lower())
-            self.assertNotIn("scrypt", serialized)
+            self.assertNotIn("pbkdf2", serialized)
+
+
+class JsonStoreApiTestCase(ApiTestCase):
+    @classmethod
+    def make_store(cls, seed_dir, runtime_dir):
+        return JsonStore(seed_dir, runtime_dir)
+
+
+class SqliteStoreApiTestCase(ApiTestCase):
+    @classmethod
+    def make_store(cls, seed_dir, runtime_dir):
+        return SqliteStore(seed_dir, os.path.join(runtime_dir, "state.db"))
 
 
 if __name__ == "__main__":

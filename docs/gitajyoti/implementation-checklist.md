@@ -50,9 +50,11 @@
 
 - [x] Introduce an injected, intent-revealing `Store` boundary between application logic and persistence.
 - [x] Keep the OpenAPI client/server contract independent of the server persistence implementation.
+- [x] Add a durable SQLite store for runtime Identity and Journey data while retaining JSON-authored reference data.
+- [x] Enforce username, active-Journey, and interest uniqueness with SQLite constraints and map conflicts to stable API errors.
 - [ ] Prevent store implementations from returning live mutable references to internal state.
 - [ ] Make update operations mutate and commit atomically inside the store boundary.
-- [ ] Run shared persistence-contract tests against every store implementation.
+- [x] Run the shared API behavior suite against every current store implementation.
 
 ## Password account identity
 
@@ -73,6 +75,20 @@
 - [ ] Create product-specific OpenAPI contracts when each integration is designed.
 - [ ] Keep browser-to-product trust and credentials out of the client.
 - [ ] Route secure product integration through `mygita.api`.
+
+## Production UI foundation
+
+- [x] Make production builds API-only and prevent URL-based fixture selection.
+- [x] Gate development screen maps, state routes, fixture reset, and simulated OTP UI out of the production experience.
+- [x] Add a reproducible minified build with content-hashed JavaScript and CSS assets.
+- [x] Verify generated production assets and development-feature policy in automated checks.
+- [x] Standardize visible client terminology on `MyGita` and remove prototype wording from production screens.
+- [x] Add structured interaction errors and reusable accessible form pending/error presentation.
+- [x] Propagate route cancellation through repository/API reads and suppress stale navigation results.
+- [x] Preserve safe intended destinations across session expiry and refresh failed routes after reconnect.
+- [ ] Add section-level loading, cached-content preservation, and background refresh where product-backed Journey details require them.
+- [ ] Replace simulated learning completion with product-owned activity or secure product launch.
+- [ ] Add rendered-browser, accessibility, and visual-regression quality gates.
 
 ## Deferred production decisions
 

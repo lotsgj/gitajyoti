@@ -31,9 +31,9 @@ export async function apiRequest(path, { method = "GET", body, signal, authentic
   try {
     response = await fetch(`${config.apiBaseUrl}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: controller.signal });
   } catch (cause) {
-    if (timedOut) throw new ApiError("The My Gita service took too long to respond.", { code: "request_timeout", cause });
+    if (timedOut) throw new ApiError("The MyGita service took too long to respond.", { code: "request_timeout", cause });
     if (controller.signal.aborted) throw new ApiError("The request was cancelled.", { code: "request_cancelled", cause });
-    throw new ApiError("The My Gita service could not be reached.", { code: "network_error", cause });
+    throw new ApiError("The MyGita service could not be reached.", { code: "network_error", cause });
   } finally {
     clearTimeout(timer);
     signal?.removeEventListener("abort", cancel);
@@ -42,13 +42,13 @@ export async function apiRequest(path, { method = "GET", body, signal, authentic
   if (!response.ok) {
     if (response.status === 401) clearSession();
     if (!validateError?.(payload)) {
-      throw new ApiError("The My Gita service returned an invalid error response.", { status: response.status, code: "contract_response_invalid", details: validateError?.errors });
+      throw new ApiError("The MyGita service returned an invalid error response.", { status: response.status, code: "contract_response_invalid", details: validateError?.errors });
     }
     const problem = payload.error;
     throw new ApiError(problem.message || "The request could not be completed.", { status: response.status, code: problem.code, details: problem.details });
   }
   if (!validate?.(payload)) {
-    throw new ApiError("The My Gita service returned data that does not match its contract.", { status: response.status, code: "contract_response_invalid", details: validate?.errors });
+    throw new ApiError("The MyGita service returned data that does not match its contract.", { status: response.status, code: "contract_response_invalid", details: validate?.errors });
   }
   return payload;
 }

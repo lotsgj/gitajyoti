@@ -257,3 +257,6 @@ class JsonStore(Store):
         with self._lock:
             self._state = copy.deepcopy(INITIAL_RUNTIME_STATE)
             self._write()
+
+    def close(self):
+        pass

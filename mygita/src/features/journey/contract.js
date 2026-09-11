@@ -3,7 +3,7 @@
 /** @typedef {{journeys:Journey[],interests:string[],completed:string[]}} JourneyState */
 /**
  * @typedef {Object} JourneyRepository
- * @property {() => Promise<JourneyState>} getState
+ * @property {(options?:{signal?:AbortSignal}) => Promise<JourneyState>} getState
  * @property {(experienceId:string,batchId?:string) => Promise<JourneyState>} enrol
  * @property {(experienceId:string) => Promise<JourneyState>} registerInterest
  * @property {(activityId:string) => Promise<JourneyState>} completeActivity

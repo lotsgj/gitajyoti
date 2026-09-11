@@ -6,5 +6,5 @@ export function escapeHtml(value = "") {
 }
 
 export function setDocumentTitle(title) {
-  document.title = title ? `${title} — My Gita` : "My Gita";
+  document.title = title ? `${title} — MyGita` : "MyGita";
 }

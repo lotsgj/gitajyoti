@@ -25,10 +25,17 @@ rewrote `api/app.py` handlers and `api/storage.py`'s `JsonStore` so the applicat
 `Store`'s methods, never on a concrete store's internal representation or a whole-graph `save()`.
 See `changes.md`, 2026-09-11 entry, for the full change list.
 
-**Reconciliation note:** ADR-0009's decision and consequences match the change as built. It also
-correctly flags a gap the change did not fully close — see roadmap item "Close the live-reference /
-non-atomic update gap in `JsonStore`" in `roadmap.md`, opened from that ADR's own consequences
-section rather than re-litigated here.
+**Reconciliation note (updated 2026-09-11):** ADR-0009's decision and consequences match the change
+as built. Its own text already anticipated the next step taken since — *"A database-backed
+implementation can be introduced at the composition root without rewriting handlers or changing the
+public API"* — which is exactly what `api/sqlite_store.py` (`SqliteStore`) now is; no new ADR
+proposed for that, since it's implementation of this ADR's own decision, not a new one. One
+correction to this note: the live-reference/non-atomic-update gap ADR-0009's consequences section
+flagged is now closed **for whichever store is selected** — `SqliteStore` enforces the
+duplicate-active-journey and duplicate-interest invariants with real database constraints, not just
+the application-level pre-check `JsonStore` relies on alone. `JsonStore` itself still has the
+original gap; it remains the default in `dev_server.py`, so the gap is only closed once `sqlite` is
+selected, not universally yet. See `changes.md`, 2026-09-11 17:45 UTC entry, for the full detail.
 
 ## 2. Password hashing: PBKDF2-HMAC-SHA256, not Argon2id or scrypt
 

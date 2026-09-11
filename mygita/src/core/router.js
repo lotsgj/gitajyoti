@@ -1,5 +1,16 @@
 // @ts-check
 const routes = [];
+let activeNavigation=null;
+let currentPath="/discover";
+
+export function beginNavigation() {
+  activeNavigation?.abort();
+  activeNavigation=new AbortController();
+  const controller=activeNavigation;
+  return {signal:controller.signal,isCurrent:()=>activeNavigation===controller&&!controller.signal.aborted};
+}
+
+export function getCurrentPath(){return currentPath;}
 
 export function defineRoute(pattern, load) {
   const keys = [];
@@ -14,13 +25,15 @@ export function navigate(path) {
 
 export async function resolveRoute() {
   const path = normalise(window.location.hash.slice(1));
+  currentPath=path;
+  const navigation=beginNavigation();
   for (const route of routes) {
     const match = path.match(route.expression);
     if (!match) continue;
     const params = Object.fromEntries(route.keys.map((key, index) => [key, decodeURIComponent(match[index + 1])]));
-    return route.load({ path, params });
+    return route.load({ path, params, ...navigation });
   }
-  return routes.find(route => route.expression.test("/not-found"))?.load({ path, params: {} });
+  return routes.find(route => route.expression.test("/not-found"))?.load({ path, params: {}, ...navigation });
 }
 
 export function startRouter() {

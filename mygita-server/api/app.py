@@ -7,12 +7,13 @@ import os
 import re
 import secrets
 import time
+import traceback
 import uuid
 
 from .auth import TokenError, issue_token, verify_token
 from .passwords import hash_password, verify_password
 from .storage import JsonStore
-from .store import DuplicateLoginIdentifier
+from .store import DuplicateActiveJourney, DuplicateInterest, DuplicateLoginIdentifier
 
 
 API_PREFIX = "/api/v1"
@@ -337,7 +338,13 @@ class MyGitaApplication:
             "activityIds": [item["id"] for item in activities],
             "completedActivityIds": [],
         }
-        self.store.create_journey(journey)
+        try:
+            self.store.create_journey(journey)
+        except DuplicateActiveJourney as exc:
+            # Backstop for a race the check above already covers in the
+            # common case; a store with real constraint support (unlike
+            # JsonStore) can still catch the rare concurrent duplicate.
+            raise ApiProblem(409, "duplicate_enrolment", "This Experience is already active in your Journey") from exc
         return self._enrich_journey(journey)
 
     def _register_interest(self, user, body):
@@ -347,7 +354,10 @@ class MyGitaApplication:
         if self.store.find_interest(user["id"], experience["id"]):
             raise ApiProblem(409, "interest_already_registered", "Interest is already registered")
         interest = {"id": "interest-" + uuid.uuid4().hex, "userId": user["id"], "experienceId": experience["id"], "registeredAt": datetime.now(timezone.utc).isoformat()}
-        return self.store.create_interest(interest)
+        try:
+            return self.store.create_interest(interest)
+        except DuplicateInterest as exc:
+            raise ApiProblem(409, "interest_already_registered", "Interest is already registered") from exc
 
     def _enrich_journey(self, journey):
         experience = self.store.find_experience(journey["experienceId"])
@@ -424,6 +434,10 @@ def make_handler(application):
             except json.JSONDecodeError:
                 self._send_json(400, {"error": {"code": "invalid_json", "message": "Request body must be valid JSON"}})
             except Exception:
+                # The client only ever sees the generic message below -- but an
+                # unexpected error must leave a diagnostic trail somewhere, or
+                # an operator has no way to find out what actually failed.
+                traceback.print_exc()
                 self._send_json(500, {"error": {"code": "internal_error", "message": "The mock server encountered an unexpected error"}})
 
         def _read_json(self):
