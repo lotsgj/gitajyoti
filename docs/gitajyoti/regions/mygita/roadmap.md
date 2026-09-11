@@ -18,3 +18,5 @@
 ## Deferred production decisions
 
 - Replace prototype identity and persistence with approved production services.
+- Replace the browser-stored bearer token with a server-managed opaque session in a `Secure`, `HttpOnly`, `SameSite` cookie.
+- Add logout, expiry, revocation, credentialed CORS, origin enforcement, and CSRF protection for the cookie-based session.

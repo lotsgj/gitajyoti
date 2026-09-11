@@ -1,7 +1,10 @@
 # ADR-0003: Learning products as first-class products
 
-Status: Accepted  
-Date: 2026-09-10
+- Status: Accepted
+- Implementation: Implemented
+- Supersedes: None
+- Superseded by: None
+- Date: 2026-09-10
 
 ## Decision
 

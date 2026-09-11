@@ -1,6 +1,6 @@
 # Current state
 
-Last reviewed: 2026-09-10
+Last reviewed: 2026-09-11
 
 ## Site
 
@@ -25,6 +25,8 @@ Last reviewed: 2026-09-10
 ## MyGita server
 
 - A local Python mock API implements catalogue, OTP, profile, onboarding, journey, interest, and activity operations.
+- Server application logic now depends on an injected `Store` interface; `JsonStore` is the default local implementation.
+- The persistence boundary is structurally in place, but `JsonStore` still exposes live mutable records; value isolation and atomic update operations remain to be completed.
 - Runtime data is persisted to ignored JSON state.
 - Seven API tests pass.
 - The browser can use the mock API through explicit provider selection; fixture behavior remains available independently.

@@ -43,3 +43,5 @@ Status: Planned
 Status: Deferred
 
 - Production identity, OTP, database, hosting, observability, privacy, consent, safeguarding, and approved learning content
+- Replace the prototype browser-readable bearer token with a server-managed opaque session using a `Secure`, `HttpOnly`, `SameSite` cookie.
+- Add credentialed requests, explicit logout, session expiry and revocation, exact origin/CORS controls, and CSRF protection for cookie-authenticated mutations.

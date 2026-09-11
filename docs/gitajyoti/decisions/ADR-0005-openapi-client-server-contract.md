@@ -1,7 +1,10 @@
 # ADR-0005: OpenAPI client/server contract
 
-Status: Accepted  
-Date: 2026-09-10
+- Status: Accepted
+- Implementation: Implemented
+- Supersedes: None
+- Superseded by: None
+- Date: 2026-09-10
 
 ## Decision
 

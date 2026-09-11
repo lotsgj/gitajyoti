@@ -137,7 +137,7 @@ class ApiTestCase(unittest.TestCase):
     def test_runtime_state_survives_store_reload(self):
         self.register()
         reloaded = JsonStore(self.seed_dir, self.temporary.name)
-        self.assertEqual(len(reloaded.state["users"]), 1)
+        self.assertEqual(len(reloaded.list_users()), 1)
 
 
 if __name__ == "__main__":

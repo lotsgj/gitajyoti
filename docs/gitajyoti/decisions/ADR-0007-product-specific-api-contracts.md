@@ -1,7 +1,10 @@
 # ADR-0007: Product-specific API contracts
 
-Status: Accepted  
-Date: 2026-09-10
+- Status: Accepted
+- Implementation: Planned
+- Supersedes: None
+- Superseded by: None
+- Date: 2026-09-10
 
 ## Decision
 

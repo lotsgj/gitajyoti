@@ -1,7 +1,10 @@
 # ADR-0008: MyGita feature and page composition
 
-Status: Accepted  
-Date: 2026-09-10
+- Status: Accepted
+- Implementation: Implemented
+- Supersedes: None
+- Superseded by: None
+- Date: 2026-09-10
 
 ## Context
 

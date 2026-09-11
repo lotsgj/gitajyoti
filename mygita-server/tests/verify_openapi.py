@@ -14,6 +14,7 @@ if SERVER_ROOT not in sys.path:
     sys.path.insert(0, SERVER_ROOT)
 
 from api.app import API_PREFIX, ApiProblem, MyGitaApplication  # noqa: E402
+from api.storage import JsonStore  # noqa: E402
 
 
 def main():
@@ -24,8 +25,7 @@ def main():
     captures = []
     with tempfile.TemporaryDirectory() as runtime_dir:
         application = MyGitaApplication(
-            os.path.join(SERVER_ROOT, "mock-data"),
-            runtime_dir,
+            JsonStore(os.path.join(SERVER_ROOT, "mock-data"), runtime_dir),
             "openapi-contract-test-secret",
             now=lambda: 1788000000,
         )

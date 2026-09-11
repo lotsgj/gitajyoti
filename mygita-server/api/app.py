@@ -27,8 +27,8 @@ class ApiProblem(Exception):
 
 
 class MyGitaApplication:
-    def __init__(self, seed_dir, runtime_dir, secret, allowed_origins=None, now=None):
-        self.store = JsonStore(seed_dir, runtime_dir)
+    def __init__(self, store, secret, allowed_origins=None, now=None):
+        self.store = store
         self.secret = secret
         self.allowed_origins = set(allowed_origins or DEFAULT_ORIGINS)
         self.now = now or time.time
@@ -49,12 +49,11 @@ class MyGitaApplication:
         if route == API_PREFIX + "/health" and method == "GET":
             return 200, {"status": "ok", "service": "mygita-mock-api", "version": "1"}
         if route == API_PREFIX + "/experiences" and method == "GET":
-            return 200, {"items": self.store.experiences}
+            return 200, {"items": self.store.list_experiences()}
         match = re.fullmatch(API_PREFIX + r"/experiences/([^/]+)/batches", route)
         if match and method == "GET":
             experience = self._experience(match.group(1))
-            items = [item for item in self.store.batches if item["experienceId"] == experience["id"]]
-            return 200, {"items": items}
+            return 200, {"items": self.store.list_batches(experience["id"])}
         match = re.fullmatch(API_PREFIX + r"/experiences/([^/]+)", route)
         if match and method == "GET":
             return 200, self._experience(match.group(1))
@@ -124,8 +123,8 @@ class MyGitaApplication:
         if str(body.get("otp", "")) != "123456":
             raise ApiProblem(401, "incorrect_otp", "OTP is incorrect")
         mobile = challenge["mobile"]
-        user = self.store.find_user_by_mobile(mobile)
-        created = user is None
+        existing = self.store.find_user_by_mobile(mobile)
+        created = existing is None
         if created:
             user = {
                 "id": "user-" + uuid.uuid4().hex,
@@ -146,8 +145,9 @@ class MyGitaApplication:
                 "onboarding": {"state": "pending", "completedAt": None},
                 "createdAt": datetime.now(timezone.utc).isoformat(),
             }
-            self.store.state["users"].append(user)
-            self.store.save()
+            self.store.create_user(user)
+        else:
+            user = existing
         self.otp_challenges.pop(str(body.get("challengeId")), None)
         token = issue_token(user, self.secret, now=self.now())
         return {"accessToken": token, "tokenType": "Bearer", "expiresIn": 28800, "isNewUser": created, "user": user}
@@ -186,22 +186,21 @@ class MyGitaApplication:
             if birth_date >= date.today():
                 raise ApiProblem(422, "invalid_date_of_birth", "Date of birth must be in the past")
             user["onboarding"] = {"state": "complete", "completedAt": datetime.now(timezone.utc).isoformat()}
-        self.store.save()
-        return user
+        return self.store.update_user(user)
 
     def _create_journey(self, user, body):
         experience = self._experience(str(body.get("experienceId", "")))
-        if any(item["userId"] == user["id"] and item["experienceId"] == experience["id"] and item["status"] == "active" for item in self.store.state["journeys"]):
+        if self.store.find_active_journey(user["id"], experience["id"]):
             raise ApiProblem(409, "duplicate_enrolment", "This Experience is already active in your Journey")
         delivery = experience.get("delivery", {})
         batch_id = body.get("batchId")
         if delivery.get("requiresBatch"):
-            batch = next((item for item in self.store.batches if item["id"] == batch_id and item["experienceId"] == experience["id"]), None)
+            batch = self.store.find_batch(batch_id, experience["id"])
             if not batch:
                 raise ApiProblem(422, "batch_required", "Choose an available batch")
             if batch.get("enrolment", {}).get("state") != "open":
                 raise ApiProblem(409, "batch_not_open", "The selected batch is not open for enrolment")
-        activities = [item for item in self.store.activities if item["experienceId"] == experience["id"]]
+        activities = self.store.list_activities(experience["id"])
         journey = {
             "id": "journey-" + uuid.uuid4().hex,
             "userId": user["id"],
@@ -214,25 +213,22 @@ class MyGitaApplication:
             "activityIds": [item["id"] for item in activities],
             "completedActivityIds": [],
         }
-        self.store.state["journeys"].append(journey)
-        self.store.save()
+        self.store.create_journey(journey)
         return self._enrich_journey(journey)
 
     def _register_interest(self, user, body):
         experience = self._experience(str(body.get("experienceId", "")))
         if experience.get("delivery", {}).get("requiresBatch"):
             raise ApiProblem(422, "enrolment_available", "Choose an available batch instead")
-        existing = next((item for item in self.store.state["interests"] if item["userId"] == user["id"] and item["experienceId"] == experience["id"]), None)
-        if existing:
+        if self.store.find_interest(user["id"], experience["id"]):
             raise ApiProblem(409, "interest_already_registered", "Interest is already registered")
         interest = {"id": "interest-" + uuid.uuid4().hex, "userId": user["id"], "experienceId": experience["id"], "registeredAt": datetime.now(timezone.utc).isoformat()}
-        self.store.state["interests"].append(interest)
-        self.store.save()
-        return interest
+        return self.store.create_interest(interest)
 
     def _enrich_journey(self, journey):
         experience = self.store.find_experience(journey["experienceId"])
-        remaining = [activity for activity in self.store.activities if activity["id"] in journey["activityIds"] and activity["id"] not in journey["completedActivityIds"]]
+        activities = self.store.list_activities(journey["experienceId"])
+        remaining = [activity for activity in activities if activity["id"] in journey["activityIds"] and activity["id"] not in journey["completedActivityIds"]]
         enriched = dict(journey)
         enriched["experience"] = {"id": experience["id"], "slug": experience["slug"], "title": experience["title"], "subtitle": experience["subtitle"]}
         enriched["nextActivity"] = remaining[0] if remaining else None
@@ -240,32 +236,29 @@ class MyGitaApplication:
         return enriched
 
     def _get_journey(self, user):
-        items = [self._enrich_journey(item) for item in self.store.state["journeys"] if item["userId"] == user["id"]]
-        interests = [item for item in self.store.state["interests"] if item["userId"] == user["id"]]
+        items = [self._enrich_journey(item) for item in self.store.list_journeys(user["id"])]
+        interests = self.store.list_interests(user["id"])
         return {"items": items, "interests": interests}
 
-    def _journey_for_activity(self, user, activity_id):
-        return next((item for item in self.store.state["journeys"] if item["userId"] == user["id"] and activity_id in item["activityIds"]), None)
-
     def _get_activity(self, user, activity_id):
-        activity = next((item for item in self.store.activities if item["id"] == activity_id), None)
-        journey = self._journey_for_activity(user, activity_id)
+        activity = self.store.find_activity(activity_id)
+        journey = self.store.find_journey_for_activity(user["id"], activity_id)
         if not activity or not journey:
             raise ApiProblem(404, "activity_not_found", "Activity is not part of your Journey")
         response = dict(activity)
         response["completed"] = activity_id in journey["completedActivityIds"]
-        response["session"] = next((item for item in self.store.sessions if item.get("experienceActivityId") == activity_id and item.get("batchId") == journey.get("batchId")), None)
+        response["session"] = self.store.find_session(activity_id, journey.get("batchId"))
         return response
 
     def _complete_activity(self, user, activity_id):
         self._get_activity(user, activity_id)
-        journey = self._journey_for_activity(user, activity_id)
+        journey = self.store.find_journey_for_activity(user["id"], activity_id)
         if activity_id not in journey["completedActivityIds"]:
             journey["completedActivityIds"].append(activity_id)
         if len(journey["completedActivityIds"]) == len(journey["activityIds"]):
             journey["status"] = "completed"
         journey["lastAccessed"] = datetime.now(timezone.utc).isoformat()
-        self.store.save()
+        self.store.update_journey(journey)
         return self._enrich_journey(journey)
 
 
@@ -339,8 +332,15 @@ def make_handler(application):
     return Handler
 
 
-def create_server(host, port, seed_dir, runtime_dir, secret, allowed_origins=None, now=None):
-    application = MyGitaApplication(seed_dir, runtime_dir, secret, allowed_origins=allowed_origins, now=now)
+def create_server(host, port, seed_dir, runtime_dir, secret, allowed_origins=None, now=None, store=None):
+    """Create the mock API server.
+
+    `store` defaults to a `JsonStore` built from `seed_dir`/`runtime_dir`, but
+    accepts any `Store` implementation — this is the substitution point for a
+    future database-backed store. `MyGitaApplication` itself never knows
+    which one it was given.
+    """
+    application = MyGitaApplication(store or JsonStore(seed_dir, runtime_dir), secret, allowed_origins=allowed_origins, now=now)
     server = ThreadingHTTPServer((host, port), make_handler(application))
     server.application = application
     return server

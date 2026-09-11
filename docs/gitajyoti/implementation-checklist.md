@@ -46,6 +46,14 @@
 - [x] Validate user input in the client and enforce it again on the server.
 - [x] Handle expired sessions, request cancellation, timeouts, and duplicate submissions.
 
+## Server persistence
+
+- [x] Introduce an injected, intent-revealing `Store` boundary between application logic and persistence.
+- [x] Keep the OpenAPI client/server contract independent of the server persistence implementation.
+- [ ] Prevent store implementations from returning live mutable references to internal state.
+- [ ] Make update operations mutate and commit atomically inside the store boundary.
+- [ ] Run shared persistence-contract tests against every store implementation.
+
 ## Product integration
 
 - [ ] Define common learner, enrolment, launch, progress, completion, error, and correlation concepts.
@@ -56,6 +64,8 @@
 ## Deferred production decisions
 
 - [ ] Select identity and SMS providers.
+- [ ] Replace the prototype bearer token and browser storage with an opaque server session and a `Secure`, `HttpOnly`, `SameSite` cookie.
+- [ ] Add logout, session expiry and revocation, credentialed CORS, exact origin checks, and CSRF protection.
 - [ ] Select production API hosting and database.
 - [ ] Define guardian and child-account policies.
 - [ ] Define privacy, consent, safeguarding, and data retention.

@@ -1,7 +1,10 @@
 # ADR-0002: MyGita as an orchestration region
 
-Status: Accepted  
-Date: 2026-09-10
+- Status: Accepted
+- Implementation: Partial
+- Supersedes: None
+- Superseded by: None
+- Date: 2026-09-10
 
 ## Decision
 
