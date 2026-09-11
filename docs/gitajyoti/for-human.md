@@ -41,6 +41,8 @@ MyGita is an orchestration region, not a container for every learning implementa
 
 Authorization is not centralized blindly under Identity. The feature that owns a resource remains responsible for its resource-specific authorization rules.
 
+Within Identity, an **Account** is the unique loggable environment and authorization principal, while a **Profile** contains the person's facts. Login identifiers locate an Account; authenticators such as a password or future passkey prove control. Mobile numbers and email addresses are Profile contact points and are not considered verified merely because they were entered.
+
 Discovery is a page and use case, not a fourth feature. It composes Experience catalogue data with Journey participation state. Similarly, an activity page combines an Experience activity definition with the learner's Journey state.
 
 ## How the MyGita client is organized
@@ -87,15 +89,16 @@ API identities use dots in prose. Their filesystem directories use hyphens—for
 - MyGita is a dependency-free browser application using native ES modules.
 - MyGita has working discovery, experience detail, batch selection, interest registration, simulated OTP, onboarding, journey, activity, profile, review, and system-state screens.
 - Pages work through asynchronous Identity, Experience, and Journey repositories.
+- Username/password Account creation and login are the primary Identity UI; Profile setup is optional and can be resumed later.
 - Repositories have fixture and API providers; fixtures remain the default and persist prototype state in `sessionStorage`.
 - Checked-JavaScript analysis, repository-contract tests, fixture-integrity tests, and architecture import-boundary tests are available.
 - Repository-boundary Phase 1 is complete.
 - A local Python mock API supports the API-backed development mode.
 - API transport, bearer-session handling, runtime response validation, normalization, and explicit provider selection are implemented.
-- The OpenAPI 3.1 `mygita.api` contract covers every mock API operation and is checked against documented examples and captured mock responses.
+- The OpenAPI 3.1 `mygita.api` contract covers every current mock API operation; version 0.2 defines password Account creation and login, now implemented at the client boundary with server integration in progress.
 - A complete Gita Sāra flow is tested through the API providers and mock server.
 
-The prototype OTP is `123456`. It is not a production authentication mechanism.
+The prototype OTP compatibility option is `123456`. It is not the primary UI or a production authentication mechanism.
 
 ### Fixture independence
 
@@ -140,4 +143,5 @@ pnpm run check
 - [Glossary](glossary.md) defines the shared language.
 - [System context](architecture/system-context.md) gives the concise ecosystem view.
 - [Repository boundaries](architecture/repository-boundaries.md) defines the UI/data-access seam.
+- [Identity architecture](architecture/identity.md) separates the loggable Account from Profile facts and authentication methods.
 - [Product integration](architecture/product-integration.md) explains how MyGita and learning products differ and connect.

@@ -6,13 +6,17 @@ import os
 import tempfile
 import threading
 
-from .store import Store
+from .store import DuplicateLoginIdentifier, Store
 
 
 INITIAL_RUNTIME_STATE = {
     "users": [],
     "journeys": [],
     "interests": [],
+    "accounts": [],
+    "profiles": [],
+    "loginIdentifiers": [],
+    "authenticators": [],
 }
 
 
@@ -108,7 +112,16 @@ class JsonStore(Store):
     # Identity.
 
     def find_user(self, user_id):
-        return next((user for user in self._state["users"] if user["id"] == user_id), None)
+        legacy = next((user for user in self._state["users"] if user["id"] == user_id), None)
+        if legacy is not None:
+            return legacy
+        account = next((item for item in self._state["accounts"] if item["id"] == user_id), None)
+        if account is None:
+            return None
+        profile = next((item for item in self._state["profiles"] if item["accountId"] == user_id), None)
+        if profile is None:
+            return None
+        return self._compose_user_dto(account, profile)
 
     def find_user_by_mobile(self, mobile):
         return next(
@@ -123,11 +136,64 @@ class JsonStore(Store):
         return user
 
     def update_user(self, user):
-        self._save()
+        with self._lock:
+            legacy = next((item for item in self._state["users"] if item["id"] == user["id"]), None)
+            if legacy is None:
+                profile = next((item for item in self._state["profiles"] if item["accountId"] == user["id"]), None)
+                if profile is not None:
+                    profile["personalDetails"] = user["personalDetails"]
+                    profile["onboarding"] = user["onboarding"]
+            self._write()
         return user
 
     def list_users(self):
         return list(self._state["users"])
+
+    # Account / Profile / Authenticator (password milestone).
+
+    def _compose_user_dto(self, account, profile):
+        return {
+            "id": account["id"],
+            "roles": account["roles"],
+            "status": account["status"],
+            "personalDetails": profile["personalDetails"],
+            "onboarding": profile["onboarding"],
+            "createdAt": account["createdAt"],
+        }
+
+    def find_login_identifier(self, identifier_type, value):
+        return next(
+            (
+                item
+                for item in self._state["loginIdentifiers"]
+                if item["type"] == identifier_type and item["value"] == value
+            ),
+            None,
+        )
+
+    def find_authenticator(self, account_id, authenticator_type):
+        return next(
+            (
+                item
+                for item in self._state["authenticators"]
+                if item["accountId"] == account_id and item["type"] == authenticator_type
+            ),
+            None,
+        )
+
+    def create_password_account(self, account, profile, identifier, authenticator):
+        with self._lock:
+            if self.find_login_identifier(identifier["type"], identifier["value"]) is not None:
+                raise DuplicateLoginIdentifier(identifier["value"])
+            self._state["accounts"].append(account)
+            self._state["profiles"].append(profile)
+            self._state["loginIdentifiers"].append(identifier)
+            self._state["authenticators"].append(authenticator)
+            self._write()
+        return self._compose_user_dto(account, profile)
+
+    def list_accounts(self):
+        return list(self._state["accounts"])
 
     # Journey.
 

@@ -36,6 +36,9 @@
 .auth-method--active { border-color:var(--color-gold-dark); }
 .auth-method:disabled { opacity:.55; }
 .auth-method span { font-size:.9rem; }
+.auth-alternative { margin-top:var(--space-5); }
+.prototype-auth { margin-top:var(--space-5); color:var(--color-muted); font-size:.9rem; }
+.prototype-auth a { display:inline-block; margin-top:var(--space-2); }
 .auth-step { max-width:38rem; margin-inline:auto; }
 .mobile-field { display:grid; grid-template-columns:auto 1fr; align-items:center; overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-sm); background:white; }
 .mobile-field span { padding:0 var(--space-4); border-right:1px solid var(--color-border); font-weight:800; }

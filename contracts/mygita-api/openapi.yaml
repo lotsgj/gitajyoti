@@ -1,11 +1,11 @@
 openapi: 3.1.0
 info:
   title: MyGita API
-  version: 0.1.0
+  version: 0.2.0
   description: >-
     Authoritative browser-to-server contract for the MyGita region. The current
-    implementation is a local mock API; production identity and persistence are
-    outside this contract milestone.
+    implementation is a local mock API. Password Account creation and login are
+    contract-first additions; production identity and persistence remain deferred.
   license:
     name: All rights reserved
     identifier: LicenseRef-Proprietary
@@ -218,6 +218,136 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         default:
           $ref: '#/components/responses/UnexpectedError'
+  /auth/accounts:
+    post:
+      tags: [Identity]
+      operationId: createPasswordAccount
+      summary: Create an Account with a username and password
+      description: >-
+        Atomically creates a unique Account, password Authenticator, and pending
+        Profile, then establishes an authenticated session. Mobile number and
+        email address are not required and are not implicitly verified.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordAccountCreate'
+            example:
+              username: vijay
+              password: a long memorable passphrase
+      responses:
+        '201':
+          description: Account created and session established
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiJ9.example.signature
+                tokenType: Bearer
+                expiresIn: 28800
+                isNewUser: true
+                user:
+                  id: user-example
+                  roles: [learner]
+                  status: active
+                  personalDetails:
+                    fullName: ''
+                    displayName: ''
+                    email: ''
+                    mobile: ''
+                    dateOfBirth: ''
+                    preferredLanguage: ''
+                    city: ''
+                    country: India
+                    timezone: Asia/Kolkata
+                    profilePicture: ''
+                  onboarding:
+                    state: pending
+                    completedAt: null
+                  createdAt: '2026-09-11T10:00:00+00:00'
+        '409':
+          description: The normalized username is already assigned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: username_unavailable
+                  message: Choose a different username
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /auth/password/login:
+    post:
+      tags: [Identity]
+      operationId: loginWithPassword
+      summary: Log in with a username and password
+      description: >-
+        Normalizes the username, verifies the password Authenticator, and
+        establishes a session. Unknown usernames and incorrect passwords return
+        the same error so the response does not disclose Account existence.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordLogin'
+            example:
+              username: vijay
+              password: a long memorable passphrase
+      responses:
+        '200':
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiJ9.example.signature
+                tokenType: Bearer
+                expiresIn: 28800
+                isNewUser: false
+                user:
+                  id: user-example
+                  roles: [learner]
+                  status: active
+                  personalDetails:
+                    fullName: Vijay Sharma
+                    displayName: Vijay
+                    email: ''
+                    mobile: ''
+                    dateOfBirth: '1985-05-12'
+                    preferredLanguage: English
+                    city: Bengaluru
+                    country: India
+                    timezone: Asia/Kolkata
+                    profilePicture: ''
+                  onboarding:
+                    state: complete
+                    completedAt: '2026-09-11T10:01:00+00:00'
+                  createdAt: '2026-09-11T10:00:00+00:00'
+        '401':
+          description: Username or password is incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+              example:
+                error:
+                  code: invalid_credentials
+                  message: Username or password is incorrect
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
   /me:
     get:
       tags: [Identity]
@@ -273,7 +403,7 @@ paths:
     patch:
       tags: [Identity]
       operationId: completeOnboarding
-      summary: Complete mandatory learner onboarding
+      summary: Complete optional learner Profile setup
       security:
         - bearerAuth: []
       requestBody:
@@ -523,15 +653,15 @@ components:
               code: authentication_required
               message: A bearer token is required
     AuthorizationError:
-      description: The learner cannot perform the operation yet
+      description: The learner is not authorized to perform the operation
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
           example:
             error:
-              code: onboarding_required
-              message: Complete the mandatory profile before continuing
+              code: operation_not_permitted
+              message: This Account cannot perform the requested operation
     NotFoundError:
       description: Requested resource not found
       content:
@@ -565,7 +695,7 @@ components:
               details:
                 fields: [fullName, displayName, dateOfBirth]
     RateLimitError:
-      description: Too many OTP attempts
+      description: Too many attempts
       content:
         application/json:
           schema:
@@ -797,6 +927,34 @@ components:
       properties:
         challengeId: {type: string, minLength: 1}
         otp: {type: string, pattern: '^[0-9]{6}$'}
+    Username:
+      type: string
+      minLength: 3
+      maxLength: 32
+      pattern: '^[A-Za-z0-9][A-Za-z0-9._-]*$'
+      description: Account login identifier normalized to lowercase by the server.
+    Password:
+      type: string
+      minLength: 15
+      maxLength: 128
+      writeOnly: true
+      description: >-
+        User-chosen password. The server applies compromised-password screening
+        and password-specific hashing without imposing composition rules.
+    PasswordAccountCreate:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: {$ref: '#/components/schemas/Username'}
+        password: {$ref: '#/components/schemas/Password'}
+    PasswordLogin:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: {$ref: '#/components/schemas/Username'}
+        password: {$ref: '#/components/schemas/Password'}
     PersonalDetails:
       type: object
       additionalProperties: false
@@ -805,7 +963,7 @@ components:
         fullName: {type: string}
         displayName: {type: string}
         email: {type: string}
-        mobile: {type: string, pattern: '^\+91[6-9][0-9]{9}$'}
+        mobile: {type: string, pattern: '^(|\+91[6-9][0-9]{9})$'}
         dateOfBirth: {type: string}
         preferredLanguage: {type: string}
         city: {type: string}

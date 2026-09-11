@@ -38,6 +38,15 @@ Status: Planned
 - Product-specific API contracts
 - Secure launch, enrolment provisioning, and progress synchronization
 
+## Identity evolution
+
+Status: Planned
+
+- Separate Account, Profile, Login Identifier, Authenticator, and identity evidence.
+- Add zero-message-cost username/password Account creation and login.
+- Preserve OTP only as a temporary prototype path during the additive migration.
+- Add recovery and additional authenticators as separately reviewed capabilities.
+
 ## Phase 4 — Production readiness
 
 Status: Deferred

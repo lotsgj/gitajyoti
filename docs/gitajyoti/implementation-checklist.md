@@ -54,6 +54,19 @@
 - [ ] Make update operations mutate and commit atomically inside the store boundary.
 - [ ] Run shared persistence-contract tests against every store implementation.
 
+## Password account identity
+
+- [x] Separate Account, Profile, Login Identifier, Authenticator, Contact Point, Identity Evidence, and Recovery Method in the architecture.
+- [x] Define password Account creation and login in the authoritative OpenAPI contract.
+- [x] Implement Account, Login Identifier, password Authenticator, and pending Profile persistence on the server.
+- [x] Implement password Account creation and login on the server.
+- [x] Add password registration and login to the client Identity repository contract.
+- [x] Implement matching fixture and API Identity providers.
+- [x] Replace the OTP-first client screens with create-account and password-login compositions.
+- [x] Make post-registration Profile setup optional and keep Profile accessible from the Account menu.
+- [x] Verify the server-backed happy path for Account creation, optional Profile skip, enrolment, sign-out, password login, and restored Journey state.
+- [ ] Verify password registration, login, onboarding, reload, and failure flows across fixture and API modes.
+
 ## Product integration
 
 - [ ] Define common learner, enrolment, launch, progress, completion, error, and correlation concepts.

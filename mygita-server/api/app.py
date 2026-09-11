@@ -10,11 +10,22 @@ import time
 import uuid
 
 from .auth import TokenError, issue_token, verify_token
+from .passwords import hash_password, verify_password
 from .storage import JsonStore
+from .store import DuplicateLoginIdentifier
 
 
 API_PREFIX = "/api/v1"
 DEFAULT_ORIGINS = {"http://127.0.0.1:8000", "http://localhost:8000"}
+
+USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+USERNAME_MIN_LENGTH = 3
+USERNAME_MAX_LENGTH = 32
+PASSWORD_MIN_LENGTH = 15
+PASSWORD_MAX_LENGTH = 128
+
+RATE_LIMIT_WINDOW_SECONDS = 900
+RATE_LIMIT_MAX_ATTEMPTS = 5
 
 
 class ApiProblem(Exception):
@@ -33,8 +44,9 @@ class MyGitaApplication:
         self.allowed_origins = set(allowed_origins or DEFAULT_ORIGINS)
         self.now = now or time.time
         self.otp_challenges = {}
+        self.rate_limit_state = {}
 
-    def dispatch(self, method, path, body, headers):
+    def dispatch(self, method, path, body, headers, client_ip=None):
         route = path.rstrip("/") or "/"
         if route == API_PREFIX and method == "GET":
             return 200, {
@@ -61,9 +73,14 @@ class MyGitaApplication:
             return 201, self._request_otp(body)
         if route == API_PREFIX + "/auth/otp/verify" and method == "POST":
             return 200, self._verify_otp(body)
+        if route == API_PREFIX + "/auth/accounts" and method == "POST":
+            return 201, self._create_password_account(body, client_ip)
+        if route == API_PREFIX + "/auth/password/login" and method == "POST":
+            return 200, self._login_with_password(body, client_ip)
         if route == API_PREFIX + "/dev/reset" and method == "POST":
             self.store.reset()
             self.otp_challenges.clear()
+            self.rate_limit_state.clear()
             return 200, {"status": "reset"}
 
         user = self._authenticated_user(headers)
@@ -73,7 +90,9 @@ class MyGitaApplication:
             return 200, self._update_profile(user, body, onboarding=False)
         if route == API_PREFIX + "/me/onboarding" and method == "PATCH":
             return 200, self._update_profile(user, body, onboarding=True)
-        self._require_onboarding(user)
+        # Profile completion is not an authorization gate (ADR-0010): a
+        # pending Profile can still discover, register interest, enrol, and
+        # participate in a Journey.
         if route == API_PREFIX + "/me/journey" and method == "GET":
             return 200, self._get_journey(user)
         if route == API_PREFIX + "/me/journey" and method == "POST":
@@ -149,8 +168,117 @@ class MyGitaApplication:
         else:
             user = existing
         self.otp_challenges.pop(str(body.get("challengeId")), None)
+        return self._issue_session(user, created)
+
+    def _issue_session(self, user, is_new_user):
+        """Shared session-issuance path: every authentication method (OTP
+        today; password now; future authenticators) converges here once its
+        own proof has been verified. See ADR-0010."""
         token = issue_token(user, self.secret, now=self.now())
-        return {"accessToken": token, "tokenType": "Bearer", "expiresIn": 28800, "isNewUser": created, "user": user}
+        return {"accessToken": token, "tokenType": "Bearer", "expiresIn": 28800, "isNewUser": is_new_user, "user": user}
+
+    def _rate_limit_tick(self, bucket, key):
+        """Increment the attempt counter for (bucket, key) in the current
+        fixed window and return True if the caller is still within the
+        allowed rate. Every call counts, including ones on an
+        already-exhausted bucket, so a caller stays blocked for the rest of
+        the window once it trips."""
+        now = int(self.now())
+        buckets = self.rate_limit_state.setdefault(bucket, {})
+        record = buckets.get(key)
+        if record is None or now - record["windowStart"] >= RATE_LIMIT_WINDOW_SECONDS:
+            record = {"windowStart": now, "count": 0}
+            buckets[key] = record
+        record["count"] += 1
+        return record["count"] <= RATE_LIMIT_MAX_ATTEMPTS
+
+    def _reset_rate_limit(self, bucket, key):
+        self.rate_limit_state.setdefault(bucket, {}).pop(key, None)
+
+    def _normalise_username(self, raw):
+        value = str(raw or "")
+        if not (USERNAME_MIN_LENGTH <= len(value) <= USERNAME_MAX_LENGTH) or not USERNAME_PATTERN.fullmatch(value):
+            raise ApiProblem(
+                422,
+                "invalid_username",
+                "Choose a username of %d-%d letters, digits, '.', '_' or '-', starting with a letter or digit"
+                % (USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH),
+            )
+        return value.lower()
+
+    def _validate_password(self, raw):
+        value = str(raw or "")
+        if not (PASSWORD_MIN_LENGTH <= len(value) <= PASSWORD_MAX_LENGTH):
+            raise ApiProblem(
+                422,
+                "weak_password",
+                "Choose a password of %d-%d characters" % (PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH),
+            )
+        return value
+
+    def _create_password_account(self, body, client_ip):
+        # IP gate first: protects against malformed-body request spam too,
+        # since it runs before any input is parsed. Username gate follows
+        # once the identifier is known to be well-formed.
+        if not self._rate_limit_tick("account_creation:ip", client_ip or "unknown"):
+            raise ApiProblem(429, "account_creation_rate_limited", "Too many account creation attempts from this address")
+        username = self._normalise_username(body.get("username"))
+        password = self._validate_password(body.get("password"))
+        if not self._rate_limit_tick("account_creation:username", username):
+            raise ApiProblem(429, "account_creation_rate_limited", "Too many account creation attempts for this username")
+        created_at = datetime.now(timezone.utc).isoformat()
+        account = {
+            "id": "user-" + uuid.uuid4().hex,
+            "status": "active",
+            "roles": ["learner"],
+            "createdAt": created_at,
+        }
+        profile = {
+            "id": "profile-" + uuid.uuid4().hex,
+            "accountId": account["id"],
+            "personalDetails": {
+                "fullName": "",
+                "displayName": "",
+                "email": "",
+                "mobile": "",
+                "dateOfBirth": "",
+                "preferredLanguage": "",
+                "city": "",
+                "country": "India",
+                "timezone": "Asia/Kolkata",
+                "profilePicture": "",
+            },
+            "onboarding": {"state": "pending", "completedAt": None},
+        }
+        identifier = {"type": "username", "value": username, "accountId": account["id"]}
+        authenticator = {
+            "accountId": account["id"],
+            "type": "password",
+            "passwordHash": hash_password(password),
+            "createdAt": created_at,
+        }
+        try:
+            user = self.store.create_password_account(account, profile, identifier, authenticator)
+        except DuplicateLoginIdentifier as exc:
+            raise ApiProblem(409, "username_unavailable", "Choose a different username") from exc
+        return self._issue_session(user, True)
+
+    def _login_with_password(self, body, client_ip):
+        if not self._rate_limit_tick("password_login:ip", client_ip or "unknown"):
+            raise ApiProblem(429, "login_rate_limited", "Too many login attempts from this address")
+        username = self._normalise_username(body.get("username"))
+        password = self._validate_password(body.get("password"))
+        if not self._rate_limit_tick("password_login:username", username):
+            raise ApiProblem(429, "login_rate_limited", "Too many login attempts for this username")
+        identifier = self.store.find_login_identifier("username", username)
+        authenticator = identifier and self.store.find_authenticator(identifier["accountId"], "password")
+        # Unknown username and incorrect password return the identical error
+        # so the response never discloses whether an Account exists.
+        if not authenticator or not verify_password(password, authenticator["passwordHash"]):
+            raise ApiProblem(401, "invalid_credentials", "Username or password is incorrect")
+        self._reset_rate_limit("password_login:username", username)
+        user = self.store.find_user(identifier["accountId"])
+        return self._issue_session(user, False)
 
     def _authenticated_user(self, headers):
         authorization = headers.get("Authorization", "")
@@ -164,10 +292,6 @@ class MyGitaApplication:
         if not user or user.get("status") != "active":
             raise ApiProblem(401, "invalid_user", "The token user is not active")
         return user
-
-    def _require_onboarding(self, user):
-        if user.get("onboarding", {}).get("state") != "complete":
-            raise ApiProblem(403, "onboarding_required", "Complete the mandatory profile before continuing")
 
     def _update_profile(self, user, body, onboarding):
         allowed = {"fullName", "displayName", "dateOfBirth", "email", "preferredLanguage", "city"}
@@ -289,7 +413,8 @@ def make_handler(application):
                 if request_path != API_PREFIX and not request_path.startswith(API_PREFIX + "/"):
                     raise ApiProblem(404, "not_found", "The requested API route does not exist")
                 body = self._read_json() if method in {"POST", "PATCH"} else {}
-                status, payload = application.dispatch(method, request_path, body, self.headers)
+                client_ip = self.client_address[0] if self.client_address else None
+                status, payload = application.dispatch(method, request_path, body, self.headers, client_ip)
                 self._send_json(status, payload)
             except ApiProblem as problem:
                 error = {"error": {"code": problem.code, "message": problem.message}}

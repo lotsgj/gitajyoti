@@ -16,6 +16,24 @@ export function createIdentityApiProvider(request = mygitaApiRequest) {
         await request("/me", { authenticated: true, validate: validateUser })
       );
     },
+    async createPasswordAccount(credentials) {
+      const payload = await request("/auth/accounts", {
+        method: "POST",
+        body: credentials,
+        validate: validateAuthSession,
+      });
+      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn });
+      return { user: payload.user, isNewUser: payload.isNewUser };
+    },
+    async loginWithPassword(credentials) {
+      const payload = await request("/auth/password/login", {
+        method: "POST",
+        body: credentials,
+        validate: validateAuthSession,
+      });
+      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn });
+      return { user: payload.user, isNewUser: payload.isNewUser };
+    },
     async requestOtp(mobile) {
       const payload = await request("/auth/otp/request", {
         method: "POST",

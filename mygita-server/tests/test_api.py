@@ -95,8 +95,10 @@ class ApiTestCase(unittest.TestCase):
     def test_registration_existing_user_and_onboarding(self):
         token, first = self.register(complete=False)
         self.assertTrue(first["isNewUser"])
+        # Profile completion is not an authorization gate (ADR-0010): a
+        # pending Profile can still read Journey state.
         status, payload, _ = self.request("GET", "/me/journey", token=token)
-        self.assertEqual((status, payload["error"]["code"]), (403, "onboarding_required"))
+        self.assertEqual((status, payload), (200, {"items": [], "interests": []}))
         status, user, _ = self.request("PATCH", "/me/onboarding", {"fullName": "Vijay Sharma", "displayName": "Vijay", "dateOfBirth": "1985-05-12"}, token)
         self.assertEqual(user["onboarding"]["state"], "complete")
         _, second_challenge, _ = self.request("POST", "/auth/otp/request", {"mobile": "9876543210"})
@@ -138,6 +140,146 @@ class ApiTestCase(unittest.TestCase):
         self.register()
         reloaded = JsonStore(self.seed_dir, self.temporary.name)
         self.assertEqual(len(reloaded.list_users()), 1)
+
+    def create_password_account(self, username="vijay.sharma", password="a long memorable passphrase"):
+        status, payload, _ = self.request("POST", "/auth/accounts", {"username": username, "password": password})
+        return status, payload
+
+    def test_password_account_creation_and_login(self):
+        status, created = self.create_password_account()
+        self.assertEqual(status, 201)
+        self.assertTrue(created["isNewUser"])
+        self.assertEqual(created["user"]["onboarding"]["state"], "pending")
+        self.assertEqual(created["user"]["personalDetails"]["mobile"], "")
+        token = created["accessToken"]
+
+        status, logged_in, _ = self.request(
+            "POST", "/auth/password/login", {"username": "vijay.sharma", "password": "a long memorable passphrase"}
+        )
+        self.assertEqual(status, 200)
+        self.assertFalse(logged_in["isNewUser"])
+        self.assertEqual(logged_in["user"]["id"], created["user"]["id"])
+
+        status, onboarded, _ = self.request(
+            "PATCH",
+            "/me/onboarding",
+            {"fullName": "Vijay Sharma", "displayName": "Vijay", "dateOfBirth": "1985-05-12"},
+            token,
+        )
+        self.assertEqual((status, onboarded["onboarding"]["state"]), (200, "complete"))
+
+        # An Account authenticated by password reaches the existing Journey
+        # feature completely unchanged -- proof that find_user/update_user
+        # resolve Account-backed and legacy OTP users transparently.
+        status, journey, _ = self.request(
+            "POST",
+            "/me/journey",
+            {"experienceId": "exp-gita-sara", "batchId": "batch-sara-2026-09"},
+            token,
+        )
+        self.assertEqual(status, 201)
+        self.assertEqual(journey["progress"], {"completed": 0, "total": 3})
+
+    def test_password_account_optional_profile_behavior(self):
+        # ADR-0010: Profile setup is optional after Account creation. A
+        # pending Profile must still be able to discover, register
+        # interest, enrol, and participate in a Journey.
+        status, created = self.create_password_account(username="pending.profile")
+        self.assertEqual(status, 201)
+        self.assertEqual(created["user"]["onboarding"]["state"], "pending")
+        token = created["accessToken"]
+
+        status, journey, _ = self.request(
+            "POST",
+            "/me/journey",
+            {"experienceId": "exp-gita-sara", "batchId": "batch-sara-2026-09"},
+            token,
+        )
+        self.assertEqual(status, 201)
+        activity_id = journey["nextActivity"]["id"]
+        status, updated, _ = self.request("POST", "/me/activities/" + activity_id + "/complete", {}, token)
+        self.assertEqual((status, updated["progress"]["completed"]), (200, 1))
+
+        status, interest, _ = self.request("POST", "/me/interests", {"experienceId": "exp-purna-yoga"}, token)
+        self.assertEqual(status, 201)
+
+        # Still pending -- none of the above required completing it.
+        status, me, _ = self.request("GET", "/me", token=token)
+        self.assertEqual((status, me["onboarding"]["state"]), (200, "pending"))
+
+    def test_password_account_duplicate_username(self):
+        status, _ = self.create_password_account(username="dup.user")
+        self.assertEqual(status, 201)
+        status, payload = self.create_password_account(username="dup.user", password="another long passphrase")
+        self.assertEqual((status, payload["error"]["code"]), (409, "username_unavailable"))
+
+    def test_password_username_normalization(self):
+        status, created = self.create_password_account(username="Mixed.Case")
+        self.assertEqual(status, 201)
+        status, payload, _ = self.request(
+            "POST", "/auth/password/login", {"username": "mixed.case", "password": "a long memorable passphrase"}
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(payload["user"]["id"], created["user"]["id"])
+        status, conflict = self.create_password_account(username="MIXED.CASE", password="yet another passphrase")
+        self.assertEqual((status, conflict["error"]["code"]), (409, "username_unavailable"))
+
+    def test_password_account_invalid_input(self):
+        status, payload = self.create_password_account(username="ab")
+        self.assertEqual((status, payload["error"]["code"]), (422, "invalid_username"))
+        status, payload = self.create_password_account(username="bad username!")
+        self.assertEqual((status, payload["error"]["code"]), (422, "invalid_username"))
+        status, payload = self.create_password_account(username="short.pw.user", password="short")
+        self.assertEqual((status, payload["error"]["code"]), (422, "weak_password"))
+
+    def test_password_login_incorrect_credentials(self):
+        self.create_password_account(username="login.user")
+        status, payload, _ = self.request(
+            "POST", "/auth/password/login", {"username": "login.user", "password": "the wrong passphrase here"}
+        )
+        self.assertEqual((status, payload["error"]["code"]), (401, "invalid_credentials"))
+        status, payload, _ = self.request(
+            "POST", "/auth/password/login", {"username": "nobody.here", "password": "a long memorable passphrase"}
+        )
+        self.assertEqual((status, payload["error"]["code"]), (401, "invalid_credentials"))
+
+    def test_password_account_creation_rate_limiting(self):
+        for _ in range(5):
+            self.create_password_account(username="rate.limited")
+        status, payload = self.create_password_account(username="rate.limited")
+        self.assertEqual((status, payload["error"]["code"]), (429, "account_creation_rate_limited"))
+
+    def test_password_login_rate_limiting(self):
+        self.create_password_account(username="rate.login")
+        for _ in range(5):
+            self.request(
+                "POST", "/auth/password/login", {"username": "rate.login", "password": "the wrong passphrase here"}
+            )
+        status, payload, _ = self.request(
+            "POST", "/auth/password/login", {"username": "rate.login", "password": "the wrong passphrase here"}
+        )
+        self.assertEqual((status, payload["error"]["code"]), (429, "login_rate_limited"))
+
+    def test_password_account_state_survives_store_reload(self):
+        self.create_password_account(username="persisted.user")
+        reloaded = JsonStore(self.seed_dir, self.temporary.name)
+        self.assertEqual(len(reloaded.list_accounts()), 1)
+        identifier = reloaded.find_login_identifier("username", "persisted.user")
+        self.assertIsNotNone(identifier)
+        self.assertIsNotNone(reloaded.find_authenticator(identifier["accountId"], "password"))
+
+    def test_password_material_absent_from_responses(self):
+        status, created = self.create_password_account(username="secret.user")
+        self.assertEqual(status, 201)
+        token = created["accessToken"]
+        _, me, _ = self.request("GET", "/me", token=token)
+        _, logged_in, _ = self.request(
+            "POST", "/auth/password/login", {"username": "secret.user", "password": "a long memorable passphrase"}
+        )
+        for payload in (created, me, logged_in):
+            serialized = json.dumps(payload)
+            self.assertNotIn("password", serialized.lower())
+            self.assertNotIn("scrypt", serialized)
 
 
 if __name__ == "__main__":

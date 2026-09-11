@@ -13,17 +13,18 @@ beforeEach(() => { globalThis.sessionStorage = new MemorySessionStorage(); });
 
 async function assertIdentityContract(repository) {
   assert.equal(await repository.getCurrentUser(), null);
-  const challenge = await repository.requestOtp("9876543210");
-  assert.ok(challenge.challengeId);
-  const authenticated = await repository.verifyOtp(challenge.challengeId, "123456");
+  const authenticated = await repository.createPasswordAccount({ username: "Aruna.Rao", password: "a long fixture passphrase" });
   assert.equal(authenticated.user.onboarding?.state, "pending");
+  await repository.signOut();
+  assert.equal(await repository.getCurrentUser(), null);
+  const signedIn = await repository.loginWithPassword({ username: "ARUNA.RAO", password: "a long fixture passphrase" });
+  assert.equal(signedIn.isNewUser, false);
   const user = await repository.completeOnboarding({ fullName: "Aruna Rao", displayName: "Aruna", dateOfBirth: "1992-01-02" });
   assert.equal(user.personalDetails.displayName, "Aruna");
   assert.ok((await repository.getCurrentUser())?.id);
   const updated = await repository.updateProfile({ displayName: "Aru" });
   assert.equal(updated.personalDetails.displayName, "Aru");
-  await repository.signOut();
-  assert.equal(await repository.getCurrentUser(), null);
+  await assert.rejects(repository.createPasswordAccount({ username: "aruna.rao", password: "another long passphrase" }));
 }
 
 async function assertExperienceContract(repository) {
@@ -69,6 +70,7 @@ function createApiHarness() {
     enrolment: { state: "open" },
   };
   let user = null;
+  const accounts = new Map();
   const journeys = [];
   const interests = [];
   const completed = [];
@@ -83,6 +85,19 @@ function createApiHarness() {
     if (path === "/auth/otp/verify") {
       user = { id: "user-api", roles: ["learner"], personalDetails: { fullName: "", displayName: "", dateOfBirth: "" }, onboarding: { state: "pending" } };
       return { accessToken: "api-token", expiresIn: 28800, isNewUser: true, user };
+    }
+    if (path === "/auth/accounts") {
+      const username = options.body.username.trim().toLowerCase();
+      if (accounts.has(username)) throw new Error("Choose a different username.");
+      user = { id: `user-${username}`, roles: ["learner"], personalDetails: { fullName: "", displayName: "", dateOfBirth: "" }, onboarding: { state: "pending" } };
+      accounts.set(username, { password: options.body.password, user });
+      return { accessToken: "api-token", expiresIn: 28800, isNewUser: true, user };
+    }
+    if (path === "/auth/password/login") {
+      const account = accounts.get(options.body.username.trim().toLowerCase());
+      if (!account || account.password !== options.body.password) throw new Error("Username or password is incorrect.");
+      user = account.user;
+      return { accessToken: "api-token", expiresIn: 28800, isNewUser: false, user };
     }
     if (path === "/me/onboarding") { user = { ...user, personalDetails: { ...user.personalDetails, ...options.body }, onboarding: { state: "complete" } }; return user; }
     if (path === "/me" && method === "PATCH") { user = { ...user, personalDetails: { ...user.personalDetails, ...options.body } }; return user; }
@@ -120,6 +135,13 @@ describe("API providers", () => {
     await harness.identity.verifyOtp(challenge.challengeId, "123456");
     await assertJourneyContract(harness.journey);
   });
+});
+
+test("OTP remains available as a compatibility authentication method", async () => {
+  const challenge = await identityFixtureProvider.requestOtp("9876543210");
+  assert.ok(challenge.challengeId);
+  const authenticated = await identityFixtureProvider.verifyOtp(challenge.challengeId, "123456");
+  assert.equal(authenticated.user.onboarding?.state, "pending");
 });
 
 test("feature fixture providers preserve fields owned by other features", async () => {

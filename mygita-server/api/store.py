@@ -13,6 +13,13 @@ architectural rationale.
 from abc import ABC, abstractmethod
 
 
+class DuplicateLoginIdentifier(Exception):
+    """Raised by `create_password_account` when the login identifier it was
+    asked to attach (e.g. a normalized username) already resolves to a
+    different Account. The check and the insert happen atomically inside the
+    store so this can never be a check-then-act race."""
+
+
 class Store(ABC):
     # Reference data (read-only, seeded).
 
@@ -48,23 +55,63 @@ class Store(ABC):
 
     @abstractmethod
     def find_user(self, user_id):
-        """Return a user by id, or None."""
+        """Return a user by id, or None.
+
+        Resolves either the legacy (mobile-OTP) `users` collection or an
+        Account+Profile pair, composed into the same User-compatible shape,
+        transparently. Callers never need to know which one a given id is."""
 
     @abstractmethod
     def find_user_by_mobile(self, mobile):
-        """Return a user by mobile number, or None."""
+        """Return a legacy (mobile-OTP) user by mobile number, or None."""
 
     @abstractmethod
     def create_user(self, user):
-        """Persist a new user and return it."""
+        """Persist a new legacy (mobile-OTP) user and return it."""
 
     @abstractmethod
     def update_user(self, user):
-        """Persist changes already made to a user and return it."""
+        """Persist changes already made to a user and return it.
+
+        Resolves back to whichever collection the user actually came from
+        (legacy `users`, or an Account's Profile) transparently."""
 
     @abstractmethod
     def list_users(self):
-        """Return every user. Diagnostic/test use only."""
+        """Return every legacy (mobile-OTP) user. Diagnostic/test use only."""
+
+    # Account / Profile / Authenticator (password milestone; see ADR-0010).
+    #
+    # An Account is the loggable principal; a Profile holds personal facts
+    # and is created pending alongside the Account; a login identifier
+    # (username, for now) locates an Account; an Authenticator proves control
+    # of it. These are separate collections from the legacy `users` above by
+    # design, so a future identifier/authenticator type (mobile, Google,
+    # Microsoft) is a new row shape, not a schema change. `find_user` and
+    # `update_user` above already resolve Account-backed users transparently
+    # for every other feature (Journey, Interests, Profile).
+
+    @abstractmethod
+    def find_login_identifier(self, identifier_type, value):
+        """Return {'type', 'value', 'accountId'} for a login identifier, or None."""
+
+    @abstractmethod
+    def find_authenticator(self, account_id, authenticator_type):
+        """Return the authenticator row for (account_id, authenticator_type), or None."""
+
+    @abstractmethod
+    def create_password_account(self, account, profile, identifier, authenticator):
+        """Atomically persist a new Account, its pending Profile, its login
+        identifier, and its password Authenticator, then return the composed
+        User-compatible DTO.
+
+        Raises DuplicateLoginIdentifier if `identifier` already resolves to a
+        different Account; the uniqueness check and the insert happen under
+        the same lock, so this can never be a check-then-act race."""
+
+    @abstractmethod
+    def list_accounts(self):
+        """Return every password-backed Account. Diagnostic/test use only."""
 
     # Journey.
 

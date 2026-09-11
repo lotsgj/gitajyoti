@@ -19,7 +19,9 @@ Last reviewed: 2026-09-11
 - Repository-boundary Phase 1 is complete.
 - API transport handles bearer sessions, timeouts, cancellation, malformed responses, normalized errors, and expired-session cleanup.
 - OpenAPI-generated runtime validators check HTTP responses before API providers normalize them into domain models.
-- Authentication uses the prototype OTP `123456` in the browser.
+- The prototype OTP `123456` remains available as a non-primary compatibility option.
+- Username/password Account creation and login are now the primary client screens in fixture mode; API adapters are implemented against contract version 0.2.
+- Profile setup after Account creation is optional and can be resumed from the Profile menu.
 - Learning illustrations and activity sessions remain placeholders.
 
 ## MyGita server
@@ -28,9 +30,9 @@ Last reviewed: 2026-09-11
 - Server application logic now depends on an injected `Store` interface; `JsonStore` is the default local implementation.
 - The persistence boundary is structurally in place, but `JsonStore` still exposes live mutable records; value isolation and atomic update operations remain to be completed.
 - Runtime data is persisted to ignored JSON state.
-- Seven API tests pass.
+- Seventeen API tests pass.
 - The browser can use the mock API through explicit provider selection; fixture behavior remains available independently.
-- The complete Gita Sāra prototype flow is verified through the API: catalogue, OTP, onboarding, batch enrolment, journey, activity completion, and profile update.
+- Server-backed API-provider flows verify the complete OTP-based Gita Sāra journey and the password lifecycle: Account creation, optional Profile skip, enrolment, sign-out, password login, and restored Journey state.
 - Browser fixtures and mock-server seed data remain independently authored; API adapters normalize the server model into the stable repository contracts.
 - The mock server is not a production identity or persistence service.
 
@@ -38,7 +40,8 @@ Last reviewed: 2026-09-11
 
 - Four products are identified, but no product applications are implemented in this repository.
 - The OpenAPI 3.1 `mygita.api` contract describes every current mock API operation, shared schemas, bearer authentication, and the standard error envelope.
-- Contract linting, 66 request/response example validations, and compatibility checks over 17 captured mock API responses run locally and in CI.
+- Contract version 0.2 additionally defines username/password Account creation and login; both client and server implementations are present.
+- Contract linting, 78 request/response example validations, and 20 server-response compatibility validations pass.
 - Identity, Experience, and Journey API providers implement the same contracts as fixture providers.
 - Product launch, enrolment provisioning, identity exchange, and progress synchronization are design work.
 

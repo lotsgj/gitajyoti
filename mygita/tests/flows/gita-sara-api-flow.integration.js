@@ -50,3 +50,36 @@ test("Gita Sāra works through runtime-validated API providers", async () => {
   await identity.signOut();
   assert.equal(await identity.getCurrentUser(), null);
 });
+
+test("password account survives optional Profile skip, sign-out, and sign-in", async () => {
+  const identity = createIdentityApiProvider();
+  const experience = createExperienceApiProvider();
+  const journey = createJourneyApiProvider();
+  const credentials = {
+    username: "aruna.browser.flow",
+    password: "a memorable gita phrase",
+  };
+
+  const registration = await identity.createPasswordAccount(credentials);
+  assert.equal(registration.isNewUser, true);
+  assert.equal(registration.user.onboarding?.state, "pending");
+  assert.equal((await identity.getCurrentUser())?.id, registration.user.id);
+
+  // Skipping optional Profile setup deliberately makes no Profile API call.
+  // Access to the signed-in experience and Journey must remain available.
+  const gitaSara = await experience.getExperience("gita-sara");
+  assert.equal(gitaSara?.id, "exp-gita-sara");
+  const batches = await experience.getBatches(gitaSara.id);
+  let state = await journey.enrol(gitaSara.id, batches[0].id);
+  assert.equal(state.journeys[0]?.experienceId, gitaSara.id);
+
+  await identity.signOut();
+  assert.equal(await identity.getCurrentUser(), null);
+
+  const login = await identity.loginWithPassword(credentials);
+  assert.equal(login.isNewUser, false);
+  assert.equal(login.user.id, registration.user.id);
+  assert.equal(login.user.onboarding?.state, "pending");
+  state = await journey.getState();
+  assert.equal(state.journeys[0]?.experienceId, gitaSara.id);
+});

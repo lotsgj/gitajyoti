@@ -29,3 +29,31 @@ See `changes.md`, 2026-09-11 entry, for the full change list.
 correctly flags a gap the change did not fully close — see roadmap item "Close the live-reference /
 non-atomic update gap in `JsonStore`" in `roadmap.md`, opened from that ADR's own consequences
 section rather than re-litigated here.
+
+## 2. Password hashing: PBKDF2-HMAC-SHA256, not Argon2id or scrypt
+
+**Status: NEW** — no ADR seen yet.
+
+**Change made (2026-09-11):** `api/passwords.py` hashes passwords with `hashlib.pbkdf2_hmac('sha256',
+...)` at 600,000 iterations, not Argon2id (`docs/gitajyoti/architecture/identity.md` handoff item 3's
+named default) and not scrypt (this milestone's own first choice, implemented then replaced in the
+same day).
+
+**Why an ADR, not just an implementation footnote:** the deviation isn't discretionary tuning — it's
+load-bearing. Argon2id has no Python stdlib implementation (would mean a new pip dependency, against
+this server's dependency-free design). scrypt *is* stdlib (`hashlib.scrypt`) but was found to be
+unavailable on two real deployment targets: Apple's bundled macOS Python (3.9.6, linked against
+LibreSSL 2.8.3 — `hashlib.scrypt` doesn't exist at all, confirmed by actually running
+`dev_server.py` under `/usr/bin/python3` and hitting `POST /auth/accounts`, not just an isolated
+check) and PythonAnywhere (matching forum reports of `ValueError: unsupported hash type scrypt` on
+their hosted Python images). PBKDF2-HMAC-SHA256 has been in `hashlib` since Python 3.4 with no
+OpenSSL-scrypt dependency, and is OWASP's documented fallback when Argon2id/scrypt/bcrypt aren't
+available. Full detail and reproduction steps: `changes.md`, 2026-09-11 09:10 UTC entry.
+
+**Why this matters to codex:** `identity.md`'s handoff item 3 still names Argon2id as the default
+with scrypt as the implied "equivalent" (per this session's own earlier framing) — a future reader
+of that doc, or a future server implementation (production, not this mock), could reasonably pick
+scrypt again without knowing it fails on real targets. Worth either an ADR recording the algorithm
+choice and its portability rationale, or an amendment to `identity.md` item 3 naming PBKDF2 (or the
+portability constraint itself) explicitly. I'm not proposing which — that's an ADR/docs judgment,
+codex's call.

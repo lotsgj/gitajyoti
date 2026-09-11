@@ -34,7 +34,7 @@ def main():
             headers = {"Authorization": "Bearer " + token} if token else {}
             dispatch_path = API_PREFIX if path == "/" else API_PREFIX + path
             try:
-                status, payload = application.dispatch(method, dispatch_path, body or {}, headers)
+                status, payload = application.dispatch(method, dispatch_path, body or {}, headers, "127.0.0.1")
             except ApiProblem as problem:
                 status = problem.status
                 payload = {"error": {"code": problem.code, "message": problem.message}}
@@ -73,6 +73,20 @@ def main():
         activity_id = journey["nextActivity"]["id"]
         request("GET", "/me/activities/" + activity_id, token=token)
         request("POST", "/me/activities/" + activity_id + "/complete", {}, token)
+
+        _, password_session = request(
+            "POST",
+            "/auth/accounts",
+            {"username": "asha.verma", "password": "a long memorable passphrase"},
+        )
+        password_token = password_session["accessToken"]
+        request("GET", "/me", token=password_token)
+        request(
+            "POST",
+            "/auth/password/login",
+            {"username": "Asha.Verma", "password": "a long memorable passphrase"},
+        )
+
         request("POST", "/dev/reset", {})
 
         capture_path = os.path.join(runtime_dir, "openapi-responses.json")

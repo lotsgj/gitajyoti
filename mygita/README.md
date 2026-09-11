@@ -2,6 +2,8 @@
 
 The client is a dependency-free, native ES-module application designed for GitHub Pages.
 
+Username/password Account creation and login are the primary Identity experience. Profile setup is optional after registration and remains available from the Account menu. The mobile OTP flow is retained only as a prototype compatibility option.
+
 ## Local preview
 
 From the repository root:
@@ -30,7 +32,7 @@ pnpm install --frozen-lockfile
 pnpm run check
 ```
 
-The check runs checked-JavaScript analysis, generated-validator freshness, fixture/API repository contracts, architecture and fixture tests, OpenAPI verification, mock-response compatibility, and the Gita Sāra API flow. Development dependencies are isolated under `dev-tools/node_modules` and are not required by the browser application.
+The check runs checked-JavaScript analysis, generated-validator freshness, fixture/API repository contracts, architecture and fixture tests, OpenAPI verification, mock-response compatibility, the Gita Sāra API flow, and the password Account lifecycle flow. Development dependencies are isolated under `dev-tools/node_modules` and are not required by the browser application.
 
 ## Boundaries
 

@@ -36,7 +36,42 @@ the whole request-handling path holds a lock across read-mutate-write. Server-in
 contract or docs impact expected — will fold into `changes.md` when done, and only needs a
 `suggestions.md` entry if the fix changes the shape of the `Store` interface itself.
 
-### 3. `SqliteStore` behind the existing `Store` interface (hybrid ER + JSON schema)
+### 3. Multi-method sign-in: Google, Microsoft, email/password alongside mobile OTP
+
+**Status: NEW** (design discussion 2026-09-11, no code written)
+
+Decision recommended: client-side SDK per provider (Google Identity Services, MSAL.js) obtains a
+provider-signed ID token; backend only verifies that token's signature against the provider's JWKS
+(`aud`/`iss`/`exp` checked, token discarded after use, never persisted) and then find-or-creates the
+local user and issues the same local session JWT `/auth/otp/verify` already issues. Rejected:
+backend-driven OAuth Authorization Code flow with server-held provider tokens — unnecessary here
+since nothing calls Google/Microsoft APIs on the user's behalf; that's a distinct, additive feature
+if it's ever needed, not part of sign-in itself. Email/password is backend-only by necessity (hash
+comparison), no provider involved.
+
+All four methods (mobile OTP, Google, Microsoft, password) converge on the same internal seam:
+verify a proof of identity → find-or-create local user → issue local JWT. Should factor a shared
+`complete_sign_in(claim)` step behind per-method verifiers, mirroring the `Store` abstraction
+pattern, rather than duplicating find-or-create/issue-token logic four times.
+
+**Identity-linking pattern (resolved 2026-09-11, design only):** a `users` table (canonical
+account) plus an `identities` table keyed `(provider, subject) → user_id` — mobile, Google,
+Microsoft, and password each become a row rather than a `users` column. Recommended policy:
+**explicit linking only** — sign-in never auto-merges across providers, even on a verified-email
+match; it points the user to sign in with their original method and link the new one from an
+authenticated profile action (`POST /me/identities/{method}/link`, requires an active session,
+`409` if that identity already belongs to someone else). Alternative considered and not chosen by
+default: "soft auto-link on verified email + notify," lighter UX, weaker guarantee — worth
+revisiting if linking friction turns out to matter more than the account-takeover-by-linking risk
+it avoids. Either policy: never treat an email claim as a linking signal unless `email_verified` is
+true on that token.
+
+Still open: the new endpoints (`/auth/google/verify`, `/auth/microsoft/verify`,
+`/auth/password/register`, `/auth/password/verify`, `/me/identities`,
+`/me/identities/{method}/link`) are `openapi.yaml` additions — for codex to pick up, not mine to add
+directly.
+
+### 4. `SqliteStore` behind the existing `Store` interface (hybrid ER + JSON schema)
 
 **Status: NEW** (design discussion 2026-09-11, no code written)
 
