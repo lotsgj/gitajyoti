@@ -2,6 +2,8 @@
 import {
   mygitaApiRequest,
   validateBatchList,
+  validateExperienceCatalogueManifest,
+  validateExperienceCatalogueSummary,
   validateExperience,
   validateExperienceList,
   validateLearnerActivity,
@@ -24,6 +26,20 @@ function normalizeExperience(item) {
     intendedOutcomes: item.intendedOutcomes,
     illustration: item.image.src.split("/").at(-1) || "experience",
     activityIds: item.constituentActivityIds,
+  };
+}
+
+/** @param {any} item @returns {import('./models.js').ExperienceCardSummary} */
+function normalizeExperienceSummary(item) {
+  return {
+    id: item.id,
+    slug: item.slug,
+    title: item.title,
+    subtitle: item.subtitle,
+    shortDescription: item.shortDescription,
+    designedFor: item.designedFor,
+    guidanceMode: item.guidanceMode,
+    illustration: item.image.src.split("/").at(-1) || "experience",
   };
 }
 
@@ -56,6 +72,20 @@ function normalizeActivity(item) {
 /** @param {typeof mygitaApiRequest} request */
 export function createExperienceApiProvider(request = mygitaApiRequest) {
   return Object.freeze({
+    async revalidateCatalogueManifest(options={}) {
+      return /** @type {Promise<import('./models.js').ConditionalResult<import('./models.js').ExperienceCatalogueManifest>>} */ (
+        request("/experience-catalogue/manifest", { signal:options.signal,ifNoneMatch:options.etag,metadata:true,validate:validateExperienceCatalogueManifest })
+      );
+    },
+    async getCatalogueManifest(options={}) {
+      return /** @type {import('./models.js').ExperienceCatalogueManifest} */ (
+        await request("/experience-catalogue/manifest", { signal:options.signal,validate: validateExperienceCatalogueManifest })
+      );
+    },
+    async listExperienceSummaries(options={}) {
+      const payload = await request("/experience-catalogue/summaries", { signal:options.signal,validate: validateExperienceCatalogueSummary });
+      return { catalogueVersion: payload.catalogueVersion, items: payload.items.map(normalizeExperienceSummary) };
+    },
     async listExperiences(options={}) {
       const payload = await request("/experiences", { signal:options.signal,validate: validateExperienceList });
       return payload.items.map(normalizeExperience);

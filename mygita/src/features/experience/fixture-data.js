@@ -6,6 +6,17 @@ export const experiences = [
   { id:"exp-gita-yoga", slug:"gita-yoga", title:"Gita Yoga", subtitle:"Learn to chant all 700 shlokas", shortDescription:"A complete chanting journey through all eighteen chapters of the Bhagavad Gita.", description:"Progress chapter by chapter with guided pronunciation, metre, rhythm and repetition.", designedFor:["Chanting learners","Different ages and levels"], guidanceMode:"acharya-guided", languages:["Sanskrit","English guidance"], commitment:{summary:"Complete chanting journey"}, delivery:{requiresBatch:true}, intendedOutcomes:["Chant all 700 shlokas with growing accuracy.","Develop rhythm, confidence and attentive listening.","Approach the text with reverence."], illustration:"chanting", activityIds:["activity-yoga-listen","activity-yoga-practise","activity-yoga-recite"] }
 ];
 
+export const experienceVersions = Object.freeze({
+  catalogueVersion: "fixture-catalogue-1",
+  generatedAt: "2026-09-12T00:00:00Z",
+  details: Object.freeze({
+    "exp-gita-children": "fixture-gita-children-1",
+    "exp-gita-sara": "fixture-gita-sara-1",
+    "exp-purna-yoga": "fixture-purna-yoga-1",
+    "exp-gita-yoga": "fixture-gita-yoga-1",
+  }),
+});
+
 export const batches = [
   {id:"batch-gfc-2026-09",experienceId:"exp-gita-children",name:"September 2026 · Sundays",period:"6 Sep 2026 – 30 May 2027",time:"10:00–11:15 IST",state:"open"},
   {id:"batch-sara-2026-09",experienceId:"exp-gita-sara",name:"September 2026 · Evenings",period:"19 Sep 2026 – 27 Mar 2027",time:"19:00–20:30 IST",state:"open"},

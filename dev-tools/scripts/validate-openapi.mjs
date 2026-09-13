@@ -102,7 +102,9 @@ function validateCapturedResponses(captures) {
   const declaredOperations = new Set();
   for (const [template, pathItem] of Object.entries(contract.paths)) {
     for (const method of ["get", "post", "put", "patch", "delete"]) {
-      if (pathItem[method]) declaredOperations.add(`${method} ${template}`);
+      if (pathItem[method] && pathItem[method]["x-implementation-status"] !== "planned") {
+        declaredOperations.add(`${method} ${template}`);
+      }
     }
   }
   const missing = [...declaredOperations].filter((operation) => !coveredOperations.has(operation));

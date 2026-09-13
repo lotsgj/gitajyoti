@@ -2,3 +2,5 @@ runtime-data/*
 !runtime-data/.gitkeep
 __pycache__/
 *.py[cod]
+.venv/
+venv/

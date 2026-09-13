@@ -4,7 +4,8 @@
   "scripts": {
     "build:mygita": "node scripts/build-mygita.mjs",
     "check": "pnpm run check:mygita && pnpm run check:mygita-build && pnpm run check:openapi && pnpm run check:api-flow",
-    "check:api-flow": "python3 ../mygita-server/tests/run_browser_api_flow.py",
+    "check:api-flow": "pnpm run check:request-budgets",
+    "check:request-budgets": "python3 ../mygita-server/tests/run_browser_api_flow.py",
     "check:mygita-build": "pnpm run build:mygita && node scripts/verify-mygita-build.mjs",
     "check:mygita": "node scripts/generate-api-validators.mjs --check && tsc --project ../mygita/jsconfig.json --noEmit && node --test ../mygita/tests/**/*.test.js",
     "check:openapi": "redocly lint --config redocly.yaml ../contracts/mygita-api/openapi.yaml && node scripts/validate-openapi.mjs && python3 ../mygita-server/tests/verify_openapi.py",
@@ -15,6 +16,7 @@
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
     "esbuild": "^0.28.2",
+    "playwright-core": "^1.63.0",
     "typescript": "5.9.2",
     "yaml": "^2.9.0"
   }

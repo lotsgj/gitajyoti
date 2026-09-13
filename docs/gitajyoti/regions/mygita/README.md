@@ -6,5 +6,6 @@ MyGita is not the learning implementation for every product. Specialized product
 
 - [Current state](current-state.md)
 - [Roadmap](roadmap.md)
+- [Data-use optimization checklist](data-use-optimization.md)
 - [Screen map](screen-map.md)
 - [Integrations](integrations/README.md)

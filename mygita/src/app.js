@@ -1,6 +1,5 @@
 // @ts-check
 import { setDocumentTitle } from "./core/dom.js";
-import { config } from "./config.js";
 import { rememberDestination, takeDestination } from "./core/auth-navigation.js";
 import { isAuthenticationError, isCancellation } from "./core/errors.js";
 import { beginFormSubmission, showFormError } from "./core/form-state.js";
@@ -9,13 +8,12 @@ import { defineRoute, getCurrentPath, navigate, resolveRoute, startRouter } from
 import { identityRepository } from "./features/identity/index.js";
 import { journeyRepository } from "./features/journey/index.js";
 import { activityPage, sessionPage } from "./pages/activity-page.js";
-import { createAccountPage, mobilePage, onboardingPage, otpPage, signInPage } from "./pages/authentication-page.js";
+import { createAccountPage, onboardingPage, signInPage } from "./pages/authentication-page.js";
 import { discoverPage } from "./pages/discover-page.js";
 import { enrolPage, confirmationPage } from "./pages/enrolment-page.js";
 import { experiencePage } from "./pages/experience-page.js";
 import { journeyPage } from "./pages/journey-page.js";
 import { profilePage } from "./pages/profile-page.js";
-import { reviewPage } from "./pages/review-page.js";
 import { systemPage } from "./pages/system-page.js";
 import { renderShell } from "./shell/app-shell.js";
 
@@ -28,16 +26,17 @@ let renderedUser=null;
 /** @param {string} title @param {string} content */
 function renderContent(title,content){const outlet=renderShell(root,renderedUser);setDocumentTitle(title);outlet.innerHTML=content;outlet.focus({preventScroll:true});}
 
-/** @param {{title:string,content:string,route:string,signal?:AbortSignal}} view */
-async function render({title,content,route,signal}){const user=await identityRepository.getCurrentUser({signal});if(signal?.aborted)return;renderedUser=user;renderContent(title,content);}
-/** @param {string} title @param {string} path @param {(signal:AbortSignal)=>Promise<string|null>|string|null} content @param {{signal:AbortSignal,isCurrent:()=>boolean}} navigation */
+/** @param {{title:string,content:string,route:string,signal?:AbortSignal,user?:import('./features/identity/contract.js').User|null}} view */
+async function render({title,content,route,signal,user}){const resolved=user===undefined?await identityRepository.getCurrentUser({signal}):user;if(signal?.aborted)return;renderedUser=resolved;renderContent(title,content);}
+/** @param {string} title @param {string} path @param {(signal:AbortSignal,user:import('./features/identity/contract.js').User|null)=>Promise<string|null>|string|null} content @param {{signal:AbortSignal,isCurrent:()=>boolean}} navigation */
 async function loadRoute(title,path,content,{signal,isCurrent}){
   const loadingTimer=setTimeout(()=>{if(isCurrent())renderContent(title,systemPage("loading"));},150);
   try{
-    const result=await content(signal);
+    const user=await identityRepository.getCurrentUser({signal});
+    const result=await content(signal,user);
     clearTimeout(loadingTimer);
     if(!isCurrent())return;
-    await render({title,content:result||systemPage("not-found"),route:path,signal});
+    await render({title,content:result||systemPage("not-found"),route:path,signal,user});
   }catch(error){
     clearTimeout(loadingTimer);
     if(isCancellation(error)||!isCurrent())return;
@@ -46,8 +45,8 @@ async function loadRoute(title,path,content,{signal,isCurrent}){
     await render({title:"Something went wrong",content:requestFailureView(error,{online:navigator.onLine}),route:path,signal});
   }
 }
-function page(title,content){return ({path,signal,isCurrent})=>loadRoute(title,path,signal=>typeof content==="function"?content({signal}):content,{signal,isCurrent});}
-function feature(title,factory){return ({path,params,signal,isCurrent})=>loadRoute(title,path,signal=>factory(params,{signal}),{signal,isCurrent});}
+function page(title,content){return ({path,signal,isCurrent})=>loadRoute(title,path,(signal,user)=>typeof content==="function"?content({signal,user}):content,{signal,isCurrent});}
+function feature(title,factory){return ({path,params,signal,isCurrent})=>loadRoute(title,path,(signal,user)=>factory(params,{signal,user}),{signal,isCurrent});}
 
 defineRoute("/discover",page("Discover",discoverPage));
 defineRoute("/experience/:slug",feature("Experience",(params,options)=>experiencePage(params.slug,options)));
@@ -56,19 +55,11 @@ defineRoute("/experience/:slug/enrolled",feature("Enrolment confirmed",(params,o
 defineRoute("/experience/:slug/interested",feature("Interest registered",(params,options)=>confirmationPage(params.slug,"interest",options)));
 defineRoute("/auth",page("Sign in",signInPage));
 defineRoute("/auth/create",page("Create an account",createAccountPage));
-if(config.features.prototypeOtp){
-  defineRoute("/auth/mobile",page("Your mobile number",mobilePage));
-  defineRoute("/auth/otp",page("Verify OTP",()=>otpPage(sessionStorage.getItem("mygita.pending.mobile")||"")));
-}
-defineRoute("/onboarding",page("Set up your profile",async({signal})=>onboardingPage((await identityRepository.getCurrentUser({signal}))?.personalDetails)));
+defineRoute("/onboarding",page("Set up your profile",async({user})=>onboardingPage(user?.personalDetails)));
 defineRoute("/journey",page("My Journey",journeyPage));
 defineRoute("/activity/:id",feature("Activity",(params,options)=>activityPage(params.id,options)));
 defineRoute("/activity/:id/session",feature("Activity session",(params,options)=>sessionPage(params.id,options)));
 defineRoute("/profile",page("My profile",profilePage));
-if(config.features.developerTools){
-  defineRoute("/states/:type",feature("System state",params=>systemPage(params.type)));
-  defineRoute("/review",page("Development screen map",reviewPage));
-}
 defineRoute("/not-found",({path,signal})=>render({title:"Page not found",content:systemPage("not-found"),route:path,signal}));
 
 function continueAfterIdentity(){navigate(takeDestination());}
@@ -95,20 +86,6 @@ document.addEventListener("submit",async event=>{
       await identityRepository.loginWithPassword({username:String(data.username||""),password:String(data.password||"")});
       continueAfterIdentity();
     }
-    if(type==="mobile"){
-      const mobile=String(data.mobile||"").replace(/\D/g,"");
-      const challenge=await identityRepository.requestOtp(mobile);
-      sessionStorage.setItem("mygita.pending.mobile",mobile);
-      sessionStorage.setItem("mygita.pending.otpChallenge",challenge.challengeId);
-      navigate("/auth/otp");
-    }
-    if(type==="otp"){
-      const challengeId=sessionStorage.getItem("mygita.pending.otpChallenge")||"";
-      const result=await identityRepository.verifyOtp(challengeId,String(data.otp||""));
-      sessionStorage.removeItem("mygita.pending.otpChallenge");
-      if(result.isNewUser)navigate("/onboarding");
-      else continueAfterIdentity();
-    }
     if(type==="onboarding"){
       await identityRepository.completeOnboarding(data);
       continueAfterIdentity();
@@ -124,7 +101,7 @@ document.addEventListener("submit",async event=>{
       navigate(`/experience/${form.dataset.slug}/interested`);
     }
     if(type==="complete-activity"){await journeyRepository.completeActivity(String(form.dataset.activity));navigate(`/activity/${form.dataset.activity}/session`);}
-    if(type==="profile"){await identityRepository.updateProfile(data);await render({title:"My profile",content:await profilePage(),route:"/profile"});const notice=document.querySelector("[data-profile-notice]");if(notice instanceof HTMLElement){notice.hidden=false;notice.setAttribute("role","status");notice.setAttribute("aria-live","polite");}}
+    if(type==="profile"){const user=await identityRepository.updateProfile(data);await render({title:"My profile",content:await profilePage({user}),route:"/profile",user});const notice=document.querySelector("[data-profile-notice]");if(notice instanceof HTMLElement){notice.hidden=false;notice.setAttribute("role","status");notice.setAttribute("aria-live","polite");}}
   }catch(error){
     console.error(error);
     if(isAuthenticationError(error)&&type!=="password-login"){rememberDestination(getCurrentPath());navigate("/auth");}
@@ -136,4 +113,7 @@ document.addEventListener("submit",async event=>{
 
 window.addEventListener("unhandledrejection",event=>{console.error(event.reason);void render({title:"Something went wrong",route:"error",content:systemPage("error")});});
 window.addEventListener("online",()=>void resolveRoute());
+window.addEventListener("mygita:experience-cache-updated",()=>void resolveRoute());
+window.addEventListener("mygita:experience-cache-checked",()=>void resolveRoute());
+window.addEventListener("mygita:private-data-updated",()=>void resolveRoute());
 startRouter();

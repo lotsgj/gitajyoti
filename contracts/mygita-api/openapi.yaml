@@ -1,11 +1,15 @@
 openapi: 3.1.0
 info:
   title: MyGita API
-  version: 0.2.0
+  version: 0.4.0
   description: >-
     Authoritative browser-to-server contract for the MyGita region. The current
     implementation is a local mock API. Password Account creation and login are
-    contract-first additions; production identity and persistence remain deferred.
+    implemented. Version 0.3 added contract-first data-use optimization operations.
+    Version 0.4 adds the Journey-, interest-, and activity-state-projection
+    operations (`/me/journeys`, `GET /me/interests`, `/me/activity-state`) that
+    let a client refresh only the `/me/manifest` projection that changed,
+    without refetching the other two.
   license:
     name: All rights reserved
     identifier: LicenseRef-Proprietary
@@ -80,6 +84,82 @@ paths:
                 items: []
         default:
           $ref: '#/components/responses/UnexpectedError'
+  /experience-catalogue/manifest:
+    get:
+      tags: [Experiences]
+      operationId: getExperienceCatalogueManifest
+      summary: Get public catalogue and Experience-detail versions
+      description: >-
+        Returns opaque versions used to decide whether locally cached catalogue
+        summaries or individual Experience details are current. Clients compare
+        versions for equality and must not parse, order, or increment them.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: Current catalogue manifest
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceCatalogueManifest'
+              example:
+                catalogueVersion: catalogue-8
+                generatedAt: '2026-09-12T08:00:00Z'
+                experiences:
+                  - id: exp-gita-children
+                    slug: gita-for-children
+                    detailVersion: experience-gita-children-12
+                  - id: exp-gita-sara
+                    slug: gita-sara
+                    detailVersion: experience-gita-sara-7
+        '304':
+          description: The client manifest version is still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /experience-catalogue/summaries:
+    get:
+      tags: [Experiences]
+      operationId: listExperienceSummaries
+      summary: List card-sized published Experience summaries
+      description: Returns only the fields needed to render the Discover catalogue.
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: Published Experience summaries
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperienceCatalogueSummary'
+              example:
+                catalogueVersion: catalogue-8
+                items:
+                  - id: exp-gita-children
+                    slug: gita-for-children
+                    title: Gita for Children
+                    subtitle: From learning the Gita’s shlokas to living their wisdom
+                    shortDescription: A learning journey for living the wisdom of selected shlokas.
+                    image:
+                      src: placeholders/gita-for-children
+                      alt: Children learning the Gita together
+                    designedFor: [Ages 7–18]
+                    guidanceMode: blended
+        '304':
+          description: The client catalogue version is still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
   /experiences/{experienceId}:
     parameters:
       - $ref: '#/components/parameters/ExperienceId'
@@ -87,9 +167,14 @@ paths:
       tags: [Experiences]
       operationId: getExperience
       summary: Get a published experience by ID or slug
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
       responses:
         '200':
           description: Experience details
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
           content:
             application/json:
               schema:
@@ -99,6 +184,11 @@ paths:
                   $ref: '#/components/examples/GitaSaraExperience'
         '404':
           $ref: '#/components/responses/NotFoundError'
+        '304':
+          description: The client Experience-detail version is still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
         default:
           $ref: '#/components/responses/UnexpectedError'
   /experiences/{experienceId}/batches:
@@ -432,6 +522,48 @@ paths:
           $ref: '#/components/responses/ValidationError'
         default:
           $ref: '#/components/responses/UnexpectedError'
+  /me/manifest:
+    get:
+      tags: [Identity, Journey]
+      operationId: getMyGitaManifest
+      summary: Get versions of the signed-in Account's MyGita projections
+      description: >-
+        Returns independent opaque versions so a client can refresh only the
+        private Profile, Journey, interest, or activity-state projection that
+        changed. This response contains no public catalogue versions.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: Current private projection versions
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyGitaDataManifest'
+              example:
+                accountId: user-example
+                accountVersion: account-4
+                profileVersion: profile-9
+                journeyVersion: journey-27
+                interestVersion: interest-6
+                activityStateVersion: activity-state-41
+                generatedAt: '2026-09-12T08:00:00Z'
+        '304':
+          description: All private projection versions are still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
   /me/journey:
     get:
       tags: [Journey]
@@ -490,7 +622,98 @@ paths:
           $ref: '#/components/responses/ValidationError'
         default:
           $ref: '#/components/responses/UnexpectedError'
+  /me/journeys:
+    get:
+      tags: [Journey]
+      operationId: listMyJourneys
+      summary: Get the learner's Journey records independently of interests and activity state
+      description: >-
+        Returns raw Journey records (no enriched `experience`, `nextActivity`,
+        or `progress`) so a client can refresh Journeys without also
+        refetching interests or activity state. The ETag corresponds to
+        `journeyVersion` from `GET /me/manifest` and is weak: `journeyVersion`
+        covers only each Journey's identity fields (id, userId, experienceId,
+        batchId, status, activityIds), so `lastAccessed` and
+        `completedActivityIds` in this body can still change (e.g. on
+        activity completion) without it -- that is `activityStateVersion`'s
+        role instead, via `GET /me/activity-state`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: The signed-in Account's Journey records
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JourneyRecordList'
+              example:
+                items:
+                  - id: journey-example
+                    userId: user-example
+                    experienceId: exp-gita-sara
+                    batchId: batch-sara-2026-09
+                    status: active
+                    startedOn: '2026-09-10'
+                    lastAccessed: '2026-09-10T10:02:00Z'
+                    currentContext: Foundations
+                    activityIds: [activity-sara-teaching]
+                    completedActivityIds: []
+        '304':
+          description: The client journeyVersion is still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
   /me/interests:
+    get:
+      tags: [Journey]
+      operationId: listMyInterests
+      summary: Get the learner's interest registrations independently of Journeys and activity state
+      description: >-
+        Returns interest registrations only, so a client can refresh interests
+        without also refetching Journeys or activity state. The ETag
+        corresponds to `interestVersion` from `GET /me/manifest`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: The signed-in Account's interest registrations
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InterestList'
+              example:
+                items:
+                  - id: interest-example
+                    userId: user-example
+                    experienceId: exp-purna-yoga
+                    registeredAt: '2026-09-12T08:00:00Z'
+        '304':
+          description: The client interestVersion is still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
     post:
       tags: [Journey]
       operationId: registerInterest
@@ -525,6 +748,45 @@ paths:
           $ref: '#/components/responses/ConflictError'
         '422':
           $ref: '#/components/responses/ValidationError'
+        default:
+          $ref: '#/components/responses/UnexpectedError'
+  /me/activity-state:
+    get:
+      tags: [Journey]
+      operationId: listMyActivityState
+      summary: Get the learner's activity-completion state independently of Journeys and interests
+      description: >-
+        Returns each Journey's completed-activity progress only, so a client
+        can refresh activity state without also refetching Journeys or
+        interests. The ETag corresponds to `activityStateVersion` from
+        `GET /me/manifest`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IfNoneMatch'
+      responses:
+        '200':
+          description: The signed-in Account's per-Journey activity completion state
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityStateList'
+              example:
+                items:
+                  - journeyId: journey-example
+                    completedActivityIds: [activity-sara-teaching]
+        '304':
+          description: The client activityStateVersion is still current
+          headers:
+            ETag:
+              $ref: '#/components/headers/ETag'
+        '401':
+          $ref: '#/components/responses/AuthenticationError'
+        '403':
+          $ref: '#/components/responses/AuthorizationError'
         default:
           $ref: '#/components/responses/UnexpectedError'
   /me/activities/{activityId}:
@@ -613,6 +875,17 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    IfNoneMatch:
+      name: If-None-Match
+      in: header
+      required: false
+      description: >-
+        ETag from an earlier representation. The value is opaque; clients
+        return it unchanged and must not interpret it as an ordered version.
+      schema:
+        type: string
+        minLength: 1
+      example: '"catalogue-8"'
     ExperienceId:
       name: experienceId
       in: path
@@ -631,6 +904,14 @@ components:
         type: string
         minLength: 1
       example: activity-sara-teaching
+  headers:
+    ETag:
+      description: Opaque validator for the returned representation.
+      required: true
+      schema:
+        type: string
+        minLength: 1
+      example: '"catalogue-8"'
   responses:
     BadRequestError:
       description: Invalid request
@@ -753,6 +1034,13 @@ components:
             details:
               type: object
               additionalProperties: true
+    OpaqueVersion:
+      type: string
+      minLength: 1
+      maxLength: 128
+      description: >-
+        Equality-only version identifier. Consumers must not parse, sort,
+        increment, or infer chronology from this value.
     Image:
       type: object
       additionalProperties: false
@@ -861,6 +1149,49 @@ components:
         slug: {type: string}
         title: {type: string}
         subtitle: {type: string}
+    ExperienceCardSummary:
+      type: object
+      additionalProperties: false
+      required: [id, slug, title, subtitle, shortDescription, image, designedFor, guidanceMode]
+      properties:
+        id: {type: string, pattern: '^exp-'}
+        slug: {type: string, minLength: 1}
+        title: {type: string, minLength: 1}
+        subtitle: {type: string, minLength: 1}
+        shortDescription: {type: string, minLength: 1}
+        image: {$ref: '#/components/schemas/Image'}
+        designedFor:
+          type: array
+          minItems: 1
+          items: {type: string, minLength: 1}
+        guidanceMode: {type: string, minLength: 1}
+    ExperienceVersionReference:
+      type: object
+      additionalProperties: false
+      required: [id, slug, detailVersion]
+      properties:
+        id: {type: string, pattern: '^exp-'}
+        slug: {type: string, minLength: 1}
+        detailVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+    ExperienceCatalogueManifest:
+      type: object
+      additionalProperties: false
+      required: [catalogueVersion, generatedAt, experiences]
+      properties:
+        catalogueVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        generatedAt: {type: string, format: date-time}
+        experiences:
+          type: array
+          items: {$ref: '#/components/schemas/ExperienceVersionReference'}
+    ExperienceCatalogueSummary:
+      type: object
+      additionalProperties: false
+      required: [catalogueVersion, items]
+      properties:
+        catalogueVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ExperienceCardSummary'}
     ExperienceList:
       type: object
       additionalProperties: false
@@ -995,6 +1326,25 @@ components:
         personalDetails: {$ref: '#/components/schemas/PersonalDetails'}
         onboarding: {$ref: '#/components/schemas/OnboardingState'}
         createdAt: {type: string, format: date-time}
+    MyGitaDataManifest:
+      type: object
+      additionalProperties: false
+      required:
+        - accountId
+        - accountVersion
+        - profileVersion
+        - journeyVersion
+        - interestVersion
+        - activityStateVersion
+        - generatedAt
+      properties:
+        accountId: {type: string, pattern: '^user-'}
+        accountVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        profileVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        journeyVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        interestVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        activityStateVersion: {$ref: '#/components/schemas/OpaqueVersion'}
+        generatedAt: {type: string, format: date-time}
     AuthSession:
       type: object
       additionalProperties: false
@@ -1152,6 +1502,67 @@ components:
         interests:
           type: array
           items: {$ref: '#/components/schemas/Interest'}
+    JourneyRecord:
+      type: object
+      additionalProperties: false
+      description: >-
+        A Journey's own stored fields, without the enriched `experience`,
+        `nextActivity`, or `progress` that `Journey` adds for
+        `GET /me/journey`, `createJourney`, and `completeMyActivity`.
+      required: [id, userId, experienceId, batchId, status, startedOn, lastAccessed, currentContext, activityIds, completedActivityIds]
+      properties:
+        id: {type: string, pattern: '^journey-'}
+        userId: {type: string, pattern: '^user-'}
+        experienceId: {type: string, pattern: '^exp-'}
+        batchId:
+          anyOf:
+            - {type: string, pattern: '^batch-'}
+            - {type: 'null'}
+        status: {type: string, enum: [active, completed]}
+        startedOn: {type: string, format: date}
+        lastAccessed: {type: string, format: date-time}
+        currentContext: {type: string}
+        activityIds:
+          type: array
+          items: {type: string}
+        completedActivityIds:
+          type: array
+          uniqueItems: true
+          items: {type: string}
+    JourneyRecordList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/JourneyRecord'}
+    InterestList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Interest'}
+    ActivityState:
+      type: object
+      additionalProperties: false
+      required: [journeyId, completedActivityIds]
+      properties:
+        journeyId: {type: string, pattern: '^journey-'}
+        completedActivityIds:
+          type: array
+          uniqueItems: true
+          items: {type: string}
+    ActivityStateList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/ActivityState'}
     ResetResult:
       type: object
       additionalProperties: false

@@ -14,3 +14,5 @@ test("features do not depend on pages or another feature",async()=>{for(const fe
 test("core remains domain agnostic",async()=>{for(const file of await filesIn(join(src,"core"))){const source=await readFile(file,"utf8");assert.doesNotMatch(source,/from ["'][^"']*(features|pages|shell)\//,`${relative(src,file)} depends on an outer layer`);}});
 
 test("HTTP contracts do not depend on features, pages, or shell",async()=>{for(const file of await filesIn(join(src,"contracts"))){const source=await readFile(file,"utf8");assert.doesNotMatch(source,/from ["'][^"']*(features|pages|shell)\//,`${relative(src,file)} depends on an outer layer`);}});
+
+test("data-cache composition depends only on domain-agnostic cache primitives",async()=>{for(const file of await filesIn(join(src,"data"))){const source=await readFile(file,"utf8");assert.doesNotMatch(source,/from ["'][^"']*(features|pages|shell)\//,`${relative(src,file)} depends on a UI or domain layer`);}});

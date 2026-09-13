@@ -187,57 +187,82 @@ class SqliteStore(Store):
         }
 
     # -- Reference data ---------------------------------------------------
+    #
+    # Every method below -- reads included -- holds `self._lock`. A single
+    # `sqlite3.Connection` is not safe for unsynchronized concurrent use
+    # from multiple threads even with `check_same_thread=False`: that flag
+    # only disables Python's own same-thread assertion, it does not make
+    # concurrent statement execution on one connection safe. Without this,
+    # Flask's threaded dev server (and any real multi-threaded WSGI server)
+    # can interleave a read with a write on the same connection/cursor and
+    # produce exactly the corruption this was found to cause in practice
+    # ("database disk image is malformed"), not just a logical race.
 
     def list_experiences(self):
-        rows = self._connection.execute("SELECT data FROM experiences WHERE status = 'published'").fetchall()
+        with self._lock:
+            rows = self._connection.execute("SELECT data FROM experiences WHERE status = 'published'").fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def find_experience(self, identifier):
-        row = self._connection.execute(
-            "SELECT data FROM experiences WHERE id = ? OR slug = ?", (identifier, identifier)
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT data FROM experiences WHERE id = ? OR slug = ?", (identifier, identifier)
+            ).fetchone()
         return self._row_data(row)
 
     def list_batches(self, experience_id):
-        rows = self._connection.execute("SELECT data FROM batches WHERE experience_id = ?", (experience_id,)).fetchall()
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT data FROM batches WHERE experience_id = ?", (experience_id,)
+            ).fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def find_batch(self, batch_id, experience_id):
-        row = self._connection.execute(
-            "SELECT data FROM batches WHERE id = ? AND experience_id = ?", (batch_id, experience_id)
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT data FROM batches WHERE id = ? AND experience_id = ?", (batch_id, experience_id)
+            ).fetchone()
         return self._row_data(row)
 
     def list_activities(self, experience_id):
-        rows = self._connection.execute("SELECT data FROM activities WHERE experience_id = ?", (experience_id,)).fetchall()
+        with self._lock:
+            rows = self._connection.execute(
+                "SELECT data FROM activities WHERE experience_id = ?", (experience_id,)
+            ).fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def find_activity(self, activity_id):
-        row = self._connection.execute("SELECT data FROM activities WHERE id = ?", (activity_id,)).fetchone()
+        with self._lock:
+            row = self._connection.execute("SELECT data FROM activities WHERE id = ?", (activity_id,)).fetchone()
         return self._row_data(row)
 
     def find_session(self, activity_id, batch_id):
-        row = self._connection.execute(
-            "SELECT data FROM sessions WHERE activity_id = ? AND batch_id = ?", (activity_id, batch_id)
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT data FROM sessions WHERE activity_id = ? AND batch_id = ?", (activity_id, batch_id)
+            ).fetchone()
         return self._row_data(row)
 
     # -- Identity (legacy mobile-OTP users) --------------------------------
 
     def find_user(self, user_id):
-        row = self._connection.execute("SELECT data FROM users WHERE id = ?", (user_id,)).fetchone()
-        if row is not None:
-            return json.loads(row[0])
-        account_row = self._connection.execute("SELECT data FROM accounts WHERE id = ?", (user_id,)).fetchone()
-        if account_row is None:
-            return None
-        profile_row = self._connection.execute("SELECT data FROM profiles WHERE account_id = ?", (user_id,)).fetchone()
-        if profile_row is None:
-            return None
-        return self._compose_user_dto(json.loads(account_row[0]), json.loads(profile_row[0]))
+        with self._lock:
+            row = self._connection.execute("SELECT data FROM users WHERE id = ?", (user_id,)).fetchone()
+            if row is not None:
+                return json.loads(row[0])
+            account_row = self._connection.execute("SELECT data FROM accounts WHERE id = ?", (user_id,)).fetchone()
+            if account_row is None:
+                return None
+            profile_row = self._connection.execute(
+                "SELECT data FROM profiles WHERE account_id = ?", (user_id,)
+            ).fetchone()
+            if profile_row is None:
+                return None
+            return self._compose_user_dto(json.loads(account_row[0]), json.loads(profile_row[0]))
 
     def find_user_by_mobile(self, mobile):
-        row = self._connection.execute("SELECT data FROM users WHERE mobile = ?", (mobile,)).fetchone()
+        with self._lock:
+            row = self._connection.execute("SELECT data FROM users WHERE mobile = ?", (mobile,)).fetchone()
         return self._row_data(row)
 
     def create_user(self, user):
@@ -267,24 +292,27 @@ class SqliteStore(Store):
         return user
 
     def list_users(self):
-        rows = self._connection.execute("SELECT data FROM users").fetchall()
+        with self._lock:
+            rows = self._connection.execute("SELECT data FROM users").fetchall()
         return [json.loads(row[0]) for row in rows]
 
     # -- Account / Profile / Authenticator (password milestone) -----------
 
     def find_login_identifier(self, identifier_type, value):
-        row = self._connection.execute(
-            "SELECT type, value, account_id FROM login_identifiers WHERE type = ? AND value = ?",
-            (identifier_type, value),
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT type, value, account_id FROM login_identifiers WHERE type = ? AND value = ?",
+                (identifier_type, value),
+            ).fetchone()
         if row is None:
             return None
         return {"type": row[0], "value": row[1], "accountId": row[2]}
 
     def find_authenticator(self, account_id, authenticator_type):
-        row = self._connection.execute(
-            "SELECT data FROM authenticators WHERE account_id = ? AND type = ?", (account_id, authenticator_type)
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT data FROM authenticators WHERE account_id = ? AND type = ?", (account_id, authenticator_type)
+            ).fetchone()
         return self._row_data(row)
 
     def create_password_account(self, account, profile, identifier, authenticator):
@@ -312,24 +340,28 @@ class SqliteStore(Store):
         return self._compose_user_dto(account, profile)
 
     def list_accounts(self):
-        rows = self._connection.execute("SELECT data FROM accounts").fetchall()
+        with self._lock:
+            rows = self._connection.execute("SELECT data FROM accounts").fetchall()
         return [json.loads(row[0]) for row in rows]
 
     # -- Journey ------------------------------------------------------------
 
     def list_journeys(self, user_id):
-        rows = self._connection.execute("SELECT data FROM journeys WHERE user_id = ?", (user_id,)).fetchall()
+        with self._lock:
+            rows = self._connection.execute("SELECT data FROM journeys WHERE user_id = ?", (user_id,)).fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def find_active_journey(self, user_id, experience_id):
-        row = self._connection.execute(
-            "SELECT data FROM journeys WHERE user_id = ? AND experience_id = ? AND status = 'active'",
-            (user_id, experience_id),
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT data FROM journeys WHERE user_id = ? AND experience_id = ? AND status = 'active'",
+                (user_id, experience_id),
+            ).fetchone()
         return self._row_data(row)
 
     def find_journey_for_activity(self, user_id, activity_id):
-        rows = self._connection.execute("SELECT data FROM journeys WHERE user_id = ?", (user_id,)).fetchall()
+        with self._lock:
+            rows = self._connection.execute("SELECT data FROM journeys WHERE user_id = ?", (user_id,)).fetchall()
         for row in rows:
             journey = json.loads(row[0])
             if activity_id in journey["activityIds"]:
@@ -363,13 +395,15 @@ class SqliteStore(Store):
     # -- Interest -----------------------------------------------------------
 
     def list_interests(self, user_id):
-        rows = self._connection.execute("SELECT data FROM interests WHERE user_id = ?", (user_id,)).fetchall()
+        with self._lock:
+            rows = self._connection.execute("SELECT data FROM interests WHERE user_id = ?", (user_id,)).fetchall()
         return [json.loads(row[0]) for row in rows]
 
     def find_interest(self, user_id, experience_id):
-        row = self._connection.execute(
-            "SELECT data FROM interests WHERE user_id = ? AND experience_id = ?", (user_id, experience_id)
-        ).fetchone()
+        with self._lock:
+            row = self._connection.execute(
+                "SELECT data FROM interests WHERE user_id = ? AND experience_id = ?", (user_id, experience_id)
+            ).fetchone()
         return self._row_data(row)
 
     def create_interest(self, interest):

@@ -16,6 +16,19 @@ test("returns a response only after runtime validation", async () => {
   assert.deepEqual(payload, { value: 1 });
 });
 
+test("preserves ETag metadata and accepts a conditional 304", async () => {
+  const seen = [];
+  globalThis.fetch = async (_url, options) => {
+    seen.push(options.headers["If-None-Match"]);
+    return new Response(null, { status: 304, headers: { ETag: 'W/"catalogue-1"' } });
+  };
+  const response = await apiRequest("/manifest", {
+    ifNoneMatch: 'W/"catalogue-1"', metadata: true, validate: () => true, validateError: validError,
+  });
+  assert.deepEqual(response, { status: 304, data: null, etag: 'W/"catalogue-1"' });
+  assert.deepEqual(seen, ['W/"catalogue-1"']);
+});
+
 test("rejects successful responses that violate the contract", async () => {
   globalThis.fetch = async () => new Response(JSON.stringify({ unexpected: true }), { status: 200 });
   await assert.rejects(

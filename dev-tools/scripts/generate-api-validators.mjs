@@ -14,6 +14,8 @@ const outputUrl = new URL("../../mygita/src/contracts/generated/mygita-api-valid
 const contract = YAML.parse(await readFile(contractUrl, "utf8"));
 const schemaNames = [
   "ErrorEnvelope",
+  "ExperienceCatalogueManifest",
+  "ExperienceCatalogueSummary",
   "ExperienceList",
   "Experience",
   "BatchList",
@@ -21,9 +23,13 @@ const schemaNames = [
   "AuthSession",
   "User",
   "JourneyCollection",
+  "JourneyRecordList",
+  "InterestList",
+  "ActivityStateList",
   "Journey",
   "Interest",
   "LearnerActivity",
+  "MyGitaDataManifest",
 ];
 
 const ajv = new Ajv2020({ code: { esm: true, source: true }, strict: false });

@@ -56,6 +56,14 @@
 - [ ] Make update operations mutate and commit atomically inside the store boundary.
 - [x] Run the shared API behavior suite against every current store implementation.
 
+## Server application framework
+
+- [x] Migrate HTTP routing and error mapping to a Flask application factory without changing the OpenAPI boundary.
+- [x] Exercise server and OpenAPI compatibility tests through Flask's WSGI test client.
+- [x] Provide a WSGI entry point that requires an explicit stable signing secret.
+- [x] Install pinned server dependencies in CI before client, OpenAPI, and server verification.
+- [ ] Select and configure the production WSGI host, process model, observability, and secret management.
+
 ## Password account identity
 
 - [x] Separate Account, Profile, Login Identifier, Authenticator, Contact Point, Identity Evidence, and Recovery Method in the architecture.
@@ -76,10 +84,14 @@
 - [ ] Keep browser-to-product trust and credentials out of the client.
 - [ ] Route secure product integration through `mygita.api`.
 
+## Data-use optimization
+
+- [x] Complete the six phases in the [MyGita data-use optimization checklist](regions/mygita/data-use-optimization.md).
+
 ## Production UI foundation
 
-- [x] Make production builds API-only and prevent URL-based fixture selection.
-- [x] Gate development screen maps, state routes, fixture reset, and simulated OTP UI out of the production experience.
+- [x] Keep root-served source and built output API-first with the same explicit `?provider=fixture` override.
+- [x] Remove development screen maps, developer state routes, fixture reset, runtime feature flags, and simulated OTP UI from the shared runtime.
 - [x] Add a reproducible minified build with content-hashed JavaScript and CSS assets.
 - [x] Verify generated production assets and development-feature policy in automated checks.
 - [x] Standardize visible client terminology on `MyGita` and remove prototype wording from production screens.
@@ -88,7 +100,8 @@
 - [x] Preserve safe intended destinations across session expiry and refresh failed routes after reconnect.
 - [ ] Add section-level loading, cached-content preservation, and background refresh where product-backed Journey details require them.
 - [ ] Replace simulated learning completion with product-owned activity or secure product launch.
-- [ ] Add rendered-browser, accessibility, and visual-regression quality gates.
+- [x] Add rendered-browser and accessibility quality gates.
+- [ ] Add a visual-regression quality gate.
 
 ## Deferred production decisions
 

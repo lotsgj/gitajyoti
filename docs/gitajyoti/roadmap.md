@@ -29,6 +29,7 @@ Status: Complete
 - Generated runtime response validators and normalized API transport
 - Identity, Experience, and Journey API providers with explicit selection
 - Complete Gita Sāra API vertical slice
+- Flask application factory, WSGI entry point, and contract verification through the WSGI boundary
 
 ## Phase 3 — Product integration
 
@@ -40,12 +41,12 @@ Status: Planned
 
 ## Identity evolution
 
-Status: Planned
+Status: Complete for the password Account milestone
 
-- Separate Account, Profile, Login Identifier, Authenticator, and identity evidence.
-- Add zero-message-cost username/password Account creation and login.
-- Preserve OTP only as a temporary prototype path during the additive migration.
-- Add recovery and additional authenticators as separately reviewed capabilities.
+- Account, Profile, Login Identifier, Authenticator, and identity-evidence concepts are separated.
+- Zero-message-cost username/password Account creation and login are implemented across the contract, client, and server.
+- OTP remains only as a temporary prototype compatibility path.
+- Recovery and additional authenticators remain future, separately reviewed capabilities.
 
 ## Phase 4 — Production readiness
 

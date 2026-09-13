@@ -2,7 +2,7 @@
 
 The client is a dependency-free, native ES-module application designed for GitHub Pages.
 
-Username/password Account creation and login are the primary Identity experience. Profile setup is optional after registration and remains available from the Account menu. The mobile OTP flow is retained only as a prototype compatibility option.
+Username/password Account creation and login are the Identity experience. Profile setup is optional after registration and remains available from the Account menu. OTP remains a server-contract compatibility method but is not exposed by the UI.
 
 ## Local preview
 
@@ -42,7 +42,7 @@ From `dev-tools/`, run:
 MYGITA_API_BASE_URL=https://api.gitajyoti.org/api/v1 pnpm run build:mygita
 ```
 
-The ignored `dist/mygita/` artifact is minified and uses content-hashed JavaScript and CSS. It always uses the API provider, ignores fixture-selection query parameters, and excludes development routes and simulated OTP from the visible production experience. `pnpm run check:mygita-build` builds and verifies the artifact.
+The ignored `dist/mygita/` artifact is minified and uses content-hashed JavaScript and CSS. Root-served source and built output follow the same runtime behavior: API by default and `?provider=fixture` as the explicit fixture override. Neither contains developer routes or simulated OTP UI. `pnpm run check:mygita-build` builds and verifies the artifact.
 
 Route reads accept cancellation signals through the feature repository boundary, so newer navigation cannot be overwritten by older responses. Forms use shared accessible pending/error feedback, known API failures map to stable user messages, and authentication expiry preserves a safe internal destination for post-login continuation.
 

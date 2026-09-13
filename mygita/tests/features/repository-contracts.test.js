@@ -28,6 +28,16 @@ async function assertIdentityContract(repository) {
 }
 
 async function assertExperienceContract(repository) {
+  const manifest = await repository.getCatalogueManifest();
+  const summaries = await repository.listExperienceSummaries();
+  assert.equal(manifest.catalogueVersion, summaries.catalogueVersion);
+  assert.ok(manifest.generatedAt);
+  assert.equal(manifest.experiences.length, summaries.items.length);
+  assert.ok(manifest.experiences.every((item) => item.detailVersion));
+  assert.deepEqual(
+    manifest.experiences.map((item) => item.id),
+    summaries.items.map((item) => item.id),
+  );
   const experiences = await repository.listExperiences();
   assert.ok(experiences.length > 0);
   const item = await repository.getExperience(experiences[0].slug);
@@ -77,6 +87,24 @@ function createApiHarness() {
   const apiJourney = () => ({ experienceId: experience.id, batchId: batch.id, completedActivityIds: [...completed] });
   const request = async (path, options = {}) => {
     const method = options.method || "GET";
+    if (path === "/experience-catalogue/manifest") return {
+      catalogueVersion: "api-catalogue-1",
+      generatedAt: "2026-09-12T00:00:00Z",
+      experiences: [{ id: experience.id, slug: experience.slug, detailVersion: "api-gita-sara-1" }],
+    };
+    if (path === "/experience-catalogue/summaries") return {
+      catalogueVersion: "api-catalogue-1",
+      items: [{
+        id: experience.id,
+        slug: experience.slug,
+        title: experience.title,
+        subtitle: experience.subtitle,
+        shortDescription: experience.shortDescription,
+        image: experience.image,
+        designedFor: experience.designedFor,
+        guidanceMode: experience.guidanceMode,
+      }],
+    };
     if (path === "/experiences") return { items: [experience] };
     if (path === "/experiences/gita-sara") return experience;
     if (path === `/experiences/${experience.id}/batches`) return { items: [batch] };
@@ -102,6 +130,9 @@ function createApiHarness() {
     if (path === "/me/onboarding") { user = { ...user, personalDetails: { ...user.personalDetails, ...options.body }, onboarding: { state: "complete" } }; return user; }
     if (path === "/me" && method === "PATCH") { user = { ...user, personalDetails: { ...user.personalDetails, ...options.body } }; return user; }
     if (path === "/me") return user;
+    if (path === "/me/journeys") return {status:200,etag:'W/"journeys-1"',data:{items:journeys.map((_item,index)=>({id:`journey-${index+1}`,userId:user.id,experienceId:experience.id,batchId:batch.id,status:"active",startedOn:"2026-09-10",lastAccessed:"2026-09-10T00:00:00Z",currentContext:"Foundations",activityIds:[activity.id],completedActivityIds:[...completed]}))}};
+    if (path === "/me/interests" && method === "GET") return {status:200,etag:'"interests-1"',data:{items:interests.map((experienceId,index)=>({id:`interest-${index+1}`,userId:user.id,experienceId,registeredAt:"2026-09-10T00:00:00Z"}))}};
+    if (path === "/me/activity-state") return {status:200,etag:'"activity-1"',data:{items:journeys.map((_item,index)=>({journeyId:`journey-${index+1}`,completedActivityIds:[...completed]}))}};
     if (path === "/me/journey" && method === "GET") return { items: journeys.map(apiJourney), interests: interests.map((experienceId) => ({ experienceId })) };
     if (path === "/me/journey" && method === "POST") { journeys.push({}); return apiJourney(); }
     if (path === "/me/interests") { interests.push(options.body.experienceId); return { experienceId: options.body.experienceId }; }

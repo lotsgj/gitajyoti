@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Run the My Gita mock API for local client development."""
+"""Run the My Gita mock/production API for local client development."""
 
 import argparse
 import os
 import secrets
 
-from api import create_server
+from api import create_app
 
 
 def main():
@@ -33,30 +33,27 @@ def main():
         print("No MYGITA_DEV_JWT_SECRET set -- using a randomly generated secret for this process.")
         print("Sessions will not survive a restart. Set MYGITA_DEV_JWT_SECRET for a stable secret.")
     origins = os.environ.get("MYGITA_DEV_ALLOWED_ORIGINS", "http://127.0.0.1:8000,http://localhost:8000").split(",")
-    store = None  # create_server defaults this to JsonStore
+    store = None  # create_app defaults this to JsonStore
     if args.store == "sqlite":
         from api.sqlite_store import SqliteStore
 
         store = SqliteStore(os.path.join(here, "mock-data"), os.path.join(here, "runtime-data", "state.db"))
-    server = create_server(
-        args.host,
-        args.port,
+    app = create_app(
         os.path.join(here, "mock-data"),
         os.path.join(here, "runtime-data"),
         secret,
         allowed_origins={origin.strip() for origin in origins if origin.strip()},
         store=store,
     )
-    print("My Gita mock API: http://%s:%s/api/v1" % (args.host, server.server_port))
+    print("My Gita mock API: http://%s:%s/api/v1" % (args.host, args.port))
     print("Store backend: %s" % args.store)
     print("Prototype OTP: 123456")
     try:
-        server.serve_forever()
+        app.run(host=args.host, port=args.port, threaded=True)
     except KeyboardInterrupt:
         print("\nStopping My Gita mock API")
     finally:
-        server.server_close()
-        server.application.store.close()
+        app.mygita.store.close()
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ await mkdir(outputRoot,{recursive:true});
 const result=await build({
   absWorkingDir:clientRoot,
   bundle:true,
-  define:{__MYGITA_BUILD__:JSON.stringify({mode:"production",apiBaseUrl})},
+  define:{__MYGITA_BUILD__:JSON.stringify({apiBaseUrl})},
   entryNames:"assets/[name]-[hash]",
   entryPoints:{app:"src/app.js",site:"styles/site.css"},
   format:"esm",

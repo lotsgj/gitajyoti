@@ -9,12 +9,15 @@ import { clearSession, hasSession, setSession } from "../../core/session.js";
 
 /** @param {typeof mygitaApiRequest} request */
 export function createIdentityApiProvider(request = mygitaApiRequest) {
+  let currentUser=null;
   return Object.freeze({
     async getCurrentUser(options={}) {
       if (!hasSession()) return null;
-      return /** @type {import('./contract.js').User} */ (
+      if(currentUser&&!options.force)return currentUser;
+      currentUser=/** @type {import('./contract.js').User} */ (
         await request("/me", { signal:options.signal,authenticated: true, validate: validateUser })
       );
+      return currentUser;
     },
     async createPasswordAccount(credentials) {
       const payload = await request("/auth/accounts", {
@@ -22,7 +25,8 @@ export function createIdentityApiProvider(request = mygitaApiRequest) {
         body: credentials,
         validate: validateAuthSession,
       });
-      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn });
+      currentUser=payload.user;
+      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn, accountId:payload.user.id });
       return { user: payload.user, isNewUser: payload.isNewUser };
     },
     async loginWithPassword(credentials) {
@@ -31,7 +35,8 @@ export function createIdentityApiProvider(request = mygitaApiRequest) {
         body: credentials,
         validate: validateAuthSession,
       });
-      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn });
+      currentUser=payload.user;
+      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn, accountId:payload.user.id });
       return { user: payload.user, isNewUser: payload.isNewUser };
     },
     async requestOtp(mobile) {
@@ -48,27 +53,28 @@ export function createIdentityApiProvider(request = mygitaApiRequest) {
         body: { challengeId, otp },
         validate: validateAuthSession,
       });
-      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn });
+      currentUser=payload.user;
+      setSession({ accessToken: payload.accessToken, expiresIn: payload.expiresIn, accountId:payload.user.id });
       return { user: payload.user, isNewUser: payload.isNewUser };
     },
     async completeOnboarding(profile) {
-      return /** @type {import('./contract.js').User} */ (await request("/me/onboarding", {
+      currentUser=/** @type {import('./contract.js').User} */ (await request("/me/onboarding", {
         method: "PATCH",
         authenticated: true,
         body: profile,
         validate: validateUser,
-      }));
+      }));return currentUser;
     },
-    async signOut() { clearSession(); },
+    async signOut() { currentUser=null;clearSession(); },
     async updateProfile(profile) {
-      return /** @type {import('./contract.js').User} */ (await request("/me", {
+      currentUser=/** @type {import('./contract.js').User} */ (await request("/me", {
         method: "PATCH",
         authenticated: true,
         body: profile,
         validate: validateUser,
-      }));
+      }));return currentUser;
     },
-    async reset() { clearSession(); },
+    async reset() { currentUser=null;clearSession(); },
   });
 }
 

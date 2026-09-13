@@ -1,4 +1,6 @@
 // @ts-check
+import { canonicaliseHashQuery, routeFromHash } from "./url-location.js";
+
 const routes = [];
 let activeNavigation=null;
 let currentPath="/discover";
@@ -24,7 +26,12 @@ export function navigate(path) {
 }
 
 export async function resolveRoute() {
-  const path = normalise(window.location.hash.slice(1));
+  const canonical=canonicaliseHashQuery(window.location.search,window.location.hash);
+  if(canonical){
+    window.location.replace(`${window.location.pathname}${canonical.search}${canonical.hash}`);
+    return;
+  }
+  const path = normalise(routeFromHash(window.location.hash));
   currentPath=path;
   const navigation=beginNavigation();
   for (const route of routes) {

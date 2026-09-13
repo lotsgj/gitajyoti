@@ -53,6 +53,7 @@ mygita/src/
 │   ├── ui/                # domain-agnostic atomic UI
 │   └── components/        # domain-agnostic composite UI
 ├── contracts/             # HTTP contract adapter and generated validators
+├── data/                  # MyGita cache-area composition over core cache primitives
 ├── features/
 │   ├── identity/
 │   ├── experience/
@@ -72,6 +73,8 @@ Pages may compose multiple features, but they must use feature `index.js` entry 
 
 The repository interface is the stable contract between UI composition and data access. Repository methods are asynchronous even when backed by local fixtures. Fixture and API implementations can therefore be selected without redesigning pages.
 
+The inactive data-use optimization foundation adds versioned in-memory and IndexedDB caching beneath future repository integration. Public Experience data is separate from private projections, which are namespaced by Account ID. The boundary rejects common credential and authentication-material fields. It is not connected to pages until the server manifest operations are implemented and verified.
+
 ## Safety and contracts
 
 There are two different kinds of boundary:
@@ -79,7 +82,7 @@ There are two different kinds of boundary:
 1. **Inside the client:** checked JavaScript and JSDoc repository interfaces provide design-time safety. Runtime schema validation is not duplicated across this trusted boundary.
 2. **Across HTTP:** OpenAPI 3.1 defines the authoritative client/server contract. Generated validators check API responses when they enter the client contract adapter, before repositories expose normalized domain data.
 
-The browser can communicate with `mygita.api` through explicit provider selection, while fixtures remain the default. In the target product architecture, MyGita's server will communicate with product-specific APIs such as `gita4children.api` and `gitasara.api`. Product API contracts stay product-specific; common concepts provide consistency without forcing different learning models into one generic API.
+The browser communicates with `mygita.api` by default, while `?provider=fixture` explicitly selects fixtures. In the target product architecture, MyGita's server will communicate with product-specific APIs such as `gita4children.api` and `gitasara.api`. Product API contracts stay product-specific; common concepts provide consistency without forcing different learning models into one generic API.
 
 API identities use dots in prose. Their filesystem directories use hyphens—for example, `gitasara.api` and `gitasara-api`.
 
@@ -87,18 +90,18 @@ API identities use dots in prose. Their filesystem directories use hyphens—for
 
 - The Landing region is a responsive static page with externalized CSS and progressively loaded images.
 - MyGita is a dependency-free browser application using native ES modules in source mode, with a reproducible minified production build.
-- MyGita has working discovery, experience detail, batch selection, interest registration, simulated OTP, onboarding, journey, activity, profile, review, and system-state screens.
+- MyGita has working discovery, experience detail, batch selection, interest registration, password Account access, onboarding, journey, activity, profile, and user-facing system-state screens.
 - Pages work through asynchronous Identity, Experience, and Journey repositories.
 - Username/password Account creation and login are the primary Identity UI; Profile setup is optional and can be resumed later.
-- Repositories have fixture and API providers. Source-mode development defaults to fixtures; production builds are API-only and disable fixture selection and development-only UI.
+- Repositories have fixture and API providers. Root-served source and built output both default to API and permit the explicit `?provider=fixture` override. Developer-only UI and runtime feature flags have been removed.
 - Checked-JavaScript analysis, repository-contract tests, fixture-integrity tests, and architecture import-boundary tests are available.
 - Repository-boundary Phase 1 is complete.
-- A local Python `ThreadingHTTPServer` mock API supports the API-backed development mode. It has interchangeable JSON and SQLite stores; JSON is the default and SQLite provides durable local runtime data.
+- A local Flask API supports API-backed development mode. Its application factory is independent of the WSGI server and has interchangeable JSON and SQLite stores; JSON is the default and SQLite provides durable local runtime data.
 - API transport, bearer-session handling, runtime response validation, normalization, and explicit provider selection are implemented.
-- The OpenAPI 3.1 `mygita.api` contract covers every current mock API operation; version 0.2 password Account creation and login are implemented and verified across the client and current server.
+- The OpenAPI 3.1 `mygita.api` contract covers every current API operation. Version 0.2 added password Accounts, version 0.3 added manifests and conditional public reads, and version 0.4 adds independently cacheable private Journey, interest, and activity-state projections.
 - A complete Gita Sāra flow is tested through the API providers and mock server.
 
-The prototype OTP compatibility option is `123456`. It is not the primary UI or a production authentication mechanism.
+The local API retains OTP contract compatibility for automated verification. OTP is not exposed as a MyGita UI authentication mechanism.
 
 ### Fixture independence
 
@@ -122,7 +125,7 @@ python3 -m http.server 8000 --bind 127.0.0.1
 
 Open `http://127.0.0.1:8000/` for Landing or `http://127.0.0.1:8000/mygita/` for MyGita.
 
-For API-backed local development, also run `python3 mygita-server/dev_server.py` and open `http://127.0.0.1:8000/mygita/?provider=api`. To retain Account and Journey data in SQLite across server restarts, start it with `python3 mygita-server/dev_server.py --store sqlite`.
+For API-backed local development, first create a virtual environment and install `mygita-server/requirements.txt`. Then run `python3 mygita-server/dev_server.py` and open `http://127.0.0.1:8000/mygita/?provider=api`. To retain Account and Journey data in SQLite across server restarts, start it with `python3 mygita-server/dev_server.py --store sqlite`. Deployment-style hosts import the WSGI callable from `mygita-server/wsgi.py` and must supply `MYGITA_JWT_SECRET` explicitly.
 
 Development dependencies live outside the browser application:
 
