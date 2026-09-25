@@ -14,6 +14,7 @@ This register is the human-facing source for the decisions currently in force. S
 | Product API boundaries | [ADR-0007](ADR-0007-product-specific-api-contracts.md) | Planned | Applied when the first product integration is designed. |
 | MyGita server persistence | [ADR-0009](ADR-0009-server-persistence-boundary.md) | Partial | Store injection, SQLite persistence, database constraints, and shared store tests exist; `JsonStore` value isolation and atomic updates remain. |
 | Identity account model | [ADR-0010](ADR-0010-account-profile-authenticator-separation.md) | Implemented | Contract, client, server, fixture/API providers, and the end-to-end password lifecycle are implemented. |
+| Public V1 interest registration | [ADR-0011](ADR-0011-v1-interest-registration.md) | Partial | Isolated Apps Script package exists; deployment and Landing-to-overview wiring remain. No Account or enrolment is created. |
 
 ## ADR lifecycle register
 
@@ -29,6 +30,7 @@ This register is the human-facing source for the decisions currently in force. S
 | [ADR-0008: MyGita feature and page composition](ADR-0008-mygita-feature-and-page-composition.md) | Accepted | Implemented | — | — |
 | [ADR-0009: Server persistence boundary](ADR-0009-server-persistence-boundary.md) | Accepted | Partial | — | — |
 | [ADR-0010: Separate Account, Profile, and Authenticator](ADR-0010-account-profile-authenticator-separation.md) | Accepted | Implemented | — | — |
+| [ADR-0011: V1 interest registration beside MyGita](ADR-0011-v1-interest-registration.md) | Accepted | Partial | — | — |
 
 ## How to read status
 

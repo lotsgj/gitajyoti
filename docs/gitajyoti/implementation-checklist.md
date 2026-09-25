@@ -84,6 +84,19 @@
 - [ ] Keep browser-to-product trust and credentials out of the client.
 - [ ] Route secure product integration through `mygita.api`.
 
+## Public V1 interest registration
+
+- [x] Build the isolated Apps Script form and Sheet handler, with server-side validation, honeypot, reCAPTCHA v2 verification, consent, and guardian confirmation.
+- [x] Read active Experiences and their active Offerings from the existing Sheet; treat each Offering row, including joint-Acharya rows, as one choice and enforce at most one Offering per Experience.
+- [x] Write one Registration row per submission using the existing seven columns and all selected Offering IDs.
+- [x] Document the existing Sheet schema, script properties, deployment, and live-verification steps in `register/setup.md`.
+- [x] Add registration-handler tests to the development check.
+- [ ] Owner deploys the Sheet-bound script, configures keys and the verified frame-host suffix, and verifies signed-out browser submissions and Sheet rows.
+- [ ] Decide whether to add durable submission-ID and consent/guardian-evidence storage before public launch; the current seven columns cannot support those guarantees.
+- [x] Add a production-safe root `mygita.html` Coming Soon overview and point every Landing My Gita link to it without exposing the unfinished application.
+- [ ] After owner confirms the Apps Script deployment, add the registration popup/iframe to root `mygita.html`.
+- [ ] Approve privacy notice, retention, WhatsApp invitation policy, and child-data handling before accepting public registrations.
+
 ## Data-use optimization
 
 - [x] Complete the six phases in the [MyGita data-use optimization checklist](regions/mygita/data-use-optimization.md).

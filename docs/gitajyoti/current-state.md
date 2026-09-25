@@ -1,12 +1,14 @@
 # Current state
 
-Last reviewed: 2026-09-12
+Last reviewed: 2026-09-22
 
 ## Site
 
 - The Landing region is implemented as a responsive static page.
-- Landing links to the relative `mygita/` region.
+- Landing links to a production-safe root `mygita.html` holding page while the full `mygita/` region remains under development.
 - Images and CSS are externalized and optimized for progressive loading.
+- Root `mygita.html` presents a responsive Coming Soon overview of the four planned Experiences without calling an API or exposing incomplete registration interactions.
+- A separate V1 `register/` Apps Script interest form now reads active Experience and Offering choices from the existing private Sheet's master tabs and writes selected Offering IDs into one seven-column Registration row. It is not deployed or linked from the site.
 
 ## MyGita region
 

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gita Jyoti — Register interest</title>
+    <style>
+      :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; color: #183846; background: #fff9ed; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 24px; }
+      main { max-width: 640px; margin: 0 auto; padding: clamp(24px, 5vw, 44px); background: #fffefb; border: 1px solid #e3ddd0; border-radius: 24px; }
+      h1 { margin: 0 0 8px; font: 700 clamp(2rem, 5vw, 3rem)/1.1 Georgia, serif; }
+      p { margin: 0 0 24px; }
+      label, legend { font-weight: 650; }
+      .field { display: grid; gap: 6px; margin-bottom: 18px; }
+      input:not([type=checkbox]):not([type=radio]), textarea { width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid #aeb7b9; border-radius: 8px; font: inherit; }
+      textarea { min-height: 100px; resize: vertical; }
+      fieldset { margin: 0 0 18px; padding: 14px; border: 1px solid #cbd2d1; border-radius: 10px; }
+      fieldset label, .check { display: flex; align-items: start; gap: 10px; margin: 9px 0; font-weight: 400; }
+      input[type=checkbox], input[type=radio] { width: 18px; height: 18px; flex: none; margin-top: 3px; }
+      .offerings { margin: 14px 0 2px 28px; }
+      .offering { display: block; padding: 12px; border: 1px solid #d8dfde; border-radius: 10px; }
+      .offering span { display: block; }
+      .offering small { display: block; }
+      details { margin: 8px 0; }
+      small { color: #52646a; }
+      button { min-height: 48px; padding: 10px 24px; background: #ebaa38; border: 0; border-radius: 999px; color: #17323e; font: 700 1rem system-ui, sans-serif; cursor: pointer; }
+      button:disabled { cursor: wait; opacity: .65; }
+      a { color: #075b6c; }
+      #status { min-height: 24px; margin-top: 18px; }
+      #status.error { color: #9c291f; }
+      .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+      [hidden] { display: none !important; }
+    </style>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  </head>
+  <body>
+    <main>
+      <div id="form-panel">
+        <h1>Register your interest</h1>
+        <p>Tell us which Gita Jyoti Experiences interest you. We will contact you about availability.</p>
+        <form id="registration-form">
+          <div class="field"><label for="name">Name *</label><input id="name" name="name" autocomplete="name" maxlength="120" required></div>
+          <div class="field"><label for="mobile">Mobile *</label><input id="mobile" name="mobile" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" required></div>
+          <div class="field"><label for="email">Email <small>(optional)</small></label><input id="email" name="email" type="email" autocomplete="email" maxlength="200"></div>
+          <div class="field"><label for="date-of-birth">Date of birth *</label><input id="date-of-birth" name="dateOfBirth" type="date" required></div>
+          <fieldset><legend>Choose Experiences and their Offerings *</legend>
+            <? if (!experiences.length) { ?><p>No Experiences are currently open for registration.</p><? } ?>
+            <? experiences.forEach(function (experience) { ?>
+              <section class="experience">
+                <label><input class="experience-toggle" type="checkbox" value="<?= experience.id ?>" <? if (preferredExperience === experience.id) { ?>checked<? } ?>><strong><?= experience.name ?></strong></label>
+                <? if (experience.description) { ?><p><?= experience.description ?></p><? } ?>
+                <? if (experience.outcome) { ?><details><summary>What you can gain</summary><p><?= experience.outcome ?></p></details><? } ?>
+                <div class="offerings" <? if (preferredExperience !== experience.id) { ?>hidden<? } ?>>
+                  <p>Choose one Offering:</p>
+                  <? experience.offerings.forEach(function (offering) { ?>
+                    <label class="offering">
+                      <input type="radio" name="offering-<?= experience.id ?>" value="<?= offering.id ?>" <? if (preferredExperience !== experience.id) { ?>disabled<? } ?>>
+                      <span><strong><?= offering.acharyas.map(function (acharya) { return acharya.name; }).join(' & ') ?></strong>
+                        <? if (offering.language) { ?><small>Language: <?= offering.language ?></small><? } ?>
+                        <? if (offering.startDate) { ?><small>Start: <?= offering.startDate ?></small><? } ?>
+                        <? offering.acharyas.forEach(function (acharya) { if (acharya.description) { ?><small><?= acharya.name ?>: <?= acharya.description ?></small><? } }); ?>
+                      </span>
+                    </label>
+                  <? }); ?>
+                </div>
+              </section>
+            <? }); ?>
+          </fieldset>
+          <div class="field"><label for="comment">Comment <small>(optional)</small></label><textarea id="comment" name="comment" maxlength="1000"></textarea></div>
+          <label class="check"><input id="guardian" type="checkbox">I am the parent or guardian submitting for a person under 18.</label>
+          <label class="check"><input id="consent" type="checkbox" required>I agree to be contacted about the selected Experiences. *</label>
+          <div class="honeypot" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+          <? if (recaptchaSiteKey) { ?>
+            <div class="g-recaptcha" data-sitekey="<?= recaptchaSiteKey ?>"></div>
+            <p><small>Google reCAPTCHA helps protect this form from automated submissions.</small></p>
+            <button id="submit-button" type="submit" <? if (!experiences.length) { ?>disabled<? } ?>>Register interest</button>
+          <? } else { ?>
+            <p role="alert">Registration is not available yet. Please try again later.</p>
+          <? } ?>
+          <p id="status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+      <div id="success-panel" hidden>
+        <h1>Thank you for registering</h1>
+        <p>We have received your interest.</p>
+        <p id="whatsapp-panel" hidden><a id="whatsapp-link" target="_blank" rel="noopener noreferrer">Join the WhatsApp group</a></p>
+      </div>
+    </main>
+    <script>
+      (() => {
+        const form = document.getElementById('registration-form');
+        const status = document.getElementById('status');
+        const button = document.getElementById('submit-button');
+        const toggles = Array.from(form.querySelectorAll('.experience-toggle'));
+        function updateExperienceChoices() {
+          toggles.forEach(toggle => {
+            const choices = toggle.closest('.experience').querySelector('.offerings');
+            choices.hidden = !toggle.checked;
+            choices.querySelectorAll('input[type="radio"]').forEach(radio => {
+              radio.disabled = !toggle.checked;
+              radio.required = toggle.checked;
+              if (!toggle.checked) radio.checked = false;
+            });
+          });
+        }
+        toggles.forEach(toggle => toggle.addEventListener('change', updateExperienceChoices));
+        updateExperienceChoices();
+        form.addEventListener('submit', event => {
+          event.preventDefault();
+          if (!form.reportValidity()) return;
+          if (!toggles.some(toggle => toggle.checked)) {
+            status.textContent = 'Choose at least one Experience and Offering.';
+            status.className = 'error';
+            return;
+          }
+          const recaptchaToken = window.grecaptcha && grecaptcha.getResponse();
+          if (!recaptchaToken) {
+            status.textContent = 'Please complete the robot check.';
+            status.className = 'error';
+            return;
+          }
+          status.textContent = 'Submitting…';
+          status.className = '';
+          button.disabled = true;
+          const payload = {
+            name: document.getElementById('name').value,
+            mobile: document.getElementById('mobile').value,
+            email: document.getElementById('email').value,
+            dateOfBirth: document.getElementById('date-of-birth').value,
+            offeringIds: Array.from(form.querySelectorAll('.offerings input[type="radio"]:checked'), radio => radio.value),
+            comment: document.getElementById('comment').value,
+            guardianConfirmation: document.getElementById('guardian').checked,
+            consent: document.getElementById('consent').checked,
+            website: document.getElementById('website').value,
+            recaptchaToken,
+          };
+          google.script.run
+            .withSuccessHandler(result => {
+              if (result.whatsappInviteUrl) {
+                document.getElementById('whatsapp-link').href = result.whatsappInviteUrl;
+                document.getElementById('whatsapp-panel').hidden = false;
+              }
+              document.getElementById('form-panel').hidden = true;
+              document.getElementById('success-panel').hidden = false;
+            })
+            .withFailureHandler(error => {
+              status.textContent = error && error.message ? error.message : 'Registration failed. Please try again.';
+              status.className = 'error';
+              button.disabled = false;
+              if (window.grecaptcha) grecaptcha.reset();
+            })
+            .submitRegistration(payload);
+        });
+      })();
+    </script>
+  </body>
+</html>
