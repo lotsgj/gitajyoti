@@ -17,8 +17,9 @@
   <meta name="twitter:description" content="Discover, realise and live the wisdom of the Bhagavad Gita.">
   <meta name="twitter:image" content="https://gitajyoti.org/assets/images/gitajyoti-social-preview.jpg">
   <title>Gita Jyoti — An invitation to learn</title>
-  <link rel="stylesheet" href="style/site.css"></head><body>
-  <div class="topbar"><div class="wrap nav"><a class="brand" href="#top" aria-label="Gita Jyoti"><span class="brand-name">Gita <b>Jyoti</b></span></a><nav id="main-menu" aria-label="Main navigation"><a href="#top">The invitation</a><a href="#invitation">Eternal &amp; Scientific</a><a href="#learning">How we learn</a><a href="#purpose">Our purpose</a></nav><a class="btn nav-cta flute-cta" href="mygita.html" aria-label="My Gita"><span class="flute-burst" aria-hidden="true"><img class="cta-icon" src="assets/images/krishna-flute.svg" alt="" width="24" height="24"><i class="music-note note-one">♪</i><i class="music-note note-two">♫</i><i class="music-note note-three">♩</i></span><span class="cta-label">My Gita</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Open navigation menu"><span></span><span></span><span></span></button></div></div>
+  <link rel="stylesheet" href="style/site.css">
+  <script src="assets/js/analytics.js" defer></script></head><body data-analytics-page="landing">
+  <div class="topbar"><div class="wrap nav"><a class="brand" href="#top" aria-label="Gita Jyoti"><span class="brand-name">Gita <b>Jyoti</b></span></a><nav id="main-menu" aria-label="Main navigation"><a href="#top">The invitation</a><a href="#invitation">Eternal &amp; Scientific</a><a href="#learning">How we learn</a><a href="#purpose">Our purpose</a></nav><a class="btn nav-cta flute-cta" href="mygita.html" aria-label="My Gita" data-analytics-event="mygita_header_selected"><span class="flute-burst" aria-hidden="true"><img class="cta-icon" src="assets/images/krishna-flute.svg" alt="" width="24" height="24"><i class="music-note note-one">♪</i><i class="music-note note-two">♫</i><i class="music-note note-three">♩</i></span><span class="cta-label">My Gita</span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-menu" aria-label="Open navigation menu"><span></span><span></span><span></span></button></div></div>
   <header class="hero" id="top">
     <picture><source media="(orientation:portrait) and (max-aspect-ratio:3/5)" srcset="assets/images/hero-mobile-portrait.webp" width="941" height="1672"><source media="(orientation:portrait)" srcset="assets/images/hero-tablet-portrait.webp" width="1086" height="1448"><source media="(orientation:landscape) and (min-aspect-ratio:16/9) and (max-height:600px)" srcset="assets/images/hero-mobile-landscape.webp" width="1774" height="887"><source media="(orientation:landscape) and (max-aspect-ratio:3/2) and (max-width:1400px)" srcset="assets/images/hero-tablet-landscape.webp" width="1448" height="1086"><img src="assets/images/hero.webp" alt="A child and family walking along a luminous path through an Indian landscape" fetchpriority="high" decoding="async" width="1672" height="941"></picture>
     <div class="wrap hero-copy"><div class="hero-primary"><p class="eyebrow">An invitation to learn</p><h1>The wisdom of the Gita is for every human life.</h1><p class="lead">Across age, gender, nationality, culture and belief, the Gita invites us to discover the light within—and bring that clarity into the way we live.</p></div></div>
@@ -55,7 +56,7 @@
 
     <section class="final"><p class="eyebrow">The invitation is open</p><h2 class="serif">Come as you are. Learn for the life you are living.</h2><p>Begin a guided journey into the wisdom of the Bhagavad Gita, with learning pathways for different ages and stages of life.</p><a class="btn final-cta flute-cta" href="mygita.html" aria-label="My Gita"><span class="flute-burst" aria-hidden="true"><img src="assets/images/krishna-flute.svg" alt="" width="24" height="24"><i class="music-note note-one">♪</i><i class="music-note note-two">♫</i><i class="music-note note-three">♩</i></span><span>My Gita</span></a></section>
   </main>
-  <footer class="footer"><div class="wrap"><span>© 2026 Gita Jyoti · An initiative of Light of the Self Foundation</span><span><a href="https://lightoftheself.org/">lightoftheself.org</a> · <a href="mygita.html">My Gita</a></span></div></footer>
+  <footer class="footer"><div class="wrap"><span>© 2026 Gita Jyoti · An initiative of Light of the Self Foundation</span><span><a href="https://lightoftheself.org/">lightoftheself.org</a> · <a href="mygita.html">My Gita</a> · <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy &amp; Analytics</a></span></div></footer>
   <script>
     const menuButton = document.querySelector('.menu-toggle');
     const mainMenu = document.querySelector('#main-menu');
@@ -196,6 +197,7 @@
         return;
       }
       selectedMaster = master;
+      window.gitaJyotiAnalytics?.track('master_profile_opened');
       const info = masterInfo[master];
       masterBubbleTitle.textContent = info.name;
       masterBubbleCopy.textContent = info.text;

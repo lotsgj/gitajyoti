@@ -104,6 +104,8 @@
 ## Production UI foundation
 
 - [x] Add a dedicated social-preview image and Open Graph/Twitter metadata for the public Landing page.
+- [x] Publish a shared Privacy & Analytics notice and link it from the public Landing and My Gita overview footers.
+- [x] Add a production-domain-only, consent-gated Clarity wrapper and instrument the public Landing and My Gita overview with allowlisted events.
 - [x] Keep root-served source and built output API-first with the same explicit `?provider=fixture` override.
 - [x] Remove development screen maps, developer state routes, fixture reset, runtime feature flags, and simulated OTP UI from the shared runtime.
 - [x] Add a reproducible minified build with content-hashed JavaScript and CSS assets.

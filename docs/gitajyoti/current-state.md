@@ -1,6 +1,6 @@
 # Current state
 
-Last reviewed: 2026-09-25
+Last reviewed: 2026-09-26
 
 ## Site
 
@@ -8,6 +8,8 @@ Last reviewed: 2026-09-25
 - Landing links to a production-safe root `mygita.html` holding page while the full `mygita/` region remains under development.
 - Images and CSS are externalized and optimized for progressive loading.
 - Landing publishes Open Graph and large-image social metadata backed by a dedicated 1200×630 JPEG preview card.
+- The public Landing and My Gita overview footers link to a shared Privacy & Analytics notice in a separate tab.
+- The public Landing, My Gita overview, and privacy pages share a consent-gated Microsoft Clarity integration. It loads only on the production custom domains, uses project `yod8n0lesm`, and records an allowlisted set of navigation, interaction, and section-visibility events without personal form data.
 - Root `mygita.html` presents a responsive Coming Soon overview of the four planned Experiences without calling an API or exposing incomplete registration interactions.
 - A separate V1 `register/` Apps Script interest form now reads active Experience and Offering choices from the existing private Sheet's master tabs and writes selected Offering IDs into one seven-column Registration row. It is not deployed or linked from the site.
 
