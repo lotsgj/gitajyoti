@@ -84,18 +84,18 @@
 - [ ] Keep browser-to-product trust and credentials out of the client.
 - [ ] Route secure product integration through `mygita.api`.
 
-## Public V1 interest registration
+## Public Profile registration
 
-- [x] Build the isolated Apps Script form and Sheet handler, with server-side validation, honeypot, reCAPTCHA v2 verification, consent, and guardian confirmation.
-- [x] Read active Experiences and their active Offerings from the existing Sheet; treat each Offering row, including joint-Acharya rows, as one choice and enforce at most one Offering per Experience.
-- [x] Write one Registration row per submission using the existing seven columns and all selected Offering IDs.
-- [x] Document the existing Sheet schema, script properties, deployment, and live-verification steps in `register/setup.md`.
-- [x] Add registration-handler tests to the development check.
-- [ ] Owner deploys the Sheet-bound script, configures keys and the verified frame-host suffix, and verifies signed-out browser submissions and Sheet rows.
-- [ ] Decide whether to add durable submission-ID and consent/guardian-evidence storage before public launch; the current seven columns cannot support those guarantees.
-- [x] Add a production-safe root `mygita.html` Coming Soon overview and point every Landing My Gita link to it without exposing the unfinished application.
-- [ ] After owner confirms the Apps Script deployment, add the registration popup/iframe to root `mygita.html`.
-- [ ] Approve privacy notice, retention, WhatsApp invitation policy, and child-data handling before accepting public registrations.
+- [x] Replace the temporary Apps Script interest path with an illustrated public MyGita overview and embedded Profile overlay.
+- [x] Keep registration UI and repository modules separate while submitting only the six Profile-contract fields.
+- [x] Support localhost and direct-file mock review without exposing an unfinished durable API.
+- [x] Show validation, duplicate, service, and success states and hand the Profile ID to `mygita.gitajyoti.org`.
+- [x] Add rendered-browser regression coverage for contract fields, validation, duplicate handling, success, handoff, localhost, and `file://`.
+- [x] Remove the superseded `register/` Apps Script package and tests.
+- [x] Build a verified GitHub Pages artifact that contains production hosts and uses an explicit registration mode.
+- [ ] Implement and accept production `POST /v1/profiles`, Turnstile verification, CORS/origin policy, rate limiting, and durable duplicate behavior.
+- [ ] Set the GitHub repository variable `REGISTRATION_DEPLOY_MODE=live` only after the live acceptance checks pass.
+- [ ] Approve privacy notice, retention, child-data handling, and the security model for handing a Profile into the MyGita application.
 
 ## Data-use optimization
 

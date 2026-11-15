@@ -3,54 +3,108 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="My Gita guided learning Experiences are coming soon.">
+  <meta name="description" content="Learn with an Acharya, explore independently, or do both through MyGita.">
   <meta name="theme-color" content="#0b3440">
-  <title>My Gita — Coming soon</title>
+  <title>MyGita — Learn your way</title>
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="assets/icons/favicon-32x32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" sizes="180x180">
-  <link rel="manifest" href="site.webmanifest">
+  <script src="assets/js/site-manifest.js" data-manifest="site.webmanifest"></script>
   <link rel="stylesheet" href="style/site.css">
   <script src="assets/js/analytics.js" defer></script>
+  <script src="assets/js/registration-repository.js?v=20261115-1" defer></script>
+  <script src="assets/js/register-page.js?v=20261115-1" defer></script>
+  <script src="assets/js/mygita-page.js?v=20261115-1" defer></script>
 </head>
-<body class="mygita-coming-soon" data-analytics-page="mygita-overview">
-  <header class="topbar">
-    <div class="wrap nav coming-soon-nav">
-      <a class="brand" href="index.html" aria-label="Return to Gita Jyoti">
-        <span class="brand-name">Gita <b>Jyoti</b></span>
-      </a>
-      <a class="coming-soon-back" href="index.html">Back to Gita Jyoti</a>
+<body class="mygita-overview" data-analytics-page="mygita-overview" data-registration-provider="gitajyoti-api" data-registration-mode="mock" data-registration-client-url="https://dev.api.gitajyoti.org/v1/client.js" data-registration-api-base-url="https://dev.api.gitajyoti.org">
+  <header class="topbar mygita-topbar">
+    <div class="wrap mygita-nav">
+      <a class="brand" href="index.html" aria-label="Return to Gita Jyoti"><span class="brand-name">Gita <b>Jyoti</b></span></a>
+      <button class="mygita-header-mark flute-cta" type="button" aria-label="Play the MyGita flute animation">
+        <span class="flute-burst" aria-hidden="true"><img src="assets/images/krishna-flute-gold.svg" alt="" width="42" height="42"><i class="music-note note-one">♪</i><i class="music-note note-two">♫</i><i class="music-note note-three">♩</i></span>
+        <span>MyGita</span>
+      </button>
+      <a class="btn mygita-register-cta" href="#register" data-open-registration>Register</a>
     </div>
   </header>
 
-  <main class="coming-soon-main">
-    <section class="wrap coming-soon-intro" aria-labelledby="mygita-title">
-      <div class="coming-soon-mark" aria-hidden="true">
-        <img src="assets/images/krishna-flute.svg" alt="" width="68" height="68">
+  <main>
+    <section class="mygita-learn" aria-labelledby="learn-title">
+      <div class="wrap">
+        <div class="mygita-section-title">
+          <h1 id="learn-title">Learn your way.</h1>
+          <p class="mygita-learning-copy">Bhagavadgita has universal truths that is applicable across age, gender, nationality, culture and belief. Listen &amp; contemplate these truths in the company of an Acharya and fellow seekers, or explore the Gita in your own time. These two complimentary paths illuminate the inward journey towards your divine self.</p>
+        </div>
+        <div class="mygita-learning-art">
+          <img src="assets/images/mygita-learn-your-way.jpg" alt="An Acharya guiding a learning circle and an individual studying independently, joined by the light of one lamp" width="1774" height="887">
+        </div>
+        <div class="royal-caption mygita-truth-caption">
+          <span class="caption-ornament" aria-hidden="true"><span class="caption-spark caption-spark-one">✦</span><span class="caption-spark caption-spark-two">✧</span><svg viewBox="0 0 48 34" focusable="false"><path d="M24 29C18 23 16 15 24 4c8 11 6 19 0 25Z"/><path d="M22 29C14 28 7 23 6 13c10 2 15 8 16 16Z"/><path d="M26 29c8-1 15-6 16-16-10 2-15 8-16 16Z"/><path d="M20 30C12 33 5 29 2 23c8-1 14 1 18 7Z"/><path d="M28 30c8 3 15-1 18-7-8-1-14 1-18 7Z"/></svg></span>
+          <span class="caption-text">Truth <b aria-hidden="true">·</b> Realise <b aria-hidden="true">·</b> Use</span>
+        </div>
       </div>
-      <p class="eyebrow">My Gita</p>
-      <h1 id="mygita-title">Guided journeys are coming soon.</h1>
-      <p class="lead">We are preparing learning Experiences that bring the wisdom of the Bhagavad Gita into different ages, interests and stages of life.</p>
-      <p class="coming-soon-note">Registrations will open shortly.</p>
     </section>
 
-    <section class="wrap coming-soon-experiences" aria-labelledby="experiences-title">
-      <div class="coming-soon-heading">
-        <p class="eyebrow">Learning Experiences</p>
-        <h2 id="experiences-title">A path for every stage of life.</h2>
+    <section class="mygita-catalogue" aria-labelledby="experiences-title">
+      <div class="wrap">
+        <div class="mygita-catalogue-heading"><p class="eyebrow">Learning Experiences</p><h2 id="experiences-title">Explore Experiences.</h2></div>
+        <p class="mygita-catalogue-intro">Various learning experiences for inner transformation in the classical vedantic style of sravana-manana-nidhidhyasa (truth heard, to truth examined, to truth realised and used.) Learning experiences use contemporary situations and is designed for modern “scientific” mind.</p>
+        <div class="mygita-poster-shelf" aria-label="Available learning Experiences">
+          <button class="mygita-poster" type="button" data-experience="children">
+            <img src="assets/images/experience-gita-for-children.jpg" alt="Children joyfully learning and chanting beneath a tree" width="1000" height="1250" loading="lazy">
+            <span><small>For children</small><strong>Gita for Children</strong></span>
+          </button>
+          <button class="mygita-poster" type="button" data-experience="sara">
+            <img src="assets/images/experience-gita-sara.jpg" alt="A learner finding clarity within everyday family, work and life" width="1000" height="1250" loading="lazy">
+            <span><small>Everyday wisdom</small><strong>Gita Sāra</strong></span>
+          </button>
+          <button class="mygita-poster" type="button" data-experience="yoga">
+            <img src="assets/images/experience-gita-yoga.jpg" alt="A multigenerational circle chanting together" width="1000" height="1250" loading="lazy">
+            <span><small>Chant and understand</small><strong>Gita Yoga</strong></span>
+          </button>
+          <button class="mygita-poster" type="button" data-experience="purna">
+            <img src="assets/images/experience-purna-yoga-darshana.jpg" alt="A contemplative seeker studying the Gita through many viewpoints" width="1000" height="1250" loading="lazy">
+            <span><small>Deep contemplation</small><strong>Purna Yoga Darshana</strong></span>
+          </button>
+        </div>
       </div>
-      <div class="coming-soon-grid">
-        <article><span>01</span><h3>Gita for Children</h3><p>A joyous journey of chanting, discovery and using the Gita to shape a purposeful life.</p></article>
-        <article><span>02</span><h3>Gita Sāra</h3><p>Chosen shlokas for a happy, healthy and peaceful life amid everyday demands.</p></article>
-        <article><span>03</span><h3>Gita Yoga</h3><p>A structured chanting journey through the Gita, with a brief meaning for each shloka.</p></article>
-        <article><span>04</span><h3>Purna Yoga Darshana</h3><p>A deep inquiry into the Gita through chanting, contemplation and multiple viewpoints.</p></article>
-      </div>
-      <a class="btn coming-soon-home" href="index.html">Return to Gita Jyoti</a>
     </section>
   </main>
 
-  <footer class="footer">
-    <div class="wrap"><span>© 2026 Gita Jyoti · An initiative of Light of the Self Foundation</span><span><a href="https://lightoftheself.org/">lightoftheself.org</a> · <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy &amp; Analytics</a></span></div>
-  </footer>
+  <dialog id="experience-dialog" class="mygita-experience-dialog" aria-labelledby="experience-dialog-title">
+    <button class="mygita-dialog-close" type="button" data-close-experience aria-label="Close">×</button>
+    <img id="experience-dialog-image" src="assets/images/experience-gita-for-children.jpg" alt="">
+    <div><p id="experience-dialog-kicker" class="eyebrow"></p><h2 id="experience-dialog-title"></h2><p id="experience-dialog-copy"></p><dl><div><dt>Learning modes</dt><dd id="experience-dialog-modes"></dd></div><div><dt>For</dt><dd id="experience-dialog-audience"></dd></div></dl></div>
+  </dialog>
+
+  <section id="registration-overlay" class="mygita-registration-overlay" aria-labelledby="registration-overlay-title" hidden>
+    <header><button id="close-registration" type="button" aria-label="Close registration">← <span>Back to MyGita</span></button><h2 id="registration-overlay-title">Create your profile</h2><span aria-hidden="true"></span></header>
+    <div class="wrap registration-layout">
+      <form id="registration-form" class="registration-form" novalidate>
+        <section class="registration-panel" aria-label="Registration details">
+          <div class="registration-field-grid">
+            <label class="registration-field registration-field-wide"><span>Name <b aria-hidden="true">*</b></span><input name="name" type="text" autocomplete="name" required maxlength="100"></label>
+            <label class="registration-field"><span>Mobile number <b aria-hidden="true">*</b></span><input name="mobile" type="tel" autocomplete="tel" inputmode="tel" placeholder="+91 98450 12345" required maxlength="32"></label>
+            <label class="registration-field"><span>Email <b aria-hidden="true">*</b></span><input name="email" type="email" autocomplete="email" required maxlength="160"></label>
+            <label class="registration-field"><span>Gender <b aria-hidden="true">*</b></span><select name="gender" required><option value="">Select</option><option>Female</option><option>Male</option><option>Another identity</option><option>Prefer not to say</option></select></label>
+            <label class="registration-field"><span>Date of birth <b aria-hidden="true">*</b></span><input name="dateOfBirth" type="date" autocomplete="bday" min="1900-01-01" required></label>
+            <label class="registration-field registration-field-wide"><span>Preferred language <b aria-hidden="true">*</b></span><select name="preferredLanguage" required><option value="">Select a language</option><option>English</option><option>Kannada</option><option>Hindi</option><option>Tamil</option><option>Telugu</option><option>Other</option></select></label>
+            <label id="other-language-field" class="registration-field registration-field-wide" hidden><span>Tell us your preferred language <b aria-hidden="true">*</b></span><input name="preferredLanguageOther" type="text" maxlength="80"></label>
+          </div>
+          <label class="registration-honeypot" aria-hidden="true">Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
+          <p id="form-error" class="registration-error" role="alert" hidden></p>
+          <button id="review-profile" class="btn registration-submit" type="button">Review my Profile</button>
+        </section>
+      </form>
+    </div>
+  </section>
+
+  <dialog id="profile-dialog" class="registration-dialog" aria-labelledby="dialog-title">
+    <button id="dialog-close" class="registration-dialog-close" type="button" aria-label="Close">×</button>
+    <div id="profile-review"><p class="eyebrow">One last look</p><h2 id="dialog-title">Review your Profile.</h2><p>Make sure these details are right before creating your Profile.</p><dl id="profile-summary" class="registration-review"></dl><div id="registration-turnstile" class="registration-turnstile" hidden></div><p id="dialog-error" class="registration-error" role="alert" hidden></p><div class="registration-dialog-actions"><button id="edit-profile" class="registration-secondary-button" type="button">Go back and edit</button><button id="confirm-profile" class="btn" type="button">Confirm and create Profile</button></div></div>
+    <div id="profile-success" class="registration-success" hidden><div class="registration-success-mark" aria-hidden="true">✓</div><p class="eyebrow">Profile created</p><h2>Your doorway to MyGita is ready.</h2><p>Keep this Profile ID. It connects your learning journeys without asking you to register again.</p><div class="registration-profile-id"><span>Profile ID</span><strong id="profile-id"></strong><button id="copy-profile-id" type="button">Copy</button></div><a id="continue-to-mygita" class="btn" href="https://mygita.gitajyoti.org/">Continue to MyGita app</a></div>
+  </dialog>
+
+  <footer class="footer"><div class="wrap"><span>© 2026 Gita Jyoti · An initiative of Light of the Self Foundation</span><span><a href="https://lightoftheself.org/">lightoftheself.org</a> · <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy &amp; Analytics</a></span></div></footer>
 </body>
 </html>

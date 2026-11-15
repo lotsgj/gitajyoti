@@ -1,9 +1,9 @@
 # ADR-0011: V1 interest registration beside MyGita
 
-- Status: Accepted
-- Implementation: Partial
+- Status: Superseded
+- Implementation: Superseded
 - Supersedes: None
-- Superseded by: None
+- Superseded by: ADR-0012
 - Date: 2026-09-18
 
 ## Context
@@ -31,3 +31,7 @@ Phase 1 source, setup guidance, and server-handler tests are in `register/`. The
 ## Relationship to earlier decisions
 
 This is a transitional public-site path. It complements [ADR-0002](ADR-0002-mygita-as-orchestration-region.md) and [ADR-0010](ADR-0010-account-profile-authenticator-separation.md); it does not redefine the MyGita Account model or supersede those decisions.
+
+## Supersession
+
+[ADR-0012](ADR-0012-embedded-public-profile-registration.md) replaces this temporary Sheet-backed interest path with Profile registration embedded in the public MyGita overview. The Apps Script package has been removed.

@@ -1,17 +1,18 @@
 # Current state
 
-Last reviewed: 2026-09-26
+Last reviewed: 2026-11-15
 
 ## Site
 
 - The Landing region is implemented as a responsive static page.
-- Landing links to a production-safe root `mygita.html` holding page while the full `mygita/` region remains under development.
+- Landing links to the public root `mygita.html` overview while the full `mygita/` application remains a separate experience.
 - Images and CSS are externalized and optimized for progressive loading.
 - Landing publishes Open Graph and large-image social metadata backed by a dedicated 1200×630 JPEG preview card.
 - The public Landing and My Gita overview footers link to a shared Privacy & Analytics notice in a separate tab.
 - The public Landing, My Gita overview, and privacy pages share a consent-gated Microsoft Clarity integration. It loads only on the production custom domains, uses project `yod8n0lesm`, and records an allowlisted set of navigation, interaction, and section-visibility events without personal form data.
-- Root `mygita.html` presents a responsive Coming Soon overview of the four planned Experiences without calling an API or exposing incomplete registration interactions.
-- A separate V1 `register/` Apps Script interest form now reads active Experience and Offering choices from the existing private Sheet's master tabs and writes selected Offering IDs into one seven-column Registration row. It is not deployed or linked from the site.
+- Root `mygita.html` presents two complementary learning approaches, four illustrated Experiences, and Profile registration in an in-page overlay.
+- Profile registration uses the official API client contract behind a small repository adapter. Source review defaults to the mock; success remains in MyGita and links to `mygita.gitajyoti.org/?pid=<profile-id>`.
+- The former Sheet-bound Apps Script interest form has been removed. A public-artifact build replaces development API hosts with production hosts and keeps mock/live activation explicit.
 
 ## MyGita region
 
@@ -61,5 +62,6 @@ Last reviewed: 2026-09-26
 
 - Development-tool declarations and their lock file live in `dev-tools/` and are version-controlled.
 - Generated `dev-tools/node_modules/` content is ignored and recreated with `pnpm install --frozen-lockfile`.
-- `pnpm run check` from `dev-tools/` runs checked-JavaScript analysis, 53 client/provider/cache tests, production-build verification, generated-validator freshness, OpenAPI linting, example and mock-response validation, eight live Flask flows, and a Chromium IndexedDB/accessibility/offline/request-budget gate.
+- `pnpm run check` from `dev-tools/` also runs a rendered-browser public Profile-registration regression and verifies the GitHub Pages artifact, in addition to the checked client, OpenAPI, server flow, build, and request-budget suites.
 - GitHub Actions installs the pinned Flask dependency, then runs the complete development-tool check and Python API unit tests on pushes and pull requests.
+- A separate Pages workflow builds a whitelisted public artifact. It defaults to mock Profile registration; the repository variable `REGISTRATION_DEPLOY_MODE=live` is the deliberate production activation switch.
