@@ -14,7 +14,7 @@ The temporary Apps Script interest form no longer matches the public experience.
 
 Embed Profile registration as an overlay in root `mygita.html`. Keep page composition and API access separate through `register-page.js` and `registration-repository.js`. The UI sends only the six contract fields and hands a successfully created Profile to `https://mygita.gitajyoti.org/?pid=<profile-id>`. Invitation-code support is deferred.
 
-Source files default to the development client and mock provider so localhost and direct `file://` review remain useful. A dedicated public-site build replaces development hosts with `api.gitajyoti.org`. Its registration mode is controlled only by `REGISTRATION_DEPLOY_MODE`, defaults to `mock`, and must be deliberately changed to `live` after the production endpoint is accepted. The obsolete Sheet-bound Apps Script package is removed.
+The root-served source uses the development client and live development API so the public flow can be accepted before production switchover. A dedicated public-site build replaces development hosts with `api.gitajyoti.org`. Its registration mode is controlled only by `REGISTRATION_DEPLOY_MODE`, defaults to `mock`, and must be deliberately changed to `live` after the production endpoint is accepted. The obsolete Sheet-bound Apps Script package is removed.
 
 ## Consequences
 

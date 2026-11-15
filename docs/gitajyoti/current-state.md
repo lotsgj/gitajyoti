@@ -11,7 +11,7 @@ Last reviewed: 2026-11-15
 - The public Landing and My Gita overview footers link to a shared Privacy & Analytics notice in a separate tab.
 - The public Landing, My Gita overview, and privacy pages share a consent-gated Microsoft Clarity integration. It loads only on the production custom domains, uses project `yod8n0lesm`, and records an allowlisted set of navigation, interaction, and section-visibility events without personal form data.
 - Root `mygita.html` presents two complementary learning approaches, four illustrated Experiences, and Profile registration in an in-page overlay.
-- Profile registration uses the official API client contract behind a small repository adapter. Source review defaults to the mock; success remains in MyGita and links to `mygita.gitajyoti.org/?pid=<profile-id>`.
+- Profile registration uses the official API client contract behind a small repository adapter. The root-served page submits live to `dev.api.gitajyoti.org`; success remains in MyGita and links to `mygita.gitajyoti.org/?pid=<profile-id>`. The production-host switchover remains a separate acceptance step.
 - The former Sheet-bound Apps Script interest form has been removed. A public-artifact build replaces development API hosts with production hosts and keeps mock/live activation explicit.
 
 ## MyGita region

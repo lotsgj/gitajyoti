@@ -40,7 +40,7 @@ export const createMockApi = () => ({
     return { ok: true, profileId: 'profile-browser-test-001' };
   }
 });
-export const connect = () => ({ async createProfile() { return { ok: false, code: 'unavailable', message: 'Profile registration is not available yet.' }; } });
+export const connect = () => createMockApi();
 export const renderTurnstile = async () => ({ token: async () => 'test-token', reset() {} });
 `;
 

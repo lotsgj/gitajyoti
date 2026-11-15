@@ -88,12 +88,12 @@
 
 - [x] Replace the temporary Apps Script interest path with an illustrated public MyGita overview and embedded Profile overlay.
 - [x] Keep registration UI and repository modules separate while submitting only the six Profile-contract fields.
-- [x] Support localhost and direct-file mock review without exposing an unfinished durable API.
+- [x] Support localhost and direct-file review and connect the root-served public form to the live development Profile API for acceptance.
 - [x] Show validation, duplicate, service, and success states and hand the Profile ID to `mygita.gitajyoti.org`.
 - [x] Add rendered-browser regression coverage for contract fields, validation, duplicate handling, success, handoff, localhost, and `file://`.
 - [x] Remove the superseded `register/` Apps Script package and tests.
 - [x] Build a verified GitHub Pages artifact that contains production hosts and uses an explicit registration mode.
-- [ ] Implement and accept production `POST /v1/profiles`, Turnstile verification, CORS/origin policy, rate limiting, and durable duplicate behavior.
+- [ ] Complete development acceptance, then implement and accept production `POST /v1/profiles`, Turnstile verification, CORS/origin policy, rate limiting, and durable duplicate behavior.
 - [ ] Set the GitHub repository variable `REGISTRATION_DEPLOY_MODE=live` only after the live acceptance checks pass.
 - [ ] Approve privacy notice, retention, child-data handling, and the security model for handing a Profile into the MyGita application.
 
