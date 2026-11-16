@@ -23,4 +23,4 @@ The client returns result objects rather than throwing API failures. The reposit
 
 ## Deployment state
 
-The public Pages build defaults to `data-registration-mode="mock"` and calls `createMockApi()` from the development 1.1 client. This preserves the full registration and invitation interaction without writing durable data. A deliberate live build uses `connect()` and switches both the API base URL and client-library URL to production. Do not enable it until production serves contract 1.1 and passes browser acceptance checks.
+Local builds default to `data-registration-mode="mock"` and call `createMockApi()` from the development 1.1 client. This preserves the full registration and invitation interaction without writing durable data. The public Pages workflow defaults to live mode because production serves contract 1.1; it uses `connect()` and switches both the API base URL and client-library URL to production. Set the repository variable `REGISTRATION_DEPLOY_MODE=mock` for an explicit emergency rollback.

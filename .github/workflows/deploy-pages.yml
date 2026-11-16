@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      REGISTRATION_DEPLOY_MODE: ${{ vars.REGISTRATION_DEPLOY_MODE || 'mock' }}
+      REGISTRATION_DEPLOY_MODE: ${{ vars.REGISTRATION_DEPLOY_MODE || 'live' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

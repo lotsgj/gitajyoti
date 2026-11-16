@@ -96,8 +96,8 @@
 - [x] Remove the superseded `register/` Apps Script package and tests.
 - [x] Build a verified GitHub Pages artifact that contains production hosts and uses an explicit registration mode.
 - [x] Complete development acceptance for contract 1.1 `POST /v1/profiles` and `GET /v1/invitations/{code}`, including invitation association and idempotent matching Profile behavior.
-- [ ] Accept the production contract-1.1 API, Turnstile verification, CORS/origin policy, rate limiting, and durable duplicate behavior before selecting live deployment mode.
-- [ ] Set the GitHub repository variable `REGISTRATION_DEPLOY_MODE=live` only after the live acceptance checks pass.
+- [x] Accept the production contract-1.1 API and live CORS/origin policy, then select live deployment mode in the Pages workflow.
+- [x] Retain `REGISTRATION_DEPLOY_MODE=mock` as the explicit emergency rollback setting.
 - [ ] Approve privacy notice, retention, child-data handling, and the security model for handing a Profile into the MyGita application.
 
 ## Data-use optimization

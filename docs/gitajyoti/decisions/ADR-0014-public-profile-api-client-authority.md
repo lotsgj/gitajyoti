@@ -1,7 +1,7 @@
 # ADR-0014: Published public Profile API client is the registration contract authority
 
 - Status: Accepted
-- Implementation: Partial
+- Implementation: Implemented
 - Supersedes: None
 - Superseded by: None
 - Date: 2026-11-16
@@ -14,13 +14,13 @@ The public registration page originally used a website-owned invitation fixture 
 
 Use the published public Profile client only through `registration-repository.js`. The repository calls `createMockApi()` in mock mode and `connect()` in live mode. It exposes page-oriented `validateProfile`, `getInvitation`, and `createProfile` methods while preserving the published request and response semantics.
 
-The deployed site remains in mock mode until the production client and endpoint implement contract 1.1. The mock artifact may therefore use the development client intentionally. Live mode must switch the client URL and API base URL as a single deployment setting.
+Local builds remain in mock mode by default. The deployed site uses live mode because the production client and endpoint implement contract 1.1. Mock mode remains available as an explicit repository-variable rollback. Live mode switches the client URL and API base URL as a single deployment setting.
 
 ## Consequences
 
 - Website invitation display, validation, and Profile association follow one contract source.
 - The UI does not own a parallel invitation-data fixture.
-- Production activation remains explicit and cannot silently pair a contract-1.1 page with a contract-1.0 client.
+- Production activation selects matching contract-1.1 client and endpoint hosts, while mock rollback remains explicit.
 - The public Profile API remains separate from the internal MyGita application OpenAPI contract.
 
 ## Implementation evidence

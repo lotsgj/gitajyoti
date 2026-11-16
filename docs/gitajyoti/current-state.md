@@ -13,7 +13,7 @@ Last reviewed: 2026-11-16
 - Root `mygita.html` presents two complementary learning approaches and four illustrated Experiences. Its Register action opens the dedicated public `register.html` page.
 - `register.html` uses the same MyGita header language and an optional invitation panel. It accepts direct links such as `register.html?i=g4c-nov26-radhakrishna`, supports manual entry and no-invitation registration, and reuses the Profile review and success flow.
 - Registration accesses the published public Profile API only through `registration-repository.js`. The shared contract-1.1 client supplies the browser mock during the current deployment and the live client/provider later; it validates invitations and records Profile–Invitation association in the same call.
-- The former Sheet-bound Apps Script interest form has been removed. The public-artifact build keeps mock/live activation explicit. Mock artifacts intentionally retain the development contract-1.1 client until the production client supports the same invitation contract; a live artifact changes client URL and API base URL together.
+- The former Sheet-bound Apps Script interest form has been removed. The public Pages deployment defaults to live registration because production now serves contract 1.1. A local artifact build remains mock unless explicitly invoked with `REGISTRATION_DEPLOY_MODE=live`; every live artifact changes client URL and API base URL together.
 
 ## MyGita region
 
@@ -65,4 +65,4 @@ Last reviewed: 2026-11-16
 - Generated `dev-tools/node_modules/` content is ignored and recreated with `pnpm install --frozen-lockfile`.
 - `pnpm run check` from `dev-tools/` also runs a rendered-browser public Profile-registration regression and verifies the GitHub Pages artifact, in addition to the checked client, OpenAPI, server flow, build, and request-budget suites.
 - GitHub Actions installs the pinned Flask dependency, then runs the complete development-tool check and Python API unit tests on pushes and pull requests.
-- A separate Pages workflow builds a whitelisted public artifact. It defaults to mock Profile registration; the repository variable `REGISTRATION_DEPLOY_MODE=live` is the deliberate production activation switch.
+- A separate Pages workflow builds a whitelisted public artifact. It defaults to live Profile registration; repository variable `REGISTRATION_DEPLOY_MODE=mock` remains an explicit emergency rollback switch.
