@@ -127,6 +127,7 @@ try {
   await page.getByRole('button', { name: 'Review my Profile' }).click();
   await page.getByRole('button', { name: 'Confirm and create Profile' }).click();
   await page.getByText('Already registered with this email.').waitFor();
+  await page.locator('#edit-profile').click();
 
   await page.getByLabel('Email').fill('1@1');
   await page.getByRole('button', { name: 'Review my Profile' }).click();
