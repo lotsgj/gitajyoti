@@ -15,7 +15,7 @@ This register is the human-facing source for the decisions currently in force. S
 | MyGita server persistence | [ADR-0009](ADR-0009-server-persistence-boundary.md) | Partial | Store injection, SQLite persistence, database constraints, and shared store tests exist; `JsonStore` value isolation and atomic updates remain. |
 | Identity account model | [ADR-0010](ADR-0010-account-profile-authenticator-separation.md) | Implemented | Contract, client, server, fixture/API providers, and the end-to-end password lifecycle are implemented. |
 | Public Profile registration and invitations | [ADR-0013](ADR-0013-public-registration-page-and-invitations.md) | Partial | Shareable registration page and contract-client invitation flow exist; production API acceptance remains. No Account or enrolment is created. |
-| Public Profile API client authority | [ADR-0014](ADR-0014-public-profile-api-client-authority.md) | Implemented | ADR-0014 refines ADR-0013: matching contract-1.1 production client/API is deployed; mock remains an explicit rollback. |
+| Public Profile API client authority | [ADR-0014](ADR-0014-public-profile-api-client-authority.md) | Implemented | ADR-0014 refines ADR-0013: matching contract-1.1 production client/API is deployed; mock requires a reviewed rollback. |
 
 ## ADR lifecycle register
 

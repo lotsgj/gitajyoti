@@ -14,13 +14,13 @@ The public registration page originally used a website-owned invitation fixture 
 
 Use the published public Profile client only through `registration-repository.js`. The repository calls `createMockApi()` in mock mode and `connect()` in live mode. It exposes page-oriented `validateProfile`, `getInvitation`, and `createProfile` methods while preserving the published request and response semantics.
 
-Local builds remain in mock mode by default. The deployed site uses live mode because the production client and endpoint implement contract 1.1. Mock mode remains available as an explicit repository-variable rollback. Live mode switches the client URL and API base URL as a single deployment setting.
+Local builds remain in mock mode by default. The deployed site explicitly selects live mode because the production client and endpoint implement contract 1.1. Mock mode remains available through a reviewed workflow change. Live mode switches the client URL and API base URL as a single deployment setting.
 
 ## Consequences
 
 - Website invitation display, validation, and Profile association follow one contract source.
 - The UI does not own a parallel invitation-data fixture.
-- Production activation selects matching contract-1.1 client and endpoint hosts, while mock rollback remains explicit.
+- Production activation selects matching contract-1.1 client and endpoint hosts, while mock rollback remains a reviewed change.
 - The public Profile API remains separate from the internal MyGita application OpenAPI contract.
 
 ## Implementation evidence

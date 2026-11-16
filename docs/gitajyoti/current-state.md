@@ -65,4 +65,4 @@ Last reviewed: 2026-11-16
 - Generated `dev-tools/node_modules/` content is ignored and recreated with `pnpm install --frozen-lockfile`.
 - `pnpm run check` from `dev-tools/` also runs a rendered-browser public Profile-registration regression and verifies the GitHub Pages artifact, in addition to the checked client, OpenAPI, server flow, build, and request-budget suites.
 - GitHub Actions installs the pinned Flask dependency, then runs the complete development-tool check and Python API unit tests on pushes and pull requests.
-- A separate Pages workflow builds a whitelisted public artifact. It defaults to live Profile registration; repository variable `REGISTRATION_DEPLOY_MODE=mock` remains an explicit emergency rollback switch.
+- A separate Pages workflow builds a whitelisted public artifact with live Profile registration explicitly selected. An emergency rollback requires a reviewed workflow change rather than a stale repository variable.

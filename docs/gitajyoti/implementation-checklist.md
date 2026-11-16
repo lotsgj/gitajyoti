@@ -97,7 +97,7 @@
 - [x] Build a verified GitHub Pages artifact that contains production hosts and uses an explicit registration mode.
 - [x] Complete development acceptance for contract 1.1 `POST /v1/profiles` and `GET /v1/invitations/{code}`, including invitation association and idempotent matching Profile behavior.
 - [x] Accept the production contract-1.1 API and live CORS/origin policy, then select live deployment mode in the Pages workflow.
-- [x] Retain `REGISTRATION_DEPLOY_MODE=mock` as the explicit emergency rollback setting.
+- [x] Require a reviewed Pages-workflow change for an emergency mock rollback, so stale repository settings cannot override production.
 - [ ] Approve privacy notice, retention, child-data handling, and the security model for handing a Profile into the MyGita application.
 
 ## Data-use optimization
