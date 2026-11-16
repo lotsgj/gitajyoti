@@ -86,14 +86,17 @@
 
 ## Public Profile registration
 
-- [x] Replace the temporary Apps Script interest path with an illustrated public MyGita overview and embedded Profile overlay.
+- [x] Replace the temporary Apps Script interest path with an illustrated public MyGita overview and dedicated Profile-registration page.
 - [x] Keep registration UI and repository modules separate while submitting only the six Profile-contract fields.
-- [x] Support localhost and direct-file review and connect the root-served public form to the live development Profile API for acceptance.
+- [x] Support localhost and direct-file review with the shared contract-client mock Profile and invitation provider.
 - [x] Show validation, duplicate, service, and success states and hand the Profile ID to `mygita.gitajyoti.org`.
+- [x] Move public registration to shareable `register.html`, retaining the MyGita visual language and reusable Profile form modules.
+- [x] Add an optional contract-client invitation panel supporting direct `?i=<invite-code>` links, manual application, removal, and no-invitation registration.
 - [x] Add rendered-browser regression coverage for contract fields, validation, duplicate handling, success, handoff, localhost, and `file://`.
 - [x] Remove the superseded `register/` Apps Script package and tests.
 - [x] Build a verified GitHub Pages artifact that contains production hosts and uses an explicit registration mode.
-- [ ] Complete development acceptance, then implement and accept production `POST /v1/profiles`, Turnstile verification, CORS/origin policy, rate limiting, and durable duplicate behavior.
+- [x] Complete development acceptance for contract 1.1 `POST /v1/profiles` and `GET /v1/invitations/{code}`, including invitation association and idempotent matching Profile behavior.
+- [ ] Accept the production contract-1.1 API, Turnstile verification, CORS/origin policy, rate limiting, and durable duplicate behavior before selecting live deployment mode.
 - [ ] Set the GitHub repository variable `REGISTRATION_DEPLOY_MODE=live` only after the live acceptance checks pass.
 - [ ] Approve privacy notice, retention, child-data handling, and the security model for handing a Profile into the MyGita application.
 

@@ -1,9 +1,9 @@
 # ADR-0012: Embedded public Profile registration
 
-- Status: Accepted
-- Implementation: Partial
+- Status: Superseded
+- Implementation: Superseded
 - Supersedes: ADR-0011
-- Superseded by: None
+- Superseded by: ADR-0013
 - Date: 2026-11-15
 
 ## Context
@@ -31,3 +31,7 @@ Root `mygita.html`, `assets/js/register-page.js`, and `assets/js/registration-re
 ## Relationship to earlier decisions
 
 This decision supersedes [ADR-0011](ADR-0011-v1-interest-registration.md). It complements the Account/Profile separation in [ADR-0010](ADR-0010-account-profile-authenticator-separation.md); creating this public Profile still does not create an Account, authentication session, enrolment, or Journey.
+
+## Supersession
+
+[ADR-0013](ADR-0013-public-registration-page-and-invitations.md) replaces the embedded overlay with a shareable public registration page and adds optional invitation-code association.

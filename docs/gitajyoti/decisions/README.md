@@ -14,7 +14,8 @@ This register is the human-facing source for the decisions currently in force. S
 | Product API boundaries | [ADR-0007](ADR-0007-product-specific-api-contracts.md) | Planned | Applied when the first product integration is designed. |
 | MyGita server persistence | [ADR-0009](ADR-0009-server-persistence-boundary.md) | Partial | Store injection, SQLite persistence, database constraints, and shared store tests exist; `JsonStore` value isolation and atomic updates remain. |
 | Identity account model | [ADR-0010](ADR-0010-account-profile-authenticator-separation.md) | Implemented | Contract, client, server, fixture/API providers, and the end-to-end password lifecycle are implemented. |
-| Public Profile registration | [ADR-0012](ADR-0012-embedded-public-profile-registration.md) | Partial | Embedded mock flow and guarded deployment build exist; production `POST /v1/profiles` activation remains. No Account or enrolment is created. |
+| Public Profile registration and invitations | [ADR-0013](ADR-0013-public-registration-page-and-invitations.md) | Partial | Shareable registration page and contract-client invitation flow exist; production API acceptance remains. No Account or enrolment is created. |
+| Public Profile API client authority | [ADR-0014](ADR-0014-public-profile-api-client-authority.md) | Partial | ADR-0014 refines ADR-0013: contract 1.1 client mock is integrated; production client/API acceptance remains. |
 
 ## ADR lifecycle register
 
@@ -31,7 +32,9 @@ This register is the human-facing source for the decisions currently in force. S
 | [ADR-0009: Server persistence boundary](ADR-0009-server-persistence-boundary.md) | Accepted | Partial | — | — |
 | [ADR-0010: Separate Account, Profile, and Authenticator](ADR-0010-account-profile-authenticator-separation.md) | Accepted | Implemented | — | — |
 | [ADR-0011: V1 interest registration beside MyGita](ADR-0011-v1-interest-registration.md) | Superseded | Superseded | — | ADR-0012 |
-| [ADR-0012: Embedded public Profile registration](ADR-0012-embedded-public-profile-registration.md) | Accepted | Partial | ADR-0011 | — |
+| [ADR-0012: Embedded public Profile registration](ADR-0012-embedded-public-profile-registration.md) | Superseded | Superseded | ADR-0011 | ADR-0013 |
+| [ADR-0013: Public registration page with optional invitations](ADR-0013-public-registration-page-and-invitations.md) | Accepted | Partial | ADR-0012 | — |
+| [ADR-0014: Public Profile API client authority](ADR-0014-public-profile-api-client-authority.md) | Accepted | Partial | — | — |
 
 ## How to read status
 

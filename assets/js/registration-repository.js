@@ -42,11 +42,17 @@ const createGitajyotiApiRepository = ({ clientUrl, apiBaseUrl, mode = 'mock' }) 
       const client = await clientPromise;
       return client.renderTurnstile(container);
     },
-    async createProfile(profile, { turnstileToken = 'mock-token', honeypot = '' } = {}) {
+    async getInvitation(code) {
       const api = await apiPromise;
-      const result = await api.createProfile(mapProfileFields(profile), { turnstileToken, honeypot });
+      const result = await api.getInvitation(code);
       if (!result.ok) throw registrationError(result);
-      return { profileId: result.profileId };
+      return result.invitation;
+    },
+    async createProfile(profile, { turnstileToken = 'mock-token', honeypot = '', invitationCode } = {}) {
+      const api = await apiPromise;
+      const result = await api.createProfile(mapProfileFields(profile), { turnstileToken, honeypot, invitationCode });
+      if (!result.ok) throw registrationError(result);
+      return { profileId: result.profileId, created: result.created !== false };
     },
   };
 };

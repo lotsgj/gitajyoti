@@ -12,8 +12,6 @@
   <script src="assets/js/site-manifest.js" data-manifest="site.webmanifest"></script>
   <link rel="stylesheet" href="style/site.css">
   <script src="assets/js/analytics.js" defer></script>
-  <script src="assets/js/registration-repository.js?v=20261115-1" defer></script>
-  <script src="assets/js/register-page.js?v=20261115-1" defer></script>
   <script src="assets/js/mygita-page.js?v=20261115-1" defer></script>
 </head>
 <body class="mygita-overview" data-analytics-page="mygita-overview" data-registration-provider="gitajyoti-api" data-registration-mode="live" data-registration-client-url="https://dev.api.gitajyoti.org/v1/client.js" data-registration-api-base-url="https://dev.api.gitajyoti.org">
@@ -24,7 +22,7 @@
         <span class="flute-burst" aria-hidden="true"><img src="assets/images/krishna-flute-gold.svg" alt="" width="42" height="42"><i class="music-note note-one">♪</i><i class="music-note note-two">♫</i><i class="music-note note-three">♩</i></span>
         <span>MyGita</span>
       </button>
-      <a class="btn mygita-register-cta" href="#register" data-open-registration>Register</a>
+      <a class="btn mygita-register-cta" href="register.html">Register</a>
     </div>
   </header>
 
@@ -75,34 +73,6 @@
     <button class="mygita-dialog-close" type="button" data-close-experience aria-label="Close">×</button>
     <img id="experience-dialog-image" src="assets/images/experience-gita-for-children.jpg" alt="">
     <div><p id="experience-dialog-kicker" class="eyebrow"></p><h2 id="experience-dialog-title"></h2><p id="experience-dialog-copy"></p><dl><div><dt>Learning modes</dt><dd id="experience-dialog-modes"></dd></div><div><dt>For</dt><dd id="experience-dialog-audience"></dd></div></dl></div>
-  </dialog>
-
-  <section id="registration-overlay" class="mygita-registration-overlay" aria-labelledby="registration-overlay-title" hidden>
-    <header><button id="close-registration" type="button" aria-label="Close registration">← <span>Back to MyGita</span></button><h2 id="registration-overlay-title">Create your profile</h2><span aria-hidden="true"></span></header>
-    <div class="wrap registration-layout">
-      <form id="registration-form" class="registration-form" novalidate>
-        <section class="registration-panel" aria-label="Registration details">
-          <div class="registration-field-grid">
-            <label class="registration-field registration-field-wide"><span>Name <b aria-hidden="true">*</b></span><input name="name" type="text" autocomplete="name" required maxlength="100"></label>
-            <label class="registration-field"><span>Mobile number <b aria-hidden="true">*</b></span><input name="mobile" type="tel" autocomplete="tel" inputmode="tel" placeholder="+91 98450 12345" required maxlength="32"></label>
-            <label class="registration-field"><span>Email <b aria-hidden="true">*</b></span><input name="email" type="email" autocomplete="email" required maxlength="160"></label>
-            <label class="registration-field"><span>Gender <b aria-hidden="true">*</b></span><select name="gender" required><option value="">Select</option><option>Female</option><option>Male</option><option>Another identity</option><option>Prefer not to say</option></select></label>
-            <label class="registration-field"><span>Date of birth <b aria-hidden="true">*</b></span><input name="dateOfBirth" type="date" autocomplete="bday" min="1900-01-01" required></label>
-            <label class="registration-field registration-field-wide"><span>Preferred language <b aria-hidden="true">*</b></span><select name="preferredLanguage" required><option value="">Select a language</option><option>English</option><option>Kannada</option><option>Hindi</option><option>Tamil</option><option>Telugu</option><option>Other</option></select></label>
-            <label id="other-language-field" class="registration-field registration-field-wide" hidden><span>Tell us your preferred language <b aria-hidden="true">*</b></span><input name="preferredLanguageOther" type="text" maxlength="80"></label>
-          </div>
-          <label class="registration-honeypot" aria-hidden="true">Website<input name="website" type="text" tabindex="-1" autocomplete="off"></label>
-          <p id="form-error" class="registration-error" role="alert" hidden></p>
-          <button id="review-profile" class="btn registration-submit" type="button">Review my Profile</button>
-        </section>
-      </form>
-    </div>
-  </section>
-
-  <dialog id="profile-dialog" class="registration-dialog" aria-labelledby="dialog-title">
-    <button id="dialog-close" class="registration-dialog-close" type="button" aria-label="Close">×</button>
-    <div id="profile-review"><p class="eyebrow">One last look</p><h2 id="dialog-title">Review your Profile.</h2><p>Make sure these details are right before creating your Profile.</p><dl id="profile-summary" class="registration-review"></dl><div id="registration-turnstile" class="registration-turnstile" hidden></div><p id="dialog-error" class="registration-error" role="alert" hidden></p><div class="registration-dialog-actions"><button id="edit-profile" class="registration-secondary-button" type="button">Go back and edit</button><button id="confirm-profile" class="btn" type="button">Confirm and create Profile</button></div></div>
-    <div id="profile-success" class="registration-success" hidden><div class="registration-success-mark" aria-hidden="true">✓</div><p class="eyebrow">Profile created</p><h2>Your doorway to MyGita is ready.</h2><p>Keep this Profile ID. It connects your learning journeys without asking you to register again.</p><div class="registration-profile-id"><span>Profile ID</span><strong id="profile-id"></strong><button id="copy-profile-id" type="button">Copy</button></div><a id="continue-to-mygita" class="btn" href="https://mygita.gitajyoti.org/">Continue to MyGita app</a></div>
   </dialog>
 
   <footer class="footer"><div class="wrap"><span>© 2026 Gita Jyoti · An initiative of Light of the Self Foundation</span><span><a href="https://lightoftheself.org/">lightoftheself.org</a> · <a href="privacy.html" target="_blank" rel="noopener noreferrer">Privacy &amp; Analytics</a></span></div></footer>

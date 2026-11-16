@@ -306,6 +306,9 @@
 .sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;border:0;margin:-1px;clip:rect(0,0,0,0);white-space:nowrap}
 .registration-page{min-height:100svh;background:radial-gradient(circle at 50% 0,rgba(226,167,70,.14),transparent 25%),#f5ecda}
 .registration-nav{justify-content:space-between}
+.registration-topbar{position:sticky;top:0;z-index:20}
+.registration-introduction{max-width:760px;margin:0 auto 30px;text-align:center}
+.registration-introduction h1{margin:.15em 0;font-size:clamp(2.5rem,6vw,4.7rem);letter-spacing:-.055em}
 .registration-back{color:#fffaf0;font-size:.86rem;font-weight:750;text-decoration:none}
 .registration-back:hover{text-decoration:underline;text-underline-offset:4px}
 .registration-layout{max-width:980px;padding-top:42px;padding-bottom:96px}
@@ -317,6 +320,24 @@
 .registration-panel-heading .eyebrow{margin-bottom:5px}
 .registration-panel-heading h2{font-size:clamp(2rem,4vw,3.3rem)}
 .registration-section-copy{max-width:680px;margin:22px 0 30px;color:var(--muted)}
+.invitation-panel{position:relative;border-color:rgba(201,149,63,.46);background:linear-gradient(135deg,rgba(255,251,239,.96),rgba(255,245,217,.8))}
+.invitation-panel h2{margin:.15em 0;font-size:clamp(1.8rem,3.5vw,2.8rem);letter-spacing:-.035em}
+.invitation-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;max-width:690px}
+.invitation-entry[hidden]{display:none}
+.invitation-entry .registration-secondary-button{min-height:52px}
+.invitation-summary{max-width:690px;padding:19px 20px;border:1px solid rgba(49,82,101,.22);border-radius:18px;background:rgba(255,253,248,.92)}
+.invitation-summary[hidden]{display:none}
+.invitation-summary>div{display:flex;gap:9px;align-items:center}
+.invitation-success-mark{display:grid;width:25px;height:25px;place-items:center;border-radius:50%;background:var(--teal);color:#fff;font-size:.82rem;font-weight:800}
+.invitation-summary .eyebrow{margin:0}
+.invitation-summary h3{margin:12px 0 4px;font-size:1.35rem}
+.invitation-summary p{margin:4px 0;color:var(--muted);font-size:.92rem}
+.registration-text-button{margin:16px 0 0;padding:0;border:0;background:transparent;color:var(--teal);font:inherit;font-size:.88rem;font-weight:800;text-decoration:underline;text-decoration-color:rgba(22,60,84,.3);text-underline-offset:4px;cursor:pointer}
+.registration-text-button:hover{color:#a46720}
+.invitation-continue-copy{margin:17px 0 0;color:var(--muted);font-size:.88rem;line-height:1.5}
+.review-invitation{max-width:none;margin:20px 0;border-color:rgba(201,149,63,.42);background:#fff5d9}
+.review-invitation[hidden],.success-invitation[hidden]{display:none}
+.success-invitation{max-width:510px;margin:18px auto;color:var(--teal);font-weight:750;line-height:1.55}
 .registration-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .registration-field{display:grid;gap:7px}
 .registration-field-wide{grid-column:1/-1}
@@ -403,10 +424,13 @@
   .mygita-experience-list{grid-template-columns:1fr}
   .mygita-experience-note{grid-column:1;margin:-6px 0 0}
   .registration-layout{padding-bottom:70px}
+  .registration-introduction{margin-bottom:24px}
   .registration-panel{padding:24px 20px;border-radius:24px}
   .registration-panel-heading{align-items:flex-start}
   .registration-field-grid,.registration-review{grid-template-columns:1fr}
   .registration-field-wide{grid-column:auto}
+  .invitation-entry{grid-template-columns:1fr}
+  .invitation-entry .registration-secondary-button{width:100%}
   .registration-submit{width:100%}
   .registration-dialog-actions{align-items:stretch;flex-direction:column-reverse}
   .registration-dialog-actions>*{width:100%}

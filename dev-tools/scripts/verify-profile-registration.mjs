@@ -18,7 +18,15 @@ const executablePath = chromeCandidates.find(existsSync);
 if (!executablePath) throw new Error('Chrome was not found. Set MYGITA_TEST_CHROME to its executable.');
 
 const apiClientFixture = `
-const created = new Set();
+const profiles = new Map();
+const invitation = {
+  code: 'g4c-nov26-radhakrishna',
+  experience: { id: '1', name: 'Gita for Children' },
+  offering: {
+    id: '1', name: 'Gita for Children - Radhakrishna Batch',
+    acharyas: [{ id: '2', name: 'AJ Vijay P' }], languages: ['sa', 'en', 'kn'], startDate: '2026-11-30'
+  }
+};
 const problem = (field, message) => ({ field, message });
 export const normalizeProfileFields = fields => ({ ...fields });
 export const checkProfileFields = fields => {
@@ -31,16 +39,29 @@ export const checkProfileFields = fields => {
   return null;
 };
 export const createMockApi = () => ({
-  async createProfile(fields) {
+  async createProfile(fields, options = {}) {
     globalThis.__registrationFields = fields;
     const validation = checkProfileFields(fields);
     if (validation) return { ok: false, code: 'invalid', ...validation };
-    if (created.has(fields.email)) return { ok: false, code: 'duplicate', field: 'email', message: 'Already registered with this email.' };
-    created.add(fields.email);
-    return { ok: true, profileId: 'profile-browser-test-001' };
+    const existing = profiles.get(fields.email);
+    if (existing && options.invitationCode) return { ok: true, profileId: existing, created: false };
+    if (existing) return { ok: false, code: 'duplicate', message: 'Already registered with this email.' };
+    profiles.set(fields.email, 'GJ-7K3M-9QX2');
+    return { ok: true, profileId: 'GJ-7K3M-9QX2', created: true };
+  },
+  async getInvitation(code) {
+    if (code.trim().toLowerCase() === invitation.code) return { ok: true, invitation };
+    return { ok: false, code: 'not_found', message: 'We couldn’t find an active invitation with that code.' };
   }
 });
-export const connect = () => createMockApi();
+export const connect = () => ({
+  async createProfile() {
+    return { ok: false, code: 'unavailable', message: 'Profile registration is not available yet.' };
+  },
+  async getInvitation(code) {
+    return createMockApi().getInvitation(code);
+  }
+});
 export const renderTurnstile = async () => ({ token: async () => 'test-token', reset() {} });
 `;
 
@@ -71,6 +92,14 @@ const configurePage = async page => {
     body: apiClientFixture,
   }));
 };
+const configureLivePage = async page => {
+  await configurePage(page);
+  await page.route('**/register.html', route => {
+    const html = readFileSync(join(siteRoot, 'register.html'), 'utf8')
+      .replace('data-registration-mode="mock"', 'data-registration-mode="live"');
+    return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
+  });
+};
 const fillValidProfile = async (page, email = 'browser@example.org') => {
   await page.getByLabel('Name').fill('Browser Test User');
   await page.getByLabel('Mobile number').fill('+91 98450 12345');
@@ -79,23 +108,18 @@ const fillValidProfile = async (page, email = 'browser@example.org') => {
   await page.getByLabel('Date of birth').fill('1980-01-01');
   await page.locator('select[name="preferredLanguage"]').selectOption({ label: 'English' });
 };
-const openRegistration = async page => {
-  await page.getByRole('link', { name: 'Register' }).click();
-  await page.getByRole('heading', { name: 'Create your profile' }).waitFor();
-};
-
 try {
   const page = await browser.newPage();
   await configurePage(page);
-  await page.goto(`http://127.0.0.1:${port}/mygita.html`);
-  await openRegistration(page);
+  await page.goto(`http://127.0.0.1:${port}/register.html`);
+  await page.getByRole('heading', { level: 1, name: 'Create your Profile.' }).waitFor();
   await fillValidProfile(page);
   await page.getByRole('button', { name: 'Review my Profile' }).click();
   await page.getByRole('heading', { name: 'Review your Profile.' }).waitFor();
   await page.getByRole('button', { name: 'Confirm and create Profile' }).click();
   await page.getByText('Profile created', { exact: true }).waitFor();
-  assert.equal(await page.locator('#profile-id').textContent(), 'profile-browser-test-001');
-  assert.equal(await page.locator('#continue-to-mygita').getAttribute('href'), 'https://mygita.gitajyoti.org/?pid=profile-browser-test-001');
+  assert.equal(await page.locator('#profile-id').textContent(), 'GJ-7K3M-9QX2');
+  assert.equal(await page.locator('#continue-to-mygita').getAttribute('href'), 'https://mygita.gitajyoti.org/?pid=GJ-7K3M-9QX2');
   assert.deepEqual(await page.evaluate(() => Object.keys(globalThis.__registrationFields).sort()),
     ['date_of_birth', 'email', 'gender', 'mobile', 'name', 'preferred_language']);
 
@@ -117,15 +141,53 @@ try {
   assert.equal(await page.getByLabel('Date of birth').getAttribute('aria-invalid'), 'true');
   await page.close();
 
+  const invitationPage = await browser.newPage();
+  await configurePage(invitationPage);
+  await invitationPage.goto(`http://127.0.0.1:${port}/register.html?i=g4c-nov26-radhakrishna`);
+  await invitationPage.locator('#invitation-summary').getByText('Invitation applied', { exact: true }).waitFor();
+  await invitationPage.getByRole('heading', { name: 'Gita for Children' }).waitFor();
+  await fillValidProfile(invitationPage, 'invited@example.org');
+  await invitationPage.getByRole('button', { name: 'Review my Profile' }).click();
+  const reviewInvitation = invitationPage.locator('#review-invitation');
+  await reviewInvitation.getByRole('heading', { name: 'Gita for Children' }).waitFor();
+  assert.match(await reviewInvitation.innerText(), /Gita for Children - Radhakrishna Batch/);
+  assert.match(await reviewInvitation.innerText(), /Guided by AJ Vijay P/);
+  assert.match(await reviewInvitation.innerText(), /Sanskrit · English · Kannada · Begins 30 November 2026/);
+  await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
+  await invitationPage.getByText('Profile created', { exact: true }).waitFor();
+  await invitationPage.locator('#dialog-close').click();
+  await invitationPage.getByRole('button', { name: 'Review my Profile' }).click();
+  await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
+  await invitationPage.getByText('Your Profile already exists. This invitation to Gita for Children has been added to it.').waitFor();
+  await invitationPage.locator('#dialog-close').click();
+  await invitationPage.getByRole('button', { name: 'Change invitation' }).click();
+  await invitationPage.getByLabel('Invitation code').fill('not-a-real-code');
+  await invitationPage.getByRole('button', { name: 'Apply' }).click();
+  await invitationPage.getByText('We couldn’t find an active invitation with that code.').waitFor();
+  await invitationPage.close();
+
   const filePage = await browser.newPage();
   await configurePage(filePage);
-  await filePage.goto(pathToFileURL(join(siteRoot, 'mygita.html')).href);
-  await openRegistration(filePage);
+  await filePage.goto(pathToFileURL(join(siteRoot, 'register.html')).href);
   await fillValidProfile(filePage, 'file@example.org');
   await filePage.getByRole('button', { name: 'Review my Profile' }).click();
   await filePage.getByRole('heading', { name: 'Review your Profile.' }).waitFor();
   await filePage.close();
-  console.log('Verified Profile registration over localhost and file://: review, validation, duplicate handling, contract fields, success ID, and MyGita handoff.');
+
+  const livePage = await browser.newPage();
+  const consoleErrors = [];
+  livePage.on('console', message => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+  await configureLivePage(livePage);
+  await livePage.goto(`http://127.0.0.1:${port}/register.html`);
+  await fillValidProfile(livePage, 'live@example.org');
+  await livePage.getByRole('button', { name: 'Review my Profile' }).click();
+  await livePage.getByRole('button', { name: 'Confirm and create Profile' }).click();
+  await livePage.getByText('Profile registration is not available yet.').waitFor();
+  assert.deepEqual(consoleErrors, []);
+  await livePage.close();
+  console.log('Verified Profile registration over localhost and file://: Profile validation, duplicate handling, invitation links/manual codes, contract fields, success ID, MyGita handoff, and live-mode API failure handling.');
 } finally {
   await browser.close();
   await new Promise(resolveClose => server.close(resolveClose));

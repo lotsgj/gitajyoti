@@ -1,6 +1,6 @@
 # Current state
 
-Last reviewed: 2026-11-15
+Last reviewed: 2026-11-16
 
 ## Site
 
@@ -10,9 +10,10 @@ Last reviewed: 2026-11-15
 - Landing publishes Open Graph and large-image social metadata backed by a dedicated 1200×630 JPEG preview card.
 - The public Landing and My Gita overview footers link to a shared Privacy & Analytics notice in a separate tab.
 - The public Landing, My Gita overview, and privacy pages share a consent-gated Microsoft Clarity integration. It loads only on the production custom domains, uses project `yod8n0lesm`, and records an allowlisted set of navigation, interaction, and section-visibility events without personal form data.
-- Root `mygita.html` presents two complementary learning approaches, four illustrated Experiences, and Profile registration in an in-page overlay.
-- Profile registration uses the official API client contract behind a small repository adapter. The root-served page submits live to `dev.api.gitajyoti.org`; success remains in MyGita and links to `mygita.gitajyoti.org/?pid=<profile-id>`. The production-host switchover remains a separate acceptance step.
-- The former Sheet-bound Apps Script interest form has been removed. A public-artifact build replaces development API hosts with production hosts and keeps mock/live activation explicit.
+- Root `mygita.html` presents two complementary learning approaches and four illustrated Experiences. Its Register action opens the dedicated public `register.html` page.
+- `register.html` uses the same MyGita header language and an optional invitation panel. It accepts direct links such as `register.html?i=g4c-nov26-radhakrishna`, supports manual entry and no-invitation registration, and reuses the Profile review and success flow.
+- Registration accesses the published public Profile API only through `registration-repository.js`. The shared contract-1.1 client supplies the browser mock during the current deployment and the live client/provider later; it validates invitations and records Profile–Invitation association in the same call.
+- The former Sheet-bound Apps Script interest form has been removed. The public-artifact build keeps mock/live activation explicit. Mock artifacts intentionally retain the development contract-1.1 client until the production client supports the same invitation contract; a live artifact changes client URL and API base URL together.
 
 ## MyGita region
 

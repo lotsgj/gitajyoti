@@ -20,26 +20,6 @@ document.querySelectorAll('[data-experience]').forEach(card => card.addEventList
 document.querySelector('[data-close-experience]').addEventListener('click', () => experienceDialog.close());
 experienceDialog.addEventListener('click', event => { if (event.target === experienceDialog) experienceDialog.close(); });
 
-const registrationOverlay = document.querySelector('#registration-overlay');
-const openRegistration = event => {
-  event?.preventDefault();
-  registrationOverlay.hidden = false;
-  document.body.classList.add('registration-is-open');
-  if (!history.state?.registrationOpen) history.pushState({ ...history.state, registrationOpen: true }, '');
-  registrationOverlay.querySelector('input')?.focus();
-};
-const hideRegistration = () => {
-  registrationOverlay.hidden = true;
-  document.body.classList.remove('registration-is-open');
-};
-document.querySelectorAll('[data-open-registration]').forEach(link => link.addEventListener('click', openRegistration));
-document.querySelector('#close-registration').addEventListener('click', () => {
-  if (history.state?.registrationOpen) history.back(); else hideRegistration();
-});
-window.addEventListener('popstate', () => {
-  if (!history.state?.registrationOpen) hideRegistration();
-});
-
 const flute = document.querySelector('.mygita-header-mark');
 const playFlute = () => {
   flute.classList.remove('is-playing');

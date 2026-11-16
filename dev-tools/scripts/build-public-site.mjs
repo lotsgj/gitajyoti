@@ -17,15 +17,17 @@ const copy = relative => {
   cpSync(source, destination, { recursive: true });
 };
 
-['index.html', 'mygita.html', 'privacy.html', 'site.webmanifest', 'CNAME', 'assets', 'style'].forEach(copy);
+['index.html', 'mygita.html', 'register.html', 'privacy.html', 'site.webmanifest', 'CNAME', 'assets', 'style'].forEach(copy);
 mkdirSync(join(outputRoot, 'mygita'), { recursive: true });
 ['mygita/index.html', 'mygita/src', 'mygita/styles'].forEach(copy);
 
-const mygitaPath = join(outputRoot, 'mygita.html');
-let html = readFileSync(mygitaPath, 'utf8');
-html = html
-  .replace(/data-registration-mode="(?:mock|live)"/, `data-registration-mode="${mode}"`)
-  .replace('https://dev.api.gitajyoti.org/v1/client.js', 'https://api.gitajyoti.org/v1/client.js')
-  .replace('https://dev.api.gitajyoti.org"', 'https://api.gitajyoti.org"');
-writeFileSync(mygitaPath, html);
+const registrationPath = join(outputRoot, 'register.html');
+let html = readFileSync(registrationPath, 'utf8');
+html = html.replace(/data-registration-mode="(?:mock|live)"/, `data-registration-mode="${mode}"`);
+if (mode === 'live') {
+  html = html
+    .replace('https://dev.api.gitajyoti.org/v1/client.js', 'https://api.gitajyoti.org/v1/client.js')
+    .replace('https://dev.api.gitajyoti.org"', 'https://api.gitajyoti.org"');
+}
+writeFileSync(registrationPath, html);
 console.log(`Built public site at ${outputRoot} with registration mode ${mode}.`);
