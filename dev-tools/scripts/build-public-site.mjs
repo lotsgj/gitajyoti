@@ -24,10 +24,10 @@ mkdirSync(join(outputRoot, 'mygita'), { recursive: true });
 const registrationPath = join(outputRoot, 'register.html');
 let html = readFileSync(registrationPath, 'utf8');
 html = html.replace(/data-registration-mode="(?:mock|live)"/, `data-registration-mode="${mode}"`);
-if (mode === 'live') {
+if (mode === 'mock') {
   html = html
-    .replace('https://dev.api.gitajyoti.org/v1/client.js', 'https://api.gitajyoti.org/v1/client.js')
-    .replace('https://dev.api.gitajyoti.org"', 'https://api.gitajyoti.org"');
+    .replace('https://api.gitajyoti.org/v1/client.js', 'https://dev.api.gitajyoti.org/v1/client.js')
+    .replace('https://api.gitajyoti.org"', 'https://dev.api.gitajyoti.org"');
 }
 writeFileSync(registrationPath, html);
 console.log(`Built public site at ${outputRoot} with registration mode ${mode}.`);

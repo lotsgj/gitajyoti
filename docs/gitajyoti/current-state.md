@@ -13,7 +13,7 @@ Last reviewed: 2026-11-16
 - Root `mygita.html` presents two complementary learning approaches and four illustrated Experiences. Its Register action opens the dedicated public `register.html` page.
 - `register.html` uses the same MyGita header language and an optional invitation panel. It accepts direct links such as `register.html?i=g4c-nov26-radhakrishna`, supports manual entry and no-invitation registration, and reuses the Profile review and success flow.
 - Registration accesses the published public Profile API only through `registration-repository.js`. The shared contract-1.1 client supplies the browser mock during the current deployment and the live client/provider later; it validates invitations and records Profile–Invitation association in the same call.
-- The former Sheet-bound Apps Script interest form has been removed. The public Pages deployment defaults to live registration because production now serves contract 1.1. A local artifact build remains mock unless explicitly invoked with `REGISTRATION_DEPLOY_MODE=live`; every live artifact changes client URL and API base URL together.
+- The former Sheet-bound Apps Script interest form has been removed. `register.html` itself selects live registration because production now serves contract 1.1; this remains correct whether GitHub Pages deploys from the branch or the vetted artifact. A local artifact build remains mock unless explicitly invoked with `REGISTRATION_DEPLOY_MODE=live`; every mock artifact switches both client URL and API base URL to the development contract client.
 
 ## MyGita region
 

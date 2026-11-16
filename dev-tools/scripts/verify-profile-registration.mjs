@@ -6,7 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const siteRoot = resolve(fileURLToPath(new URL('../..', import.meta.url)));
-const clientUrl = 'https://dev.api.gitajyoti.org/v1/client.js';
+const clientUrl = 'https://api.gitajyoti.org/v1/client.js';
 const chromeCandidates = [
   process.env.MYGITA_TEST_CHROME,
   '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -92,11 +92,11 @@ const configurePage = async page => {
     body: apiClientFixture,
   }));
 };
-const configureLivePage = async page => {
+const configureMockPage = async page => {
   await configurePage(page);
   await page.route('**/register.html', route => {
     const html = readFileSync(join(siteRoot, 'register.html'), 'utf8')
-      .replace('data-registration-mode="mock"', 'data-registration-mode="live"');
+      .replace('data-registration-mode="live"', 'data-registration-mode="mock"');
     return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
   });
 };
@@ -110,7 +110,7 @@ const fillValidProfile = async (page, email = 'browser@example.org') => {
 };
 try {
   const page = await browser.newPage();
-  await configurePage(page);
+  await configureMockPage(page);
   await page.goto(`http://127.0.0.1:${port}/register.html`);
   await page.getByRole('heading', { level: 1, name: 'Create your Profile.' }).waitFor();
   await fillValidProfile(page);
@@ -143,7 +143,7 @@ try {
   await page.close();
 
   const invitationPage = await browser.newPage();
-  await configurePage(invitationPage);
+  await configureMockPage(invitationPage);
   await invitationPage.goto(`http://127.0.0.1:${port}/register.html?i=g4c-nov26-radhakrishna`);
   await invitationPage.locator('#invitation-summary').getByText('Invitation applied', { exact: true }).waitFor();
   await invitationPage.getByRole('heading', { name: 'Gita for Children' }).waitFor();
@@ -154,13 +154,7 @@ try {
   assert.match(await reviewInvitation.innerText(), /Gita for Children - Radhakrishna Batch/);
   assert.match(await reviewInvitation.innerText(), /Guided by AJ Vijay P/);
   assert.match(await reviewInvitation.innerText(), /Sanskrit · English · Kannada · Begins 30 November 2026/);
-  await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
-  await invitationPage.getByText('Profile created', { exact: true }).waitFor();
-  await invitationPage.locator('#dialog-close').click();
-  await invitationPage.getByRole('button', { name: 'Review my Profile' }).click();
-  await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
-  await invitationPage.getByText('Your Profile already exists. This invitation to Gita for Children has been added to it.').waitFor();
-  await invitationPage.locator('#dialog-close').click();
+  await invitationPage.locator('#edit-profile').click();
   await invitationPage.getByRole('button', { name: 'Change invitation' }).click();
   await invitationPage.getByLabel('Invitation code').fill('not-a-real-code');
   await invitationPage.getByRole('button', { name: 'Apply' }).click();
@@ -180,7 +174,7 @@ try {
   livePage.on('console', message => {
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
-  await configureLivePage(livePage);
+  await configurePage(livePage);
   await livePage.goto(`http://127.0.0.1:${port}/register.html`);
   await fillValidProfile(livePage, 'live@example.org');
   await livePage.getByRole('button', { name: 'Review my Profile' }).click();

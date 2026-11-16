@@ -14,7 +14,7 @@ The public registration page originally used a website-owned invitation fixture 
 
 Use the published public Profile client only through `registration-repository.js`. The repository calls `createMockApi()` in mock mode and `connect()` in live mode. It exposes page-oriented `validateProfile`, `getInvitation`, and `createProfile` methods while preserving the published request and response semantics.
 
-Local builds remain in mock mode by default. The deployed site explicitly selects live mode because the production client and endpoint implement contract 1.1. Mock mode remains available through a reviewed workflow change. Live mode switches the client URL and API base URL as a single deployment setting.
+The checked-in registration page and deployed site explicitly select live mode because the production client and endpoint implement contract 1.1. Local artifact builds remain mock by default. Mock mode remains available through a reviewed source and workflow change. Both modes switch the client URL and API base URL as a single setting.
 
 ## Consequences
 
