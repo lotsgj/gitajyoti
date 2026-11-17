@@ -10,6 +10,12 @@ for (const relative of ['index.html', 'mygita.html', 'register.html', 'privacy.h
   assert.ok(existsSync(join(outputRoot, relative)), `Missing built file: ${relative}`);
 }
 const html = readFileSync(join(outputRoot, 'register.html'), 'utf8');
+const socialPreview = 'https://gitajyoti.org/assets/images/gitajyoti-social-preview.jpg';
+for (const page of ['index.html', 'mygita.html', 'register.html']) {
+  const pageHtml = readFileSync(join(outputRoot, page), 'utf8');
+  assert.ok(pageHtml.includes(`property="og:image" content="${socialPreview}"`), `${page} is missing the shared Open Graph preview.`);
+  assert.ok(pageHtml.includes(`name="twitter:image" content="${socialPreview}"`), `${page} is missing the shared Twitter preview.`);
+}
 assert.ok(html.includes(`data-registration-mode="${mode}"`), `Expected registration mode ${mode}.`);
 if (mode === 'live') {
   assert.ok(html.includes('https://api.gitajyoti.org/v1/client.js'), 'Production client URL is absent.');
