@@ -28,6 +28,10 @@ if (mode === 'mock') {
   html = html
     .replace('https://api.gitajyoti.org/v1/client.js', 'https://dev.api.gitajyoti.org/v1/client.js')
     .replace('https://api.gitajyoti.org"', 'https://dev.api.gitajyoti.org"');
+} else {
+  // Local serving needs these values, but a deployed artifact must not publish
+  // a development endpoint that a visitor could select or discover.
+  html = html.replace(/\sdata-registration-dev-(?:client-url|api-base-url)="[^"]*"/g, '');
 }
 writeFileSync(registrationPath, html);
 console.log(`Built public site at ${outputRoot} with registration mode ${mode}.`);

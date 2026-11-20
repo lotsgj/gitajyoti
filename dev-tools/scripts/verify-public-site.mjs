@@ -20,6 +20,7 @@ assert.ok(html.includes(`data-registration-mode="${mode}"`), `Expected registrat
 if (mode === 'live') {
   assert.ok(html.includes('https://api.gitajyoti.org/v1/client.js'), 'Production client URL is absent.');
   assert.ok(html.includes('data-registration-api-base-url="https://api.gitajyoti.org"'), 'Production API base URL is absent.');
+  assert.ok(!html.includes('data-registration-dev-'), 'Local development registration settings leaked into the live public artifact.');
   assert.ok(!html.includes('dev.api.gitajyoti.org'), 'Development API URL leaked into the live public artifact.');
 } else {
   assert.ok(html.includes('https://dev.api.gitajyoti.org/v1/client.js'), 'The contract-1.1 mock client URL is absent.');
