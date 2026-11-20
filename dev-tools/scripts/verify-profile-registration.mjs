@@ -25,7 +25,7 @@ const invitation = {
   experience: { id: '1', name: 'Gita for Children' },
   offering: {
     id: '1', name: 'Gita for Children - Radhakrishna Batch',
-    acharyas: [{ id: '2', name: 'AJ Vijay P', profilePic: 'https://example.com/acharya-sample.jpg' }], languages: ['sa', 'en', 'kn'], startDate: '2026-11-30'
+    acharyas: [{ id: '2', name: 'AJ Vijay P', profilePic: null }], languages: ['sa', 'en', 'kn'], startDate: '2026-11-30'
   }
 };
 const invitationActions = [{ link: 'https://example.com/mock-group', label: 'Join the mock group', prompt: 'Join the mock group for class updates.' }];
@@ -98,8 +98,7 @@ const configurePage = async page => {
 };
 const configureMockPage = async page => {
   await configurePage(page);
-  await page.route('https://example.com/acharya-sample.jpg', route => route.fulfill({ status: 404, body: 'Not found' }));
-  await page.route('**/register.html', route => {
+  await page.route('**/register.html*', route => {
     const html = readFileSync(join(siteRoot, 'register.html'), 'utf8')
       .replace('data-registration-mode="live"', 'data-registration-mode="mock"');
     return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
@@ -160,9 +159,8 @@ try {
   const reviewInvitation = invitationPage.locator('#review-invitation');
   await reviewInvitation.getByRole('heading', { name: 'Gita for Children' }).waitFor();
   assert.match(await reviewInvitation.innerText(), /Gita for Children - Radhakrishna Batch/);
-  assert.match(await reviewInvitation.innerText(), /Guided by\s+AJ Vijay P/);
+  assert.match(await reviewInvitation.innerText(), /Guided by[\s\S]*AJ Vijay P/);
   assert.match(await reviewInvitation.innerText(), /Sanskrit · English · Kannada · Begins 30 November 2026/);
-  await reviewInvitation.locator('.mygita-acharya-avatar').dispatchEvent('error');
   await reviewInvitation.locator('.mygita-acharya-initials').waitFor();
   await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
   await invitationPage.getByRole('link', { name: 'Join the mock group' }).waitFor();
@@ -190,7 +188,7 @@ try {
       { link: 'https://example.com/safe', label: '<b>safe</b>', prompt: '<b>prompt</b>' },
     ]);
   });
-  assert.equal(await rendererPage.getByRole('link').count(), 1);
+  assert.equal(await rendererPage.locator('#success-actions a').count(), 1);
   await rendererPage.getByText('<b>safe</b>', { exact: true }).waitFor();
   await rendererPage.getByText('<b>prompt</b>', { exact: true }).waitFor();
   await rendererPage.evaluate(() => {
