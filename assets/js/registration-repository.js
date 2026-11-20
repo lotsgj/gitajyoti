@@ -52,7 +52,7 @@ const createGitajyotiApiRepository = ({ clientUrl, apiBaseUrl, mode = 'mock' }) 
       const api = await apiPromise;
       const result = await api.createProfile(mapProfileFields(profile), { turnstileToken, honeypot, invitationCode });
       if (!result.ok) throw registrationError(result);
-      return { profileId: result.profileId, created: result.created !== false };
+      return { profileId: result.profileId, created: result.created !== false, onSuccess: Array.isArray(result.onSuccess) ? result.onSuccess : [] };
     },
   };
 };

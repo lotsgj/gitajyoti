@@ -1,8 +1,14 @@
+const isLocalRegistrationHost = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  || window.location.protocol === 'file:';
 const config = {
   provider: document.body.dataset.registrationProvider || 'gitajyoti-api',
   mode: document.body.dataset.registrationMode || 'mock',
-  clientUrl: document.body.dataset.registrationClientUrl || '',
-  apiBaseUrl: document.body.dataset.registrationApiBaseUrl || '',
+  clientUrl: isLocalRegistrationHost
+    ? document.body.dataset.registrationDevClientUrl || document.body.dataset.registrationClientUrl || ''
+    : document.body.dataset.registrationClientUrl || '',
+  apiBaseUrl: isLocalRegistrationHost
+    ? document.body.dataset.registrationDevApiBaseUrl || document.body.dataset.registrationApiBaseUrl || ''
+    : document.body.dataset.registrationApiBaseUrl || '',
 };
 const repository = window.createRegistrationRepository(config);
 const form = document.querySelector('#registration-form');
@@ -65,87 +71,40 @@ const ensureTurnstile = () => {
   captchaPromise ||= repository.renderTurnstile(turnstileContainer);
   return captchaPromise;
 };
-const setInvitationUrl = code => {
-  const url = new URL(window.location.href);
-  if (code) url.searchParams.set('i', code); else url.searchParams.delete('i');
-  history.replaceState({ ...history.state, invitationCode: code || null }, '', url);
-};
-const languageNames = new Intl.DisplayNames(['en'], { type: 'language' });
-const formatLanguages = languages => languages?.length
-  ? languages.map(code => {
-    try { return languageNames.of(code) || code; } catch { return code; }
-  }).join(' · ')
-  : 'Language to be announced';
-const formatStartDate = value => {
-  if (!value) return 'Start date to be announced';
-  const date = new Date(`${value}T00:00:00Z`);
-  return Number.isNaN(date.getTime()) ? 'Start date to be announced' : new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
-};
-const invitationAcharyas = invitation => invitation.offering.acharyas.map(acharya => acharya.name).join(' and ');
-const invitationMeta = invitation => `${formatLanguages(invitation.offering.languages)} · Begins ${formatStartDate(invitation.offering.startDate)}`;
-const displayInvitation = invitation => {
-  appliedInvitation = invitation;
-  invitationCode.value = invitation.code;
-  document.querySelector('#invitation-experience').textContent = invitation.experience.name;
-  document.querySelector('#invitation-offering').textContent = invitation.offering.name;
-  document.querySelector('#invitation-acharyas').textContent = `Guided by ${invitationAcharyas(invitation)}`;
-  document.querySelector('#invitation-meta').textContent = invitationMeta(invitation);
-  invitationEntry.hidden = true;
-  invitationSummary.hidden = false;
-  invitationError.hidden = true;
-  setInvitationUrl(invitation.code);
-};
-const clearInvitation = ({ focus = false } = {}) => {
-  appliedInvitation = null;
-  invitationCode.value = '';
-  invitationEntry.hidden = false;
-  invitationSummary.hidden = true;
-  invitationError.hidden = true;
-  setInvitationUrl();
-  if (focus) invitationCode.focus();
-};
-const applyInvitation = async () => {
-  const code = invitationCode.value.trim();
-  invitationError.hidden = true;
-  if (!code) {
-    invitationError.textContent = 'Enter an invitation code, or continue without one.';
-    invitationError.hidden = false;
-    invitationCode.focus();
-    return false;
-  }
-  const applyButton = document.querySelector('#apply-invitation');
-  applyButton.disabled = true;
-  applyButton.textContent = 'Checking…';
-  try {
-    displayInvitation(await repository.getInvitation(code));
-    return true;
-  } catch (error) {
-    appliedInvitation = null;
-    invitationError.textContent = error.message || 'We couldn’t find an active invitation with that code.';
-    invitationError.hidden = false;
-    invitationCode.setAttribute('aria-invalid', 'true');
-    invitationCode.focus();
-    return false;
-  } finally {
-    applyButton.disabled = false;
-    applyButton.textContent = 'Apply';
-  }
-};
+const invitationHandler = window.createMyGitaInviteHandler({
+  repository,
+  input: invitationCode,
+  entry: invitationEntry,
+  summary: invitationSummary,
+  error: invitationError,
+  applyButton: document.querySelector('#apply-invitation'),
+  changeButton: document.querySelector('#change-invitation'),
+  targets: {
+    experience: document.querySelector('#invitation-experience'),
+    offering: document.querySelector('#invitation-offering'),
+    acharyas: document.querySelector('#invitation-acharyas'),
+    meta: document.querySelector('#invitation-meta'),
+  },
+  onApplied: invitation => { appliedInvitation = invitation; },
+  onCleared: () => { appliedInvitation = null; },
+});
 const renderReviewInvitation = () => {
   const element = document.querySelector('#review-invitation');
   if (!appliedInvitation) { element.hidden = true; return; }
   element.hidden = false;
-  document.querySelector('#review-invitation-experience').textContent = appliedInvitation.experience.name;
-  document.querySelector('#review-invitation-offering').textContent = appliedInvitation.offering.name;
-  document.querySelector('#review-invitation-acharyas').textContent = `Guided by ${invitationAcharyas(appliedInvitation)}`;
-  document.querySelector('#review-invitation-meta').textContent = invitationMeta(appliedInvitation);
+  window.MyGitaInviteRenderer.renderInvitation(appliedInvitation, {
+    experience: document.querySelector('#review-invitation-experience'),
+    offering: document.querySelector('#review-invitation-offering'),
+    acharyas: document.querySelector('#review-invitation-acharyas'),
+    meta: document.querySelector('#review-invitation-meta'),
+  });
 };
 const openReview = async event => {
   event.preventDefault();
   clearFieldErrors();
   formError.hidden = true;
   if (invitationCode.value.trim() && !appliedInvitation) {
-    await applyInvitation();
+    await invitationHandler.apply();
     if (!appliedInvitation) return;
   }
   if (!form.checkValidity()) {
@@ -195,20 +154,10 @@ const createProfile = async () => {
     const destination = new URL('https://mygita.gitajyoti.org/');
     destination.searchParams.set('pid', result.profileId);
     document.querySelector('#continue-to-mygita').href = destination;
-    const successInvitation = document.querySelector('#success-invitation');
     document.querySelector('#success-eyebrow').textContent = result.created ? 'Profile created' : 'Invitation added';
-    document.querySelector('#success-title').textContent = result.created
-      ? 'Your doorway to MyGita is ready.'
-      : 'Your invitation is connected.';
-    document.querySelector('#success-copy').textContent = result.created
-      ? 'Keep this Profile ID. It connects your learning journeys without asking you to register again.'
-      : 'Your existing Profile is ready to continue on its learning journeys.';
-    successInvitation.hidden = !appliedInvitation;
-    successInvitation.textContent = appliedInvitation
-      ? result.created
-        ? `Your invitation to ${appliedInvitation.experience.name} has been linked to this Profile.`
-        : `Your Profile already exists. This invitation to ${appliedInvitation.experience.name} has been added to it.`
-      : '';
+    window.MyGitaInviteRenderer.renderSuccessActions(
+      document.querySelector('#success-actions'), result.onSuccess,
+    );
     review.hidden = true;
     success.hidden = false;
   } catch (error) {
@@ -230,9 +179,6 @@ const today = new Date();
 form.elements.dateOfBirth.max = [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-');
 language.addEventListener('change', updateOtherLanguage);
 form.addEventListener('input', event => event.target.removeAttribute?.('aria-invalid'));
-invitationCode.addEventListener('input', () => { invitationCode.removeAttribute('aria-invalid'); invitationError.hidden = true; });
-document.querySelector('#apply-invitation').addEventListener('click', applyInvitation);
-document.querySelector('#change-invitation').addEventListener('click', () => clearInvitation({ focus: true }));
 document.querySelector('#review-profile').addEventListener('click', openReview);
 form.addEventListener('submit', openReview);
 document.querySelector('#edit-profile').addEventListener('click', () => dialog.close());
@@ -243,8 +189,7 @@ document.querySelector('#copy-profile-id').addEventListener('click', async event
   event.currentTarget.textContent = 'Copied';
 });
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-const invitationFromUrl = new URLSearchParams(window.location.search).get('i');
-if (invitationFromUrl) { invitationCode.value = invitationFromUrl; applyInvitation(); }
+invitationHandler.loadFromUrl();
 updateOtherLanguage();
 
 const flute = document.querySelector('.mygita-header-mark');

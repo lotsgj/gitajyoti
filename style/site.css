@@ -332,12 +332,22 @@
 .invitation-summary .eyebrow{margin:0}
 .invitation-summary h3{margin:12px 0 4px;font-size:1.35rem}
 .invitation-summary p{margin:4px 0;color:var(--muted);font-size:.92rem}
+.mygita-acharyas{display:flex;gap:9px;align-items:flex-start;margin:9px 0;color:var(--muted);font-size:.92rem}
+.mygita-acharya-label{padding-top:7px;white-space:nowrap}
+.mygita-acharya-list{display:flex;flex-wrap:wrap;gap:8px}
+.mygita-acharya{display:inline-flex;gap:7px;align-items:center;color:var(--ink);font-weight:700}
+.mygita-acharya-avatar{width:34px;height:34px;flex:0 0 34px;border:1px solid rgba(49,82,101,.24);border-radius:50%;object-fit:cover;background:#f5ecda}
+.mygita-acharya-initials{display:grid;place-items:center;background:var(--teal);color:#fff;font-size:.7rem;font-weight:850;letter-spacing:.03em}
 .registration-text-button{margin:16px 0 0;padding:0;border:0;background:transparent;color:var(--teal);font:inherit;font-size:.88rem;font-weight:800;text-decoration:underline;text-decoration-color:rgba(22,60,84,.3);text-underline-offset:4px;cursor:pointer}
 .registration-text-button:hover{color:#a46720}
 .invitation-continue-copy{margin:17px 0 0;color:var(--muted);font-size:.88rem;line-height:1.5}
 .review-invitation{max-width:none;margin:20px 0;border-color:rgba(201,149,63,.42);background:#fff5d9}
-.review-invitation[hidden],.success-invitation[hidden]{display:none}
-.success-invitation{max-width:510px;margin:18px auto;color:var(--teal);font-weight:750;line-height:1.55}
+.review-invitation[hidden]{display:none}
+.mygita-success-actions{display:grid;gap:18px;max-width:510px;margin:24px auto;text-align:center}
+.mygita-success-actions[hidden]{display:none}
+.mygita-success-action{display:grid;justify-items:center;gap:10px}
+.mygita-success-action p{margin:0;color:var(--muted);white-space:pre-line;line-height:1.55}
+.mygita-success-action-link{min-width:min(100%,300px)}
 .registration-field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .registration-field{display:grid;gap:7px}
 .registration-field-wide{grid-column:1/-1}
@@ -379,6 +389,9 @@
 .registration-profile-id span{color:var(--muted);font-size:.72rem;font-weight:850;letter-spacing:.09em;text-transform:uppercase}
 .registration-profile-id strong{grid-row:2;font-family:Georgia,"Times New Roman",serif;font-size:1.35rem}
 .registration-profile-id button{grid-row:1/3;grid-column:2;align-self:center;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:white;color:var(--ink);font:inherit;font-size:.78rem;font-weight:800;cursor:pointer}
+.registration-profile-id p{grid-row:3;grid-column:1/-1;margin:5px 0 0;color:var(--muted);font-size:.82rem;font-weight:500;line-height:1.5}
+.registration-continue-link{display:inline-block;margin-top:4px;color:var(--teal);font-size:.9rem;font-weight:800;text-decoration-thickness:1px;text-underline-offset:4px}
+.registration-continue-link:hover{color:#9b6927}
 .privacy-page{min-height:100svh;background:linear-gradient(180deg,#fffaf0 0%,#f5ecda 100%)}
 .privacy-main{padding:88px 0 96px}
 .privacy-card{max-width:880px;padding:clamp(30px,6vw,68px);border:1px solid var(--line);border-radius:30px;background:rgba(255,255,255,.76);box-shadow:0 18px 48px rgba(29,53,56,.09)}
