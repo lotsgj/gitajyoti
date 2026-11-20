@@ -189,14 +189,14 @@ try {
     ]);
   });
   assert.equal(await rendererPage.locator('#success-actions a').count(), 1);
-  await rendererPage.getByText('<b>safe</b>', { exact: true }).waitFor();
-  await rendererPage.getByText('<b>prompt</b>', { exact: true }).waitFor();
+  assert.equal(await rendererPage.locator('#success-actions a').textContent(), '<b>safe</b>');
+  assert.equal(await rendererPage.locator('#success-actions p').textContent(), '<b>prompt</b>');
   await rendererPage.evaluate(() => {
     window.MyGitaInviteRenderer.renderAcharyas(document.querySelector('#invitation-acharyas'), [
       { id: '3', name: 'No Picture', profilePic: null },
     ]);
   });
-  await rendererPage.locator('#invitation-acharyas .mygita-acharya-initials').waitFor();
+  assert.equal(await rendererPage.locator('#invitation-acharyas .mygita-acharya-initials').count(), 1);
   await rendererPage.close();
 
   const filePage = await browser.newPage();
