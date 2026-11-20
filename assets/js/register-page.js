@@ -20,6 +20,7 @@ const dialog = document.querySelector('#profile-dialog');
 const review = document.querySelector('#profile-review');
 const success = document.querySelector('#profile-success');
 const confirmButton = document.querySelector('#confirm-profile');
+const continueToMyGita = document.querySelector('#continue-to-mygita');
 const turnstileContainer = document.querySelector('#registration-turnstile');
 const invitationCode = document.querySelector('#invitation-code');
 const invitationEntry = document.querySelector('#invitation-entry');
@@ -170,9 +171,9 @@ const createProfile = async () => {
       turnstileToken: captcha ? await captcha.token() : 'mock-token', honeypot: value('website'), invitationCode: invitationView.invitation?.code,
     });
     document.querySelector('#profile-id').textContent = result.profileId;
-    const destination = new URL('https://mygita.gitajyoti.org/');
+    const destination = new URL(continueToMyGita.href);
     destination.searchParams.set('pid', result.profileId);
-    document.querySelector('#continue-to-mygita').href = destination;
+    continueToMyGita.href = destination.href;
     document.querySelector('#success-eyebrow').textContent = result.created ? 'Profile created' : 'Invitation added';
     document.querySelector('#success-actions').actions = result.onSuccess;
     review.hidden = true;

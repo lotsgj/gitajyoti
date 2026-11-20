@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { existsSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { extname, join, normalize, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { createInterface } from 'node:readline';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright-core';
 
@@ -67,26 +70,6 @@ export const connect = () => ({
 export const renderTurnstile = async () => ({ token: async () => 'test-token', reset() {} });
 `;
 
-const mime = new Map([
-  ['.html', 'text/html; charset=utf-8'], ['.css', 'text/css; charset=utf-8'],
-  ['.js', 'text/javascript; charset=utf-8'], ['.json', 'application/json; charset=utf-8'],
-  ['.svg', 'image/svg+xml'], ['.png', 'image/png'], ['.jpg', 'image/jpeg'], ['.webp', 'image/webp'],
-]);
-const server = createServer((request, response) => {
-  const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
-  const candidate = normalize(join(siteRoot, pathname === '/' ? 'index.html' : pathname));
-  if (!candidate.startsWith(`${siteRoot}/`) || !existsSync(candidate) || !statSync(candidate).isFile()) {
-    response.writeHead(404).end('Not found');
-    return;
-  }
-  response.writeHead(200, {
-    'content-type': mime.get(extname(candidate)) || 'application/octet-stream',
-    'access-control-allow-origin': '*',
-  });
-  response.end(readFileSync(candidate));
-});
-await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
-const { port } = server.address();
 const consumerServer = createServer((request, response) => {
   response.writeHead(200, { 'content-type': 'text/html' });
   response.end('<style>.mygita-acharyas{display:flex}.mygita-acharya-name{color:red}</style>' +
@@ -94,7 +77,12 @@ const consumerServer = createServer((request, response) => {
 });
 await new Promise(resolveListen => consumerServer.listen(0, '127.0.0.1', resolveListen));
 
-const browser = await chromium.launch({ headless: true, executablePath, args: ['--no-sandbox'] });
+const appUrl = `http://127.0.0.1:${consumerServer.address().port}/app/?lang=en&view=learn#home`;
+const server = spawn('python3', [
+  join(siteRoot, 'dev-tools/scripts/serve-website.py'), '--port', '0', '--mygita-url', appUrl,
+], { stdio: ['ignore', 'pipe', 'ignore'] });
+const stopped = once(server, 'close');
+let browser;
 const configurePage = async page => {
   const fulfillClient = route => route.fulfill({
     status: 200,
@@ -107,9 +95,9 @@ const configurePage = async page => {
 };
 const configureMockPage = async page => {
   await configurePage(page);
-  await page.route('**/register.html*', route => {
-    const html = readFileSync(join(siteRoot, 'register.html'), 'utf8')
-      .replace('data-registration-mode="live"', 'data-registration-mode="mock"');
+  await page.route('**/register.html*', async route => {
+    const original = await route.fetch();
+    const html = (await original.text()).replace('data-registration-mode="live"', 'data-registration-mode="mock"');
     return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: html });
   });
 };
@@ -122,9 +110,18 @@ const fillValidProfile = async (page, email = 'browser@example.org') => {
   await page.locator('select[name="preferredLanguage"]').selectOption({ label: 'English' });
 };
 try {
+  const lines = createInterface({ input: server.stdout });
+  const [ready] = await Promise.race([
+    once(lines, 'line'),
+    stopped.then(() => { throw new Error('Local website server exited before startup.'); }),
+  ]);
+  lines.close();
+  const { port } = new URL(ready.replace('Serving Gita Jyoti at ', ''));
+  browser = await chromium.launch({ headless: true, executablePath, args: ['--no-sandbox'] });
   const page = await browser.newPage();
   await configureMockPage(page);
-  await page.goto(`http://127.0.0.1:${port}/register.html`);
+  await page.goto(`http://127.0.0.1:${port}/mygita.html`);
+  await page.getByRole('link', { name: 'Register', exact: true }).click();
   await page.getByRole('heading', { level: 1, name: 'Create your Profile.' }).waitFor();
   await fillValidProfile(page);
   await page.getByRole('button', { name: 'Review my Profile' }).click();
@@ -132,7 +129,14 @@ try {
   await page.getByRole('button', { name: 'Confirm and create Profile' }).click();
   await page.getByText('Profile created', { exact: true }).waitFor();
   assert.equal(await page.locator('#profile-id').textContent(), 'GJ-7K3M-9QX2');
-  assert.equal(await page.locator('#continue-to-mygita').getAttribute('href'), 'https://mygita.gitajyoti.org/?pid=GJ-7K3M-9QX2');
+  const expectedApp = new URL(appUrl);
+  expectedApp.searchParams.set('pid', 'GJ-7K3M-9QX2');
+  const [appTab] = await Promise.all([
+    page.waitForEvent('popup'),
+    page.locator('#continue-to-mygita').click(),
+  ]);
+  await appTab.waitForURL(expectedApp.href);
+  await appTab.close();
   assert.equal(await page.locator('#continue-to-mygita').getAttribute('target'), '_blank');
   assert.equal(await page.locator('#continue-to-mygita').getAttribute('rel'), 'noopener noreferrer');
   assert.match(await page.locator('.registration-profile-id').innerText(), /Keep this Profile ID/);
@@ -242,6 +246,7 @@ try {
   const filePage = await browser.newPage();
   await configurePage(filePage);
   await filePage.goto(pathToFileURL(join(siteRoot, 'register.html')).href);
+  assert.equal(await filePage.locator('#continue-to-mygita').getAttribute('href'), 'https://mygita.gitajyoti.org/');
   await fillValidProfile(filePage, 'file@example.org');
   await filePage.getByRole('button', { name: 'Review my Profile' }).click();
   await filePage.getByRole('heading', { name: 'Review your Profile.' }).waitFor();
@@ -262,7 +267,8 @@ try {
   await livePage.close();
   console.log('Verified Profile registration over localhost and file://: Profile validation, duplicate handling, invitation links/manual codes, Acharya fallback, safe ordered success actions, contract fields, success ID, MyGita handoff, and live-mode API failure handling.');
 } finally {
-  await browser.close();
+  await browser?.close();
+  server.kill();
+  await stopped;
   await new Promise(resolveClose => consumerServer.close(resolveClose));
-  await new Promise(resolveClose => server.close(resolveClose));
 }

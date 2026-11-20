@@ -6,6 +6,10 @@ Last reviewed: 2026-11-16
 
 Registration renders invitation details, Acharyas, and follow-up actions with the [v2 invitation component](../../assets/js/mygita-invite-handler/v2/README.md). MyGita can import the same file and supply an invitation from a verified Profile. The registration page is its first consumer.
 
+For local registration with the dev Profile API, run `python3 -m http.server 4173 --bind 127.0.0.1` from the sibling `mygita-app` checkout. From the website checkout, run `python3 dev-tools/scripts/serve-website.py --mygita-url http://127.0.0.1:4173/` and open `http://127.0.0.1:8080/mygita.html`. The website server sets the Continue link to the supplied app URL and allows that origin to import the v2 invitation component. After registration the browser adds the PID to the link, preserving its path, other query parameters and fragment.
+
+The website's optional `--port` and the app URL are independent. Without `--mygita-url`, the page uses the published destination `https://mygita.gitajyoti.org/`, including when opened directly as a file. The navigation override does not select the Profile API. For tests with the dev API, its local origin allowlist includes ports 8080 and 4173.
+
 - The Landing region is implemented as a responsive static page.
 - Landing links to the public root `mygita.html` overview while the full `mygita/` application remains a separate experience.
 - Images and CSS are externalized and optimized for progressive loading.
