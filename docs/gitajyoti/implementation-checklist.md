@@ -92,6 +92,7 @@
 - [x] Show validation, duplicate, service, and success states and hand the Profile ID to `mygita.gitajyoti.org`.
 - [x] Move public registration to shareable `register.html`, retaining the MyGita visual language and reusable Profile form modules.
 - [x] Add an optional contract-client invitation panel supporting direct `?i=<invite-code>` links, manual application, removal, and no-invitation registration.
+- [x] Package invitation lookup, rendering and responsive styles as a single v2 web component with a host-styled option, and use it in registration.
 - [x] Add rendered-browser regression coverage for contract fields, validation, duplicate handling, success, handoff, localhost, and `file://`.
 - [x] Remove the superseded `register/` Apps Script package and tests.
 - [x] Build a verified GitHub Pages artifact that contains production hosts and uses an explicit registration mode.

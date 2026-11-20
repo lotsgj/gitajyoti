@@ -4,6 +4,8 @@ Last reviewed: 2026-11-16
 
 ## Site
 
+Registration renders invitation details, Acharyas, and follow-up actions with the [v2 invitation component](../../assets/js/mygita-invite-handler/v2/README.md). MyGita can import the same file and supply an invitation from a verified Profile. The registration page is its first consumer.
+
 - The Landing region is implemented as a responsive static page.
 - Landing links to the public root `mygita.html` overview while the full `mygita/` application remains a separate experience.
 - Images and CSS are externalized and optimized for progressive loading.

@@ -10,6 +10,9 @@ for (const relative of ['index.html', 'mygita.html', 'register.html', 'privacy.h
   assert.ok(existsSync(join(outputRoot, relative)), `Missing built file: ${relative}`);
 }
 const html = readFileSync(join(outputRoot, 'register.html'), 'utf8');
+const invitationComponent = 'assets/js/mygita-invite-handler/v2/index.js';
+assert.ok(existsSync(join(outputRoot, invitationComponent)), 'Missing public invitation component.');
+assert.ok(html.includes(`src="${invitationComponent}"`), 'Registration must load the versioned invitation component.');
 const socialPreview = 'https://gitajyoti.org/assets/images/gitajyoti-social-preview.jpg';
 for (const page of ['index.html', 'mygita.html', 'register.html']) {
   const pageHtml = readFileSync(join(outputRoot, page), 'utf8');

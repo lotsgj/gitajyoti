@@ -26,7 +26,9 @@ const invitationEntry = document.querySelector('#invitation-entry');
 const invitationSummary = document.querySelector('#invitation-summary');
 const invitationError = document.querySelector('#invitation-error');
 let pendingProfile = null;
-let appliedInvitation = null;
+const invitationView = document.querySelector('#applied-invitation');
+const applyButton = document.querySelector('#apply-invitation');
+invitationView.api = repository;
 let captchaPromise = null;
 
 const fieldNames = { date_of_birth: 'dateOfBirth', preferred_language: 'preferredLanguage' };
@@ -71,41 +73,58 @@ const ensureTurnstile = () => {
   captchaPromise ||= repository.renderTurnstile(turnstileContainer);
   return captchaPromise;
 };
-const invitationHandler = window.createMyGitaInviteHandler({
-  repository,
-  input: invitationCode,
-  entry: invitationEntry,
-  summary: invitationSummary,
-  error: invitationError,
-  applyButton: document.querySelector('#apply-invitation'),
-  changeButton: document.querySelector('#change-invitation'),
-  targets: {
-    experience: document.querySelector('#invitation-experience'),
-    offering: document.querySelector('#invitation-offering'),
-    acharyas: document.querySelector('#invitation-acharyas'),
-    meta: document.querySelector('#invitation-meta'),
-  },
-  onApplied: invitation => { appliedInvitation = invitation; },
-  onCleared: () => { appliedInvitation = null; },
+function setInvitationUrl(code) {
+  const url = new URL(location.href);
+  if (code) url.searchParams.set('i', code);
+  else url.searchParams.delete('i');
+  history.replaceState(history.state, '', url);
+}
+async function applyInvitation() {
+  const code = invitationCode.value.trim();
+  invitationError.hidden = true;
+  if (applyButton.disabled) return;
+  applyButton.disabled = true;
+  applyButton.textContent = 'Checking…';
+  invitationCode.readOnly = true;
+  try {
+    if (!code) throw new Error('Enter an invitation code, or continue without one.');
+    const invitation = await invitationView.load(code);
+    invitationCode.value = invitation.code;
+    invitationEntry.hidden = true;
+    invitationSummary.hidden = false;
+    setInvitationUrl(invitation.code);
+  } catch (error) {
+    invitationError.textContent = error.message;
+    invitationError.hidden = false;
+    invitationCode.setAttribute('aria-invalid', 'true');
+    invitationCode.focus();
+  } finally {
+    invitationCode.readOnly = false;
+    applyButton.disabled = false;
+    applyButton.textContent = 'Apply';
+  }
+}
+applyButton.addEventListener('click', applyInvitation);
+invitationCode.addEventListener('input', () => { invitationError.hidden = true; });
+document.querySelector('#change-invitation').addEventListener('click', () => {
+  invitationView.invitation = null;
+  invitationCode.value = '';
+  invitationEntry.hidden = false;
+  invitationSummary.hidden = true;
+  setInvitationUrl(null);
+  invitationCode.focus();
 });
-const renderReviewInvitation = () => {
-  const element = document.querySelector('#review-invitation');
-  if (!appliedInvitation) { element.hidden = true; return; }
-  element.hidden = false;
-  window.MyGitaInviteRenderer.renderInvitation(appliedInvitation, {
-    experience: document.querySelector('#review-invitation-experience'),
-    offering: document.querySelector('#review-invitation-offering'),
-    acharyas: document.querySelector('#review-invitation-acharyas'),
-    meta: document.querySelector('#review-invitation-meta'),
-  });
-};
+function renderReviewInvitation() {
+  document.querySelector('#review-invitation').hidden = !invitationView.invitation;
+  document.querySelector('#review-invitation-details').invitation = invitationView.invitation;
+}
 const openReview = async event => {
   event.preventDefault();
   clearFieldErrors();
   formError.hidden = true;
-  if (invitationCode.value.trim() && !appliedInvitation) {
-    await invitationHandler.apply();
-    if (!appliedInvitation) return;
+  if (invitationCode.value.trim() && !invitationView.invitation) {
+    await applyInvitation();
+    if (!invitationView.invitation) return;
   }
   if (!form.checkValidity()) {
     formError.textContent = 'Please complete all required fields before reviewing your Profile.';
@@ -148,16 +167,14 @@ const createProfile = async () => {
   try {
     captcha = await ensureTurnstile();
     const result = await repository.createProfile(pendingProfile, {
-      turnstileToken: captcha ? await captcha.token() : 'mock-token', honeypot: value('website'), invitationCode: appliedInvitation?.code,
+      turnstileToken: captcha ? await captcha.token() : 'mock-token', honeypot: value('website'), invitationCode: invitationView.invitation?.code,
     });
     document.querySelector('#profile-id').textContent = result.profileId;
     const destination = new URL('https://mygita.gitajyoti.org/');
     destination.searchParams.set('pid', result.profileId);
     document.querySelector('#continue-to-mygita').href = destination;
     document.querySelector('#success-eyebrow').textContent = result.created ? 'Profile created' : 'Invitation added';
-    window.MyGitaInviteRenderer.renderSuccessActions(
-      document.querySelector('#success-actions'), result.onSuccess,
-    );
+    document.querySelector('#success-actions').actions = result.onSuccess;
     review.hidden = true;
     success.hidden = false;
   } catch (error) {
@@ -189,7 +206,11 @@ document.querySelector('#copy-profile-id').addEventListener('click', async event
   event.currentTarget.textContent = 'Copied';
 });
 dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
-invitationHandler.loadFromUrl();
+const initialCode = new URL(location.href).searchParams.get('i');
+if (initialCode) {
+  invitationCode.value = initialCode;
+  applyInvitation();
+}
 updateOtherLanguage();
 
 const flute = document.querySelector('.mygita-header-mark');

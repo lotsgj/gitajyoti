@@ -79,11 +79,20 @@ const server = createServer((request, response) => {
     response.writeHead(404).end('Not found');
     return;
   }
-  response.writeHead(200, { 'content-type': mime.get(extname(candidate)) || 'application/octet-stream' });
+  response.writeHead(200, {
+    'content-type': mime.get(extname(candidate)) || 'application/octet-stream',
+    'access-control-allow-origin': '*',
+  });
   response.end(readFileSync(candidate));
 });
 await new Promise(resolveListen => server.listen(0, '127.0.0.1', resolveListen));
 const { port } = server.address();
+const consumerServer = createServer((request, response) => {
+  response.writeHead(200, { 'content-type': 'text/html' });
+  response.end('<style>.mygita-acharyas{display:flex}.mygita-acharya-name{color:red}</style>' +
+    '<mygita-invitation code="sample"></mygita-invitation>');
+});
+await new Promise(resolveListen => consumerServer.listen(0, '127.0.0.1', resolveListen));
 
 const browser = await chromium.launch({ headless: true, executablePath, args: ['--no-sandbox'] });
 const configurePage = async page => {
@@ -158,9 +167,10 @@ try {
   await invitationPage.getByRole('button', { name: 'Review my Profile' }).click();
   const reviewInvitation = invitationPage.locator('#review-invitation');
   await reviewInvitation.getByRole('heading', { name: 'Gita for Children' }).waitFor();
-  assert.match(await reviewInvitation.innerText(), /Gita for Children - Radhakrishna Batch/);
-  assert.match(await reviewInvitation.innerText(), /Guided by[\s\S]*AJ Vijay P/);
-  assert.match(await reviewInvitation.innerText(), /Sanskrit · English · Kannada · Begins 30 November 2026/);
+  for (const text of ['Gita for Children - Radhakrishna Batch', 'Guided by', 'AJ Vijay P',
+    'Sanskrit · English · Kannada · Begins 30 November 2026']) {
+    await reviewInvitation.getByText(text, { exact:true }).waitFor();
+  }
   await reviewInvitation.locator('.mygita-acharya-initials').waitFor();
   await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
   await invitationPage.getByRole('link', { name: 'Join the mock group' }).waitFor();
@@ -176,27 +186,57 @@ try {
   await invitationPage.getByRole('button', { name: 'Change invitation' }).click();
   await invitationPage.getByLabel('Invitation code').fill('not-a-real-code');
   await invitationPage.getByRole('button', { name: 'Apply' }).click();
-  await invitationPage.getByText('We couldn’t find an active invitation with that code.').waitFor();
+  await invitationPage.getByRole('alert').filter({ hasText: 'We couldn’t find an active invitation with that code.' }).waitFor();
   await invitationPage.close();
 
   const rendererPage = await browser.newPage();
-  await configureMockPage(rendererPage);
-  await rendererPage.goto(`http://127.0.0.1:${port}/register.html`);
-  await rendererPage.evaluate(() => {
-    window.MyGitaInviteRenderer.renderSuccessActions(document.querySelector('#success-actions'), [
-      { link: 'javascript:alert(1)', label: '<b>unsafe</b>', prompt: '<b>unsafe</b>' },
+  await rendererPage.goto(`http://127.0.0.1:${consumerServer.address().port}/`);
+  const component = rendererPage.locator('mygita-invitation');
+  const moduleUrl = `http://127.0.0.1:${port}/assets/js/mygita-invite-handler/v2/index.js`;
+  await rendererPage.evaluate(async url => {
+    const element = document.querySelector('mygita-invitation');
+    window.lookups = [];
+    const invitation = {
+      code: 'sample', experience: { name: 'Gita for Children' },
+      offering: { name: 'Joint offering', acharyas: Array.from({ length: 8 }, (_, i) => ({ name: 'Teacher ' + i })) },
+    };
+    element.api = { async getInvitation(code) {
+      window.lookups.push(code);
+      return { ok: true, invitation };
+    } };
+    await import(url);
+  }, moduleUrl);
+  await component.getByText('Teacher 7', { exact: true }).waitFor();
+  for (const [width, columns] of [[1280, 3], [820, 2], [412, 1]]) {
+    await rendererPage.setViewportSize({ width, height: 924 });
+    const layout = await component.evaluate(element => {
+      const root = element.shadowRoot;
+      const label = root.querySelector('.mygita-acharya-label').getBoundingClientRect();
+      const entries = [...root.querySelectorAll('.mygita-acharya')].map(el => el.getBoundingClientRect());
+      return { above: label.bottom <= entries[0].top, columns: new Set(entries.map(rect => rect.left)).size };
+    });
+    assert.deepEqual(layout, { above: true, columns });
+  }
+  await component.evaluate(el => {
+    el.invitation = { ...el.invitation, onSuccess: [
+      { link: 'javascript:alert(1)', label: 'unsafe' },
       { link: 'https://example.com/safe', label: '<b>safe</b>', prompt: '<b>prompt</b>' },
-    ]);
+    ] };
   });
-  assert.equal(await rendererPage.locator('#success-actions a').count(), 1);
-  assert.equal(await rendererPage.locator('#success-actions a').textContent(), '<b>safe</b>');
-  assert.equal(await rendererPage.locator('#success-actions p').textContent(), '<b>prompt</b>');
-  await rendererPage.evaluate(() => {
-    window.MyGitaInviteRenderer.renderAcharyas(document.querySelector('#invitation-acharyas'), [
-      { id: '3', name: 'No Picture', profilePic: null },
-    ]);
-  });
-  assert.equal(await rendererPage.locator('#invitation-acharyas .mygita-acharya-initials').count(), 1);
+  for (const mode of ['default', 'host']) {
+    await component.evaluate((el, value) => el.setAttribute('styling', value), mode);
+    assert.equal(await component.locator('a').count(), 1);
+    assert.equal(await component.locator('a').textContent(), '<b>safe</b>');
+    assert.equal(await component.locator('.mygita-action-prompt').textContent(), '<b>prompt</b>');
+    assert.equal(await component.locator('b').count(), 0);
+    assert.equal(await component.locator('.mygita-acharya-initials').count(), 8);
+    const hostStylesApply = await component.evaluate(el => {
+      const name = el.querySelector('.mygita-acharya-name');
+      return !!name && getComputedStyle(name).color === 'rgb(255, 0, 0)';
+    });
+    assert.equal(hostStylesApply, mode === 'host');
+  }
+  assert.deepEqual(await rendererPage.evaluate(() => window.lookups), ['sample']);
   await rendererPage.close();
 
   const filePage = await browser.newPage();
@@ -223,5 +263,6 @@ try {
   console.log('Verified Profile registration over localhost and file://: Profile validation, duplicate handling, invitation links/manual codes, Acharya fallback, safe ordered success actions, contract fields, success ID, MyGita handoff, and live-mode API failure handling.');
 } finally {
   await browser.close();
+  await new Promise(resolveClose => consumerServer.close(resolveClose));
   await new Promise(resolveClose => server.close(resolveClose));
 }
