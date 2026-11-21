@@ -325,10 +325,8 @@
 .invitation-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;max-width:690px}
 .invitation-entry[hidden]{display:none}
 .invitation-entry .registration-secondary-button{min-height:52px}
-.invitation-summary{max-width:690px;padding:19px 20px;border:1px solid rgba(49,82,101,.22);border-radius:18px;background:rgba(255,253,248,.92)}
+.invitation-summary{max-width:690px}
 .invitation-summary[hidden]{display:none}
-.invitation-summary-header{display:flex;gap:9px;align-items:center}
-.invitation-success-mark{display:grid;width:25px;height:25px;place-items:center;border-radius:50%;background:var(--teal);color:#fff;font-size:.82rem;font-weight:800}
 .invitation-summary .eyebrow{margin:0}
 .invitation-summary h3{margin:12px 0 4px;font-size:1.35rem}
 .invitation-summary p{margin:4px 0;color:var(--muted);font-size:.92rem}
@@ -343,7 +341,7 @@
 .registration-text-button{margin:16px 0 0;padding:0;border:0;background:transparent;color:var(--teal);font:inherit;font-size:.88rem;font-weight:800;text-decoration:underline;text-decoration-color:rgba(22,60,84,.3);text-underline-offset:4px;cursor:pointer}
 .registration-text-button:hover{color:#a46720}
 .invitation-continue-copy{margin:17px 0 0;color:var(--muted);font-size:.88rem;line-height:1.5}
-.review-invitation{max-width:none;margin:20px 0;border-color:rgba(201,149,63,.42);background:#fff5d9}
+.review-invitation{max-width:none;margin:20px 0}
 .review-invitation[hidden]{display:none}
 .mygita-success-actions{display:grid;gap:18px;max-width:510px;margin:24px auto;text-align:center}
 .mygita-success-actions[hidden]{display:none}

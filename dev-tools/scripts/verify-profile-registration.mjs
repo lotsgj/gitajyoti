@@ -25,10 +25,10 @@ const apiClientFixture = `
 const profiles = new Map();
 const invitation = {
   code: 'g4c-nov26-radhakrishna',
-  experience: { id: '1', name: 'Gita for Children' },
+  experience: { id: '1', name: 'Gita for Children', description: 'Learning together.', outcome: 'Apply a verse in daily life.', pic: 'https://example.org/experience.jpg' },
   offering: {
     id: '1', name: 'Gita for Children - Radhakrishna Batch',
-    acharyas: [{ id: '2', name: 'AJ Vijay P', profilePic: null }], languages: ['sa', 'en', 'kn'], startDate: '2026-11-30'
+    acharyas: [{ id: '2', name: 'AJ Vijay P', profilePic: null, about: 'A guide for this batch.' }], languages: ['sa', 'en', 'kn'], startDate: '2026-11-30'
   }
 };
 const invitationActions = [{ link: 'https://example.com/mock-group', label: 'Join the mock group', prompt: 'Join the mock group for class updates.' }];
@@ -164,16 +164,47 @@ try {
 
   const invitationPage = await browser.newPage();
   await configureMockPage(invitationPage);
+  await invitationPage.route('https://example.org/experience.jpg', route => route.fulfill({
+    path: join(siteRoot, 'assets/images/experience-gita-for-children.jpg'), contentType: 'image/jpeg',
+  }));
   await invitationPage.goto(`http://127.0.0.1:${port}/register.html?i=g4c-nov26-radhakrishna`);
   await invitationPage.locator('#invitation-summary').getByText('Invitation applied', { exact: true }).waitFor();
   await invitationPage.getByRole('heading', { name: 'Gita for Children' }).waitFor();
+  const applied = invitationPage.locator('#applied-invitation');
+  await applied.locator('.mygita-cover').waitFor();
+  await applied.locator('.mygita-cover').evaluate(img => img.decode());
+  for (const width of [412, 1280]) {
+    await invitationPage.setViewportSize({width, height: 900});
+    for (const name of ['View invitation details', 'Hide invitation details']) {
+      const control = applied.getByRole('button', { name, exact:true });
+      const corner = await control.evaluate(button => {
+        const card = button.closest('section.mygita-invitation-details').getBoundingClientRect();
+        const rect = button.getBoundingClientRect();
+        return rect.width >= 44 && rect.height >= 44 && Math.abs(card.right - rect.right) < 10 && Math.abs(card.bottom - rect.bottom) < 10;
+      });
+      assert.ok(corner, name + ' should stay in the card corner at ' + width);
+      await control.click();
+    }
+  }
+  assert.equal(await applied.getByText('Learning together.').isVisible(), false);
+  await applied.getByRole('button', { name: 'View invitation details' }).click();
+  await applied.getByText('Apply a verse in daily life.').waitFor();
+  await applied.getByRole('button', { name: 'About AJ Vijay P' }).click();
+  await applied.getByRole('dialog').getByText('A guide for this batch.').waitFor();
+  await invitationPage.keyboard.press('Escape');
+  assert.equal(await applied.getByRole('dialog').count(), 0);
+  await applied.getByRole('button', { name: 'Hide invitation details' }).click();
   await fillValidProfile(invitationPage, 'invited@example.org');
   await invitationPage.getByRole('button', { name: 'Review my Profile' }).click();
   const reviewInvitation = invitationPage.locator('#review-invitation');
+  await reviewInvitation.getByRole('button', { name: 'View invitation details' }).click();
+  await reviewInvitation.getByRole('button', { name: 'About AJ Vijay P' }).click();
+  await reviewInvitation.getByRole('button', { name: 'Close biography' }).click();
+  assert.ok(await invitationPage.locator('#profile-dialog').isVisible());
   await reviewInvitation.getByRole('heading', { name: 'Gita for Children' }).waitFor();
   for (const text of ['Gita for Children - Radhakrishna Batch', 'Guided by', 'AJ Vijay P',
     'Sanskrit · English · Kannada · Begins 30 November 2026']) {
-    await reviewInvitation.getByText(text, { exact:true }).waitFor();
+    await reviewInvitation.getByText(text, { exact:true }).filter({visible:true}).waitFor();
   }
   await reviewInvitation.locator('.mygita-acharya-initials').waitFor();
   await invitationPage.getByRole('button', { name: 'Confirm and create Profile' }).click();
@@ -210,7 +241,9 @@ try {
     } };
     await import(url);
   }, moduleUrl);
+  await component.getByRole('button', { name: 'View invitation details' }).click();
   await component.getByText('Teacher 7', { exact: true }).waitFor();
+  assert.equal(await component.locator('.mygita-cover,.mygita-description,.mygita-outcome,button.mygita-person').count(), 0);
   for (const [width, columns] of [[1280, 3], [820, 2], [412, 1]]) {
     await rendererPage.setViewportSize({ width, height: 924 });
     const layout = await component.evaluate(element => {
