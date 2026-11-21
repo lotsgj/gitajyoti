@@ -26,11 +26,11 @@
     .mygita-acharyas { display:grid; gap:8px; padding:14px 54px 16px 19px; border-top:1px solid #e5dcc9; background:#fcf6e9; font-size:.92rem }
     .mygita-acharya-label { margin:0 }
     .mygita-toggle { position:absolute; right:4px; bottom:4px; width:44px; height:44px; display:grid; place-items:center; background:none; border:0; padding:0; color:#285f59; cursor:pointer }
-    .mygita-toggle span { display:grid; place-items:center; width:29px; height:29px; border-radius:50%; border:1px solid #b8c8ba; background:#fffaf0; font-size:0 }
-    .mygita-toggle span::before { content:''; width:8px; height:8px; border:solid currentColor; border-width:0 2px 2px 0; transform:translateY(-2px) rotate(45deg) }
-    .mygita-toggle[aria-expanded=true] span::before { transform:translateY(2px) rotate(225deg) }
+    .mygita-chevron { display:grid; place-items:center; width:29px; height:29px; border-radius:50%; border:1px solid #b8c8ba; background:#fffaf0 }
     .mygita-toggle:focus-visible,.mygita-person:focus-visible { outline:2px solid #296b64; outline-offset:-2px }
-    .mygita-toggle:focus-visible::after,.mygita-toggle:hover::after { content:attr(aria-label); position:absolute; right:100%; bottom:7px; width:max-content; padding:4px 9px; border-radius:5px; background:#173c50; color:white; font:500 .8rem/1.4 system-ui }
+    .mygita-toggle::after { position:absolute; right:100%; bottom:7px; width:max-content; padding:4px 9px; border-radius:5px; background:#173c50; color:white; font:500 .8rem/1.4 system-ui; pointer-events:none }
+    .mygita-toggle:focus-visible::after { content:attr(aria-label) }
+    @media (hover:hover) and (pointer:fine) { .mygita-toggle:hover::after { content:attr(aria-label) } }
     .mygita-acharya-label { color:var(--ink,#163c54) }
     .mygita-acharya-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px 18px; list-style:none; margin:0; padding:0 }
     .mygita-person { display:grid; grid-template-columns:34px minmax(0,1fr); gap:7px; align-items:center; min-height:44px; color:inherit; font:inherit; font-weight:700; text-align:left; overflow-wrap:anywhere }
@@ -147,6 +147,8 @@
       const toggle = node('button', 'mygita-toggle');
       const icon = node('span', 'mygita-chevron');
       icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" focusable="false"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      const arrow = icon.querySelector('path');
       toggle.type = 'button';
       toggle.append(icon);
       function expand(open) {
@@ -154,8 +156,9 @@
         extra.hidden = group.hidden = !open;
         toggle.setAttribute('aria-expanded', String(open));
         toggle.setAttribute('aria-label', open ? 'Hide invitation details' : 'View invitation details');
-        if (hostStyled) toggle.title = toggle.getAttribute('aria-label');
-        icon.textContent = open ? '▴' : '▾';
+        if (hostStyled && matchMedia('(hover:hover) and (pointer:fine)').matches) toggle.title = toggle.getAttribute('aria-label');
+        else toggle.removeAttribute('title');
+        arrow.setAttribute('d', open ? 'M2 11 L8 5 L14 11' : 'M2 5 L8 11 L14 5');
       }
       toggle.onclick = () => expand(!block.hasAttribute('data-expanded'));
       expand(false);

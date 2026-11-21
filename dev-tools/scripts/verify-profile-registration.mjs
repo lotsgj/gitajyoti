@@ -175,6 +175,7 @@ try {
   await cover.waitFor();
   assert.equal(await cover.getAttribute('loading'), 'lazy');
   await cover.evaluate(img => img.decode());
+  const tooltip = control => control.evaluate(button => getComputedStyle(button, '::after').content);
   for (const width of [412, 1280]) {
     await invitationPage.setViewportSize({width, height: 900});
     for (const name of ['View invitation details', 'Hide invitation details']) {
@@ -185,10 +186,42 @@ try {
         return rect.width >= 44 && rect.height >= 44 && Math.abs(card.right - rect.right) < 10 && Math.abs(card.bottom - rect.bottom) < 10;
       });
       assert.ok(corner, name + ' should stay in the card corner at ' + width);
+      const offset = await control.evaluate(button => {
+        const circle = button.querySelector('.mygita-chevron').getBoundingClientRect();
+        const arrow = button.querySelector('path').getBoundingClientRect();
+        return Math.max(Math.abs(arrow.left + arrow.right - circle.left - circle.right),
+                        Math.abs(arrow.top + arrow.bottom - circle.top - circle.bottom)) / 2;
+      });
+      assert.ok(offset < 1, name + ' should be centered within one CSS pixel at ' + width);
+      await control.hover();
+      assert.equal(await tooltip(control), JSON.stringify(name));
       await control.click();
     }
   }
+  await invitationPage.mouse.move(0, 0);
+  await invitationPage.getByRole('button', { name: 'Change invitation' }).focus();
+  await invitationPage.keyboard.press('Shift+Tab');
+  const keyboardToggle = applied.getByRole('button', { name: 'View invitation details' });
+  assert.ok(await keyboardToggle.evaluate(button => button.matches(':focus-visible')));
+  assert.equal(await tooltip(keyboardToggle), '"View invitation details"');
+  await invitationPage.keyboard.press('Enter');
+  assert.equal(await tooltip(applied.getByRole('button', { name: 'Hide invitation details' })), '"Hide invitation details"');
+  await invitationPage.keyboard.press('Space');
   assert.equal(await applied.getByText('Learning together.').isVisible(), false);
+
+  const touchPage = await browser.newPage({ viewport: { width: 412, height: 924 }, isMobile: true, hasTouch: true });
+  await configureMockPage(touchPage);
+  await touchPage.route('https://example.org/experience.jpg', route => route.abort());
+  await touchPage.goto(invitationPage.url());
+  const touchCard = touchPage.locator('#applied-invitation');
+  const show = touchCard.getByRole('button', { name: 'View invitation details' });
+  const hide = touchCard.getByRole('button', { name: 'Hide invitation details' });
+  assert.equal(await tooltip(show), 'none');
+  await show.tap();
+  assert.equal(await tooltip(hide), 'none');
+  await hide.tap();
+  assert.equal(await tooltip(show), 'none');
+  await touchPage.close();
   await applied.getByRole('button', { name: 'View invitation details' }).click();
   await applied.getByText('Apply a verse in daily life.').waitFor();
   await applied.getByRole('button', { name: 'About AJ Vijay P' }).click();
