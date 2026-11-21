@@ -17,7 +17,7 @@ const copy = relative => {
   cpSync(source, destination, { recursive: true });
 };
 
-['index.html', 'mygita.html', 'register.html', 'privacy.html', 'site.webmanifest', 'CNAME', 'assets', 'style'].forEach(copy);
+['index.html', 'mygita.html', 'register.html', 'privacy.html', 'CNAME', 'assets', 'style'].forEach(copy);
 mkdirSync(join(outputRoot, 'mygita'), { recursive: true });
 ['mygita/index.html', 'mygita/src', 'mygita/styles'].forEach(copy);
 

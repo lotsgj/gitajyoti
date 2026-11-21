@@ -1,10 +1,17 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const siteRoot = resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const outputRoot = resolve(siteRoot, 'dist', 'site');
+for (const file of readdirSync(outputRoot, { recursive: true })) {
+  assert.ok(!file.endsWith('.webmanifest') && file !== 'assets/js/site-manifest.js', 'Unexpected PWA asset: ' + file);
+  if (file.endsWith('.html')) {
+    const source = readFileSync(join(outputRoot, file), 'utf8');
+    assert.doesNotMatch(source, /<link\b[^>]*\brel\s*=\s*["']?manifest\b|site-manifest\.js/i, 'Public page advertises app installation: ' + file);
+  }
+}
 const mode = process.env.REGISTRATION_DEPLOY_MODE || 'mock';
 for (const relative of ['index.html', 'mygita.html', 'register.html', 'privacy.html', 'CNAME', 'assets/js/register-page.js', 'assets/js/registration-repository.js', 'mygita/index.html']) {
   assert.ok(existsSync(join(outputRoot, relative)), `Missing built file: ${relative}`);

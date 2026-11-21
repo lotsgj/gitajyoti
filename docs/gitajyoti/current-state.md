@@ -6,7 +6,9 @@ Last reviewed: 2026-11-16
 
 Registration renders invitation details, Acharyas, and follow-up actions with the [v2 invitation component](../../assets/js/mygita-invite-handler/v2/README.md). MyGita can import the same file and supply an invitation from a verified Profile. The registration page is its first consumer.
 
-Applied and review invitations start compact. A corner chevron reveals the experience description, outcome and guides. The optional experience picture and Acharya biographies come from the shared API client. Older responses still show the batch, schedule, languages and available guides.
+Applied and review invitations start compact. A corner chevron reveals the experience description, outcome and guides. On desktop the applied invitation expands to the full panel width. Narrow cards, including the review dialog, stack artwork above the text. The optional experience picture and Acharya biographies come from the shared API client. Older responses still show the batch, schedule, languages and available guides.
+
+The installable learning app lives at `mygita.gitajyoti.org`. Pages on `gitajyoti.org` publish ordinary website icons and omit the web app manifest.
 
 For local registration with the dev Profile API, run `python3 -m http.server 4173 --bind 127.0.0.1` from the sibling `mygita-app` checkout. From the website checkout, run `python3 dev-tools/scripts/serve-website.py --mygita-url http://127.0.0.1:4173/` and open `http://127.0.0.1:8080/mygita.html`. The website server sets the Continue link to the supplied app URL and allows that origin to import the v2 invitation component. After registration the browser adds the PID to the link, preserving its path, other query parameters and fragment.
 

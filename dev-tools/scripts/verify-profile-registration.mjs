@@ -176,8 +176,21 @@ try {
   assert.equal(await cover.getAttribute('loading'), 'lazy');
   await cover.evaluate(img => img.decode());
   const tooltip = control => control.evaluate(button => getComputedStyle(button, '::after').content);
+  const layout = async card => card.evaluate(host => {
+    const root = host.shadowRoot;
+    return {
+      width: host.getBoundingClientRect().width,
+      left: host.getBoundingClientRect().left,
+      available: host.parentElement.getBoundingClientRect().width,
+      art: root.querySelector('.mygita-art').getBoundingClientRect().width,
+      storyColumns: getComputedStyle(root.querySelector('.mygita-story')).gridTemplateColumns.split(' ').length,
+      guideColumns: getComputedStyle(root.querySelector('.mygita-acharya-list')).gridTemplateColumns.split(' ').length,
+    };
+  });
   for (const width of [412, 1280]) {
     await invitationPage.setViewportSize({width, height: 900});
+    const compact = await layout(applied);
+    assert.equal(compact.width, Math.min(690, compact.available));
     for (const name of ['View invitation details', 'Hide invitation details']) {
       const control = applied.getByRole('button', { name, exact:true });
       const corner = await control.evaluate(button => {
@@ -186,6 +199,17 @@ try {
         return rect.width >= 44 && rect.height >= 44 && Math.abs(card.right - rect.right) < 10 && Math.abs(card.bottom - rect.bottom) < 10;
       });
       assert.ok(corner, name + ' should stay in the card corner at ' + width);
+      if (name === 'Hide invitation details') {
+        const expanded = await layout(applied);
+        assert.equal(expanded.left, compact.left);
+        assert.equal(expanded.width, compact.available);
+        assert.equal(expanded.storyColumns, width === 412 ? 1 : 2);
+        assert.equal(expanded.guideColumns, width === 412 ? 1 : 3);
+        if (width === 1280) {
+          assert.ok(expanded.width > compact.width);
+          assert.ok(expanded.art <= 280);
+        }
+      }
       const offset = await control.evaluate(button => {
         const circle = button.querySelector('.mygita-chevron').getBoundingClientRect();
         const arrow = button.querySelector('path').getBoundingClientRect();
@@ -197,6 +221,7 @@ try {
       assert.equal(await tooltip(control), JSON.stringify(name));
       await control.click();
     }
+    assert.equal((await layout(applied)).width, compact.width);
   }
   await invitationPage.mouse.move(0, 0);
   await invitationPage.getByRole('button', { name: 'Change invitation' }).focus();
@@ -233,6 +258,9 @@ try {
   await invitationPage.getByRole('button', { name: 'Review my Profile' }).click();
   const reviewInvitation = invitationPage.locator('#review-invitation');
   await reviewInvitation.getByRole('button', { name: 'View invitation details' }).click();
+  const reviewLayout = await layout(reviewInvitation.locator('mygita-invitation'));
+  assert.equal(reviewLayout.storyColumns, 1, 'The narrow desktop review dialog should stack the artwork above the text.');
+  assert.equal(reviewLayout.guideColumns, 1);
   await reviewInvitation.getByRole('button', { name: 'About AJ Vijay P' }).click();
   await reviewInvitation.getByRole('button', { name: 'Close biography' }).click();
   assert.ok(await invitationPage.locator('#profile-dialog').isVisible());

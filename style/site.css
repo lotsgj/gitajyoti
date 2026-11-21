@@ -325,7 +325,7 @@
 .invitation-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:end;max-width:690px}
 .invitation-entry[hidden]{display:none}
 .invitation-entry .registration-secondary-button{min-height:52px}
-.invitation-summary{max-width:690px}
+#applied-invitation:not([data-expanded]){max-width:690px}
 .invitation-summary[hidden]{display:none}
 .invitation-summary .eyebrow{margin:0}
 .invitation-summary h3{margin:12px 0 4px;font-size:1.35rem}

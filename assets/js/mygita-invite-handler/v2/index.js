@@ -5,6 +5,7 @@
 
   const css = `
     :host { display:block; color:var(--ink,#163c54); font:inherit }
+    .mygita-invitation-details { container-type:inline-size }
     :host([hidden]) { display:none }
     [hidden] { display:none!important }
     h3 { font:600 clamp(1.4rem,3vw,2rem)/1.15 Georgia,serif; margin:4px 0 }
@@ -22,7 +23,7 @@
     .mygita-description,.mygita-outcome,.mygita-bio p { white-space:pre-line }
     .mygita-description { margin-top:15px }
     .mygita-outcome-label,.mygita-acharya-label { font:600 1.12rem/1.3 Georgia,serif; margin:12px 0 4px }
-    .mygita-invitation-details[data-expanded] .mygita-story:has(img) { grid-template-columns:minmax(0,38%) minmax(0,1fr); min-height:185px }
+    .mygita-invitation-details[data-expanded] .mygita-story:has(img) { grid-template-columns:min(32%,280px) minmax(0,1fr); min-height:185px }
     .mygita-acharyas { display:grid; gap:8px; padding:14px 54px 16px 19px; border-top:1px solid #e5dcc9; background:#fcf6e9; font-size:.92rem }
     .mygita-acharya-label { margin:0 }
     .mygita-toggle { position:absolute; right:4px; bottom:4px; width:44px; height:44px; display:grid; place-items:center; background:none; border:0; padding:0; color:#285f59; cursor:pointer }
@@ -45,9 +46,12 @@
     .mygita-success-action { display:grid; justify-items:center; gap:10px; margin:20px auto; text-align:center }
     .mygita-success-action p { white-space:pre-line }
     .mygita-success-action-link { padding:12px 24px; border-radius:2em; background:var(--gold,#e9aa3c); color:#163c54; font-weight:750; text-decoration:none }
-    @media(max-width:900px) { .mygita-acharya-list { grid-template-columns:repeat(2,minmax(0,1fr)) } }
-    @media(max-width:700px) { .mygita-acharya-list { grid-template-columns:minmax(0,1fr) } }
-    @media(max-width:600px) { .mygita-invitation-details[data-expanded] .mygita-story:has(img) { grid-template-columns:1fr } .mygita-invitation-details[data-expanded] .mygita-art { height:165px } }
+    @container (max-width:820px) { .mygita-acharya-list { grid-template-columns:repeat(2,minmax(0,1fr)) } }
+    @container (max-width:640px) {
+      .mygita-acharya-list { grid-template-columns:minmax(0,1fr) }
+      .mygita-invitation-details[data-expanded] .mygita-story:has(img) { grid-template-columns:1fr }
+      .mygita-invitation-details[data-expanded] .mygita-art { height:165px }
+    }
   `;
 
   function node(tagName, className, text) {
@@ -103,7 +107,7 @@
   }
   const languageNames = new Intl.DisplayNames(['en'], { type:'language' });
   const dates = new Intl.DateTimeFormat('en-IN', { day:'numeric', month:'long', year:'numeric', timeZone:'UTC' });
-  function details(invitation, applied, hostStyled) {
+  function details(host, invitation, hostStyled) {
     const { experience, offering } = invitation;
     const block = node('section', 'mygita-invitation-details');
     const story = node('div', 'mygita-story');
@@ -119,7 +123,7 @@
       art.append(img);
       story.append(art);
     }
-    if (applied) copy.append(node('div', 'mygita-applied', 'Invitation applied'));
+    if (host.hasAttribute('applied')) copy.append(node('div', 'mygita-applied', 'Invitation applied'));
     copy.append(node('h3', 'mygita-experience', experience.name), node('p', 'mygita-offering', offering.name));
     story.append(copy);
     block.append(story);
@@ -152,6 +156,7 @@
       toggle.type = 'button';
       toggle.append(icon);
       function expand(open) {
+        host.toggleAttribute('data-expanded', open);
         block.toggleAttribute('data-expanded', open);
         extra.hidden = group.hidden = !open;
         toggle.setAttribute('aria-expanded', String(open));
@@ -273,6 +278,7 @@
     }
     render() {
       if (!this.isConnected) return;
+      this.removeAttribute('data-expanded');
       const content = document.createDocumentFragment();
       if (this.#message) {
         const status = node('p', 'mygita-invitation-status', this.#message);
@@ -280,7 +286,7 @@
         content.append(status);
       }
       const hostStyled = this.getAttribute('styling') === 'host';
-      if (this.#invitation) content.append(details(this.#invitation, this.hasAttribute('applied'), hostStyled));
+      if (this.#invitation) content.append(details(this, this.#invitation, hostStyled));
       appendActions(content, this.#actions);
       if (hostStyled) {
         this.shadowRoot.replaceChildren(document.createElement('slot'));
