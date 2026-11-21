@@ -112,7 +112,8 @@
     if (pic) {
       const art = node('div', 'mygita-art');
       const img = node('img', 'mygita-cover');
-      img.alt = '';
+      img.alt = experience.name;
+      img.loading = 'lazy';
       img.onerror = () => art.remove();
       img.src = pic;
       art.append(img);

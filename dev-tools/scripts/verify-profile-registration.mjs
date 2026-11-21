@@ -171,8 +171,10 @@ try {
   await invitationPage.locator('#invitation-summary').getByText('Invitation applied', { exact: true }).waitFor();
   await invitationPage.getByRole('heading', { name: 'Gita for Children' }).waitFor();
   const applied = invitationPage.locator('#applied-invitation');
-  await applied.locator('.mygita-cover').waitFor();
-  await applied.locator('.mygita-cover').evaluate(img => img.decode());
+  const cover = applied.getByRole('img', { name: 'Gita for Children', exact: true });
+  await cover.waitFor();
+  assert.equal(await cover.getAttribute('loading'), 'lazy');
+  await cover.evaluate(img => img.decode());
   for (const width of [412, 1280]) {
     await invitationPage.setViewportSize({width, height: 900});
     for (const name of ['View invitation details', 'Hide invitation details']) {
